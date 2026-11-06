@@ -27,6 +27,7 @@ import {
   CircleHelp,
   Layers,
 } from "lucide-react";
+import TreasuryPanel from "@/components/treasury-panel";
 import AgentControlCenter from "@/components/agent-control-center";
 import { BrandLogo } from "@/components/brand-logo";
 import { useRelayAuth, targetChain } from "@/context/privy-auth-context";
@@ -50,7 +51,7 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
       router.replace("/login?redirect=/dashboard");
     }
   }, [auth.ready, auth.authenticated, router]);
-  const [sample, setSample] = useState(true); // Default to true so user sees the rich interface immediately
+  const [sample, setSample] = useState(false);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<(typeof tasks)[number] | null>(null);
   const [copied, setCopied] = useState(false);
@@ -373,7 +374,8 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
           )}
 
           {/* OVERVIEW OR TASKS TAB */}
-          {(tab === "Overview" || tab === "Tasks") && (
+          {!sample && ["Overview", "Tasks", "Recovery"].includes(tab) && <TreasuryPanel />}
+          {sample && (tab === "Overview" || tab === "Tasks") && (
             <>
               {/* Metrics Grid */}
               <div className="dashboard-metrics-grid">

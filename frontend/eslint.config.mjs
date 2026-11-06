@@ -11,6 +11,7 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    "public/recovery/**", // generated standalone vendor bundle
     "next-env.d.ts",
     "**/._*",
   ]),

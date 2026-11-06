@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "network": "ephemeral local EVM 1337",
+  "checks": [
+    "actual React treasury panel",
+    "block-pinned balances and event timeline",
+    "consent required",
+    "assignment epoch increment",
+    "rejected approval does not cancel",
+    "receipt-confirmed cancel/release/withdraw",
+    "dashboard host stopped before direct recovery",
+    "pending reservation preserved until expiry"
+  ],
+  "withdrawnBeforeExpiry": "990",
+  "withdrawnAfterExpiry": "1000",
+  "liveFunds": false
+}

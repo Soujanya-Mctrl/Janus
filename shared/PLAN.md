@@ -2,11 +2,11 @@
 
 ## Current direction: research-task demo
 
-Follow [demo.md](../demo.md). Preserve the local payment-aware handoff, recorded Hedera payment/replay and independent recovery. Next connect authoritative treasury state and receipt-confirmed actions to the browser, integrate research-model execution with paid artifacts/checkpoints, and complete funded live Arkiv discovery evidence. Arkiv query results now drive operator-triggered eligible replacement selection; remote worker transport and browser orchestration remain separate. Dashboard agent creation, a single-host parallel research runtime, saved artifacts and account-private monitoring are now implemented. Paid research tools and authoritative treasury controls remain separate integration gates. No new sponsor acceptance is claimed.
+Follow [demo.md](../demo.md). Preserve the local payment-aware handoff, recorded Hedera payment/replay and independent recovery. Paid research handoff and authoritative browser treasury controls are implemented with bounded local acceptance. Next complete integrated release verification and funded live Arkiv discovery evidence. Arkiv query results now drive operator-triggered eligible replacement selection; remote worker transport and browser orchestration remain separate. Dashboard agent creation, a single-host parallel research runtime, saved artifacts and account-private monitoring are now implemented. Paid research tools are verified through trusted CLI bindings; treasury controls are connected to the browser. No new sponsor acceptance is claimed.
 
 ## Dashboard agent creation and monitoring
 
-The next implementation sequence is defined in [DASHBOARD_AGENTS.md](DASHBOARD_AGENTS.md): account-owned agent creation, durable parallel orchestration and monitoring, user-key model execution, payment-aware handoff, then Arkiv replacement and independent owner exit. The first three phases now have an implemented dashboard/runtime and offline/browser tests; live provider validation remains pending. See [DASHBOARD_RUNTIME.md](DASHBOARD_RUNTIME.md). Paid-tool wiring and discovery-driven research-run reassignment remain open.
+The next implementation sequence is defined in [DASHBOARD_AGENTS.md](DASHBOARD_AGENTS.md): account-owned agent creation, durable parallel orchestration and monitoring, user-key model execution, payment-aware handoff, then Arkiv replacement and independent owner exit. The first three phases now have an implemented dashboard/runtime and offline/browser tests; Groq provider execution is verified by the phase-five bounded demo. See [DASHBOARD_RUNTIME.md](DASHBOARD_RUNTIME.md). Paid-tool wiring is verified through trusted supervisor bindings; discovery-driven research-run reassignment remains open.
 
 ## Local orchestration
 
@@ -71,3 +71,7 @@ Implemented v2 profiles with execution-network/protocol filters, native block ex
 ## Phase 5 paid research acceptance
 
 Completed the bounded CLI research-to-paid-tool-to-replacement gate: separate worker processes, three paid task sources, confirmed onchain replacement, old-worker refusal and original transaction/artifact reuse. Five real Groq calls produced a final report; treasury transactions were local EVM fixtures. Evidence: [phase5-paid-research.json](evidence/phase5-paid-research.json). Reproduction and limitations: [PHASE5.md](PHASE5.md). Trusted supervisor bindings are implemented; connected dashboard financial controls, encrypted checkpoints and production scheduling remain separate gates. No new sponsor qualification is claimed.
+
+## Phase 6 authoritative treasury dashboard
+
+Overview/Tasks now default to validated chain reads, block-pinned balances, bounded event discovery and receipt-confirmed owner/scheduler actions. A separately downloadable static recovery copy is generated before frontend dev/build, with configurable RPC and no application dependency. Local Chromium acceptance covers actual dashboard actions and independent recovery with the dashboard server stopped; static wallet recovery has its own acceptance test. See [PHASE6.md](PHASE6.md). No manual live recovery, production readiness or new sponsor acceptance is claimed.

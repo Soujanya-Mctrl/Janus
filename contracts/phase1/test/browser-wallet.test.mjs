@@ -52,6 +52,8 @@ test('recovery browser checks wallet identity, rejection, consent, network and e
  await page.goto(`http://127.0.0.1:${server.address().port}`);await page.locator('#task').fill(task);await page.locator('#operations').fill(operation);
  const inspect=async()=>{await page.locator('#inspect').click();await page.waitForFunction(()=>!document.getElementById('inspect').disabled);assert.equal(await page.locator('#execute').isDisabled(),false,(await page.locator('#plan').textContent()).slice(0,600));};
  const execute=async()=>{await page.locator('#consent').check();await page.locator('#execute').click();await page.waitForFunction(()=>!document.getElementById('inspect').disabled);};
+ await page.locator('#rpc').fill('http://example.com');await page.locator('#inspect').click();await page.waitForFunction(()=>!document.getElementById('inspect').disabled);assert.match(await page.locator('#plan').textContent(),/Use HTTPS/);assert.equal(await page.locator('#execute').isDisabled(),true);
+ await page.locator('#rpc').fill(chain.rpcUrls.default.http[0]);
  await inspect();await page.locator('#execute').click();await page.waitForFunction(()=>document.getElementById('status').textContent.includes('acknowledge'));assert.equal(sends,0);
  await execute();assert.match(await page.locator('#status').textContent(),/not the owner/);assert.equal(sends,0);
  selected=addresses[0];wrongChain=true;await inspect();await execute();assert.match(await page.locator('#status').textContent(),/chain mismatch/);assert.equal(sends,0);

@@ -39,8 +39,8 @@ test('local EVM paid HTTP request survives response loss, restart and worker rep
  const authorization = encodeAuthorization(taskId, operationId, '1');
  await send(wallets[1], 'reserve', [taskId, operationId, requestHash(request), 20n, 1n, 1n, 300n]);
  let fail = true;
- const make = () => createTaskMerchant({ directory, publicClient, walletClient: wallets[3], manifest, price: '20',
-  produce: async () => { if (fail) throw new Error('Injected post-payment loss'); return { dataset: 'original' }; } });
+ const make = (options = {}) => createTaskMerchant({ directory, publicClient, walletClient: wallets[3], manifest, price: '20', confirmations: 1,
+  produce: async () => { if (fail) throw new Error('Injected post-payment loss'); return { dataset: 'original' }; }, ...options });
  let merchant = await make();
  const server = http.createServer((req, res) => taskMerchantHandler(merchant)(req, res));
  t.after(() => new Promise(resolve => { server.closeAllConnections(); server.close(resolve); }));
@@ -53,20 +53,24 @@ test('local EVM paid HTTP request survives response loss, restart and worker rep
  const read = (name, args = []) => publicClient.readContract({ address: treasury, abi, functionName: name, args });
  assert.equal(await read('totalSpent'), 20n);
  await send(wallets[0], 'assignWorker', [taskId, wallets[2].account.address]);
- fail = false; merchant = await make();
+ fail = false; merchant = await make({ logPageSize: 1n });
  assert.equal((await post('/purchase', { quote, authorization, request, principal: await principal(wallets[1]) })).status, 409);
  const recovered = await post('/purchase', { quote, authorization, request, principal: await principal(wallets[2]) });
  assert.equal(recovered.status, 200); const original = await recovered.json(); assert.equal(original.result, '{"dataset":"original"}');
  assert.equal((await post('/purchase', { quote, authorization, request: { ...request, amount: '21' }, principal: await principal(wallets[2]) })).status, 409);
  const again = await post('/purchase', { quote, authorization, request, principal: await principal(wallets[2]) });
  assert.deepEqual(await again.json(), original); assert.equal(await read('totalSpent'), 20n);
+ const awaitingFinality = await make({ confirmations: 1000000 });
+ await assert.rejects(() => principal(wallets[2]).then(principal => awaitingFinality.purchase({ authorization, request, principal })), /reconciliation/);
+ await assert.rejects(() => make({ confirmations: 0 }), /Invalid settlement policy/);
  assert.equal(await publicClient.readContract({ address: token, abi: tokenArtifact.abi, functionName: 'balanceOf', args: [wallets[3].account.address] }), 20n);
  // Lost local state is reconciled from the contract and original Paid log, never charged again.
  for (const name of await fs.readdir(directory)) await fs.unlink(path.join(directory, name));
- merchant = await make();
+ merchant = await make({ logPageSize: 1n });
  assert.equal((await post('/purchase', { quote, authorization, request, principal: await principal(wallets[2]) })).status, 409);
  assert.equal(await read('totalSpent'), 20n);
  await assert.rejects(() => publicClient.simulateContract({ account: wallets[1].account, address: treasury, abi, functionName: 'reserve', args: [taskId, keccak256(stringToHex('stale')), requestHash(request), 1n, 1n, 1n, 300n] }));
+ await assert.rejects(() => principal(wallets[2]).then(principal => merchant.purchase({ authorization, request, principal })), /owner decision/);
  assert.equal((await read('tasks', [other]))[1], 100n);
  const sdkArgs = { publicClient, walletClient: wallets[2], endpoint: `http://127.0.0.1:${server.address().port}`, taskId: other, stepId: 'verified-dataset', request, manifest };
  const sdkResult = await buyTaskDataset(sdkArgs);

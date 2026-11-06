@@ -37,7 +37,7 @@ test('four-task checkpointed handoff reuses a paid result and reconciles assignm
  const descriptor = JSON.parse(await fs.readFile(new URL('../../../shared/treasury-interface.json', import.meta.url), 'utf8'));
  const manifest = { interfaceVersion: descriptor.interfaceVersion, abiHash: descriptor.abiHash, mode: 'local', chainId: 1337,
   treasury, token, owner: wallets[0].account.address, runtimeCodeHash: keccak256(await publicClient.getBytecode({ address: treasury })) };
- const merchant = await createTaskMerchant({ directory: merchantDirectory, publicClient, walletClient: wallets[3], manifest, price: '20',
+ const merchant = await createTaskMerchant({ directory: merchantDirectory, publicClient, walletClient: wallets[3], manifest, price: '20', confirmations: 1,
   produce: async ({ request }) => ({ dataset: request.body.dataset }) });
  const server = http.createServer(taskMerchantHandler(merchant));
  t.after(() => new Promise(resolve => { server.closeAllConnections(); server.close(resolve); }));

@@ -21,7 +21,9 @@
     "hedera:verify-live": "node hedera/scripts/verify-live.mjs",
     "hedera:final-check": "node hedera/scripts/final-check.mjs",
     "task:serve": "node hedera/scripts/task-server.mjs",
-    "demo:handoff": "node runner/demo.mjs"
+    "demo:handoff": "node runner/demo.mjs",
+    "task:preflight": "node hedera/scripts/task-preflight.mjs",
+    "task:live": "node hedera/scripts/task-live.mjs"
   },
   "dependencies": {
     "@hiero-ledger/sdk": "2.90.1",

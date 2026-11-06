@@ -1,3 +1,4 @@
+import { transactionPolicy } from './transaction-policy.mjs';
 import { keccak256, stringToHex, verifyMessage, parseEventLogs } from 'viem';
 import { canonicalJson, baseUnits, decodeAuthorization } from '../../../shared/protocol.mjs';
 import { taskTreasuryAbi as abi } from './treasury.mjs';
@@ -8,8 +9,9 @@ export const requestHash = request => keccak256(stringToHex(canonicalJson(reques
 export const accessMessage = (authorization, request, expiresAt) => canonicalJson({ domain: 'janus-merchant-access/1', authorization, requestHash: requestHash(request), expiresAt });
 export const quoteMessage = quote => canonicalJson({ ...quote, domain: 'janus-merchant-quote/1' });
 
-export async function createTaskMerchant({ directory, publicClient, walletClient, manifest, produce, fromBlock = 0n, price = '20000', route = '/dataset' }) {
+export async function createTaskMerchant({ directory, publicClient, walletClient, manifest, produce, fromBlock = 0n, price = '20000', route = '/dataset', confirmations = 2, logPageSize = 1000n }) {
   await validateTreasury(publicClient, manifest);
+  if (!Number.isSafeInteger(confirmations) || confirmations < 1 || logPageSize < 1n || logPageSize > 10000n) throw new Error('Invalid settlement policy');
   const merchant = walletClient.account.address;
   const read = (name, args) => publicClient.readContract({ address: manifest.treasury, abi, functionName: name, args });
   const validate = async ({ identity, request }) => {
@@ -21,15 +23,27 @@ export async function createTaskMerchant({ directory, publicClient, walletClient
     if (!task[0] || task[7].toLowerCase() !== merchant.toLowerCase() || baseUnits(request.amount) > task[5]) throw new Error('Task policy mismatch');
     return task;
   };
-  const reconcile = async ({ identity, request }) => {
+  const reconcile = async ({ identity, request, knownReceipt }) => {
     await validate({ identity, request });
     const op = await read('getOperation', [identity.taskId, identity.operationId]);
     if (op.amount !== baseUnits(request.amount) || op.requestHash !== requestHash(request)) throw new Error('Reservation fingerprint mismatch');
     if (Number(op.status) === 2) {
-      const logs = await publicClient.getLogs({ address: manifest.treasury, event: abi.find(item => item.type === 'event' && item.name === 'Paid'),
-        args: { taskId: identity.taskId, operationId: identity.operationId }, fromBlock, toBlock: 'latest' });
-      const log = logs.find(log => log.args.amount === op.amount && log.args.attempt === op.attempt);
-      if (!log) return { status: 'unknown' };
+      let log;
+      if (knownReceipt?.transaction) {
+        const receipt = await publicClient.getTransactionReceipt({ hash: knownReceipt.transaction });
+        if (receipt.status !== 'success') return { status: 'unknown' };
+        log = parseEventLogs({ abi, logs: receipt.logs, eventName: 'Paid' }).find(item => item.address.toLowerCase() === manifest.treasury.toLowerCase() && item.args.taskId === identity.taskId && item.args.operationId === identity.operationId && item.args.amount === op.amount && item.args.attempt === op.attempt);
+      } else {
+        const latest = await publicClient.getBlockNumber();
+        for (let start = BigInt(fromBlock); start <= latest; start += logPageSize) {
+          const end = start + logPageSize - 1n;
+          const logs = await publicClient.getLogs({ address: manifest.treasury, event: abi.find(item => item.type === 'event' && item.name === 'Paid'),
+            args: { taskId: identity.taskId, operationId: identity.operationId }, fromBlock: start, toBlock: end < latest ? end : latest });
+          log = logs.find(item => item.args.amount === op.amount && item.args.attempt === op.attempt);
+          if (log) break;
+        }
+      }
+      if (!log || (await publicClient.getBlockNumber()) < log.blockNumber + BigInt(confirmations - 1)) return { status: 'unknown' };
       return { status: 'paid', receipt: { confirmed: true, transaction: log.transactionHash } };
     }
     if (Number(op.status) !== 1 || op.attempt !== BigInt(identity.attempt)) throw new Error('Reservation unavailable');
@@ -53,9 +67,9 @@ export async function createTaskMerchant({ directory, publicClient, walletClient
       if (observed.status === 'paid') return observed.receipt;
       if (observed.status !== 'unpaid') throw new Error('Payment outcome unknown');
       if (await walletClient.getChainId() !== manifest.chainId) throw new Error('Wallet chain mismatch');
-      const transaction = await walletClient.writeContract({ address: manifest.treasury, abi, functionName: 'executeTransfer',
+      const transaction = await walletClient.writeContract({ ...await transactionPolicy(publicClient, manifest.chainId), address: manifest.treasury, abi, functionName: 'executeTransfer',
         args: [manifest.treasury, manifest.token, merchant, baseUnits(request.amount), authorization] });
-      const receipt = await publicClient.waitForTransactionReceipt({ hash: transaction });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: transaction, confirmations });
       const paid = parseEventLogs({ abi, logs: receipt.logs, eventName: 'Paid' }).find(log => log.address.toLowerCase() === manifest.treasury.toLowerCase()
         && log.args.taskId === identity.taskId && log.args.operationId === identity.operationId && log.args.amount === baseUnits(request.amount));
       if (receipt.status !== 'success' || !paid) throw new Error('Settlement not confirmed');

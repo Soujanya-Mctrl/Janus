@@ -1,3 +1,4 @@
+import { transactionPolicy, merchantEndpoint } from './transaction-policy.mjs';
 import { validateTreasury } from '../../../contracts/phase1/lib/recovery.mjs';
 import { verifyMessage, parseEventLogs } from 'viem';
 import { createHash } from 'node:crypto';
@@ -6,6 +7,7 @@ import { taskTreasuryAbi as abi } from './treasury.mjs';
 import { accessMessage, quoteMessage, requestHash } from './task-merchant.mjs';
 
 export async function buyTaskDataset({ publicClient, walletClient, endpoint, taskId, stepId, request, manifest }) {
+ endpoint = merchantEndpoint(endpoint);
  await validateTreasury(publicClient, manifest);
  if (request.treasury.toLowerCase() !== manifest.treasury.toLowerCase() || request.token.toLowerCase() !== manifest.token.toLowerCase()) throw new Error('Client deployment mismatch');
  if (await publicClient.getChainId() !== Number(request.chainId) || await walletClient.getChainId() !== Number(request.chainId)) throw new Error('Client chain mismatch');
@@ -25,7 +27,7 @@ export async function buyTaskDataset({ publicClient, walletClient, endpoint, tas
    || baseUnits(quote.expiresAt) <= BigInt(Math.floor(Date.now() / 1000)) || !await verifyMessage({ address: request.merchant, message: quoteMessage(signed), signature })) throw new Error('Invalid quoted payment');
  if (Number(op.status) === 0 || Number(op.status) === 3) {
   const task = await read('tasks', [taskId]);
-  const hash = await walletClient.writeContract({ address: request.treasury, abi, functionName: 'reserve', args: [taskId, opId, requestHash(request), baseUnits(request.amount), task[8], attempt, 120n] });
+  const hash = await walletClient.writeContract({ ...await transactionPolicy(publicClient, manifest.chainId), address: request.treasury, abi, functionName: 'reserve', args: [taskId, opId, requestHash(request), baseUnits(request.amount), task[8], attempt, 120n] });
   const receipt = await publicClient.waitForTransactionReceipt({ hash });
   if (receipt.status !== 'success') throw new Error('Reservation failed');
  } else if (op.requestHash !== requestHash(request) || op.amount !== baseUnits(request.amount)) throw new Error('Operation conflict');

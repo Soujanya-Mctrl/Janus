@@ -104,7 +104,24 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="unified-dashboard-shell">
+    <div className="landing-body unified-dashboard-shell">
+      {/* Background Video with Apple Frosted Glass Filter */}
+      <div className="bg">
+        <video className="bg-video" autoPlay muted loop playsInline style={{ opacity: 0.18, filter: "blur(24px)" }}>
+          <source
+            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260809_012548_ef22562c-c0ae-4816-ad9d-f8922af4e6a7.mp4"
+            type="video/mp4"
+          />
+        </video>
+      </div>
+
+      {/* Floating Apple Liquid Glass Ambient Light Orbs */}
+      <div className="ambient-glass-canvas" aria-hidden="true">
+        <div className="glass-orb orb-violet" />
+        <div className="glass-orb orb-cyan" />
+        <div className="glass-orb orb-silver" />
+      </div>
+
       {/* Sidebar */}
       <aside className="unified-sidebar">
         <BrandLogo size="md" showTagline />

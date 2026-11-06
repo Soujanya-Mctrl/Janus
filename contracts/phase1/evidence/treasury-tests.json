@@ -2,7 +2,7 @@
   "status": "passed",
   "network": "LOCAL EVM ONLY",
   "compiler": "0.8.30+commit.73712a01.Emscripten.clang",
-  "generatedAt": "2026-11-06T13:34:12.128Z",
+  "generatedAt": "2026-11-06T14:12:23.192Z",
   "checks": [
     {
       "name": "canonical 1000-unit treasury: A handoff and recovery preserve B, C and D",
@@ -105,5 +105,5 @@
     "tokenBalance": "879000000",
     "withdrawalTransaction": "0x1ee69135c97ed2959d176796d6a582f3be0d1124420786b9bced233f7e647e77"
   },
-  "finishedAt": "2026-11-06T13:36:32.437Z"
+  "finishedAt": "2026-11-06T14:14:41.729Z"
 }

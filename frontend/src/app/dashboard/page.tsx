@@ -181,6 +181,8 @@ export default function Dashboard() {
 
         <span className="nav-group-label">WORKSPACE</span>
         <nav className="sidebar-nav-list" aria-label="Workspace navigation">
+          <Link href="/dashboard/agents" className="sidebar-nav-item"><GitBranch size={17} /><span>Agent workflow</span></Link>
+          <Link href="/dashboard/credentials" className="sidebar-nav-item"><LockKeyhole size={17} /><span>Provider credentials</span></Link>
           {[
             { name: "Overview", icon: LayoutDashboard },
             { name: "Tasks", icon: ListTodo },

@@ -29,6 +29,10 @@ Open http://localhost:3000. Copy `frontend/.env.example` to `frontend/.env.local
 
 The root package only orchestrates commands; it has no application dependencies. `npm install` at the root is not a substitute for `npm run setup`. Each module has its own lockfile and `node_modules/`. Install frontend dependencies locally. The Next.js resolution root includes the repository for shared configuration; this does not move dependencies or build output out of `frontend/`.
 
+## Docker Compose
+
+Run `docker compose up --build --wait` to start the frontend, task-aware backend and persistent local blockchain with automatically deployed contracts. Open http://localhost:3000. See [Docker setup](shared/DOCKER.md) for optional login configuration, SDK smoke checks and volume lifecycle.
+
 ## Verify
 
 ```sh

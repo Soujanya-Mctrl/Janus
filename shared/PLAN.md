@@ -1,5 +1,17 @@
 # Janus implementation plan
 
+## Agent workspace implementation
+
+The connected agent/credential UI, encrypted per-identity server vault, five provider adapters, assignment/budget forms, streamed worker events and saved-run resume are implemented. Arkiv schema/wallet directory code and sponsor documents, Hedera read-only checks, and an isolated CRE workflow/setup are prepared. Frontend/CRE types, lint, offline security/provider/runtime tests and the browser fixture smoke pass. Next: user account setup, actual provider/model calls, Arkiv testnet write/read evidence, official CRE CLI simulation and completed Hedera payment acceptance. No live trading or new sponsor qualification is claimed. Repository-wide Windows fsync/build-memory blockers still hold publication. See [WORKBENCH.md](WORKBENCH.md).
+
+## Paper-trading agent phase
+
+Parallel trading simulation now includes profit-only capped operating expenses, owner-configured free-cash reallocation, recovery after transfer debit/credit interruption and one bounded replacement for worker availability failures. Strategies, prices and expenses remain simulated; there are no real swaps, model integrations or provider payments. The connected agent UI is documented above; integration with task-aware treasury/handoff contracts remains a separate gate. Existing Windows fsync/build-memory failures continue to block publication acceptance. See [PAPER_TRADING.md](PAPER_TRADING.md).
+
+## Local orchestration
+
+Docker Compose starts the implemented frontend/backend/contracts together with persistent local chain and merchant state. SDK purchase/replay smoke verification is provided; connected dashboard and production process scheduling remain separate gates. See [DOCKER.md](DOCKER.md). No sponsor claim changes in this phase.
+
 ## Foundation completed
 
 Use top-level `backend/`, `frontend/`, `contracts/` and `shared/`. Keep separate dependency lockfiles, root orchestration commands, preserved proof evidence, and one current context set. Keep archived research distinct from implementation status.

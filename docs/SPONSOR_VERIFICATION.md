@@ -26,6 +26,10 @@ The [official requirements](https://ethglobal.com/events/mumbai/prizes/ethereum-
 
 The [official tracks](https://ethglobal.com/events/mumbai/prizes/arkiv) distinguish from-scratch and Continuity projects. Required evidence includes current-testnet writes and a user-visible feature reading them, writer wallets and a runnable query in README, an open-source license and AI disclosure, plus `/arkiv/schema.md`, `/arkiv/friction.md`, `/arkiv/reach.md`, `/arkiv/why-arkiv.md`, and `/arkiv/how-you-use-arkiv.md`. SDK installation or unread logs do not qualify. The four judging criteria have equal weight; we do not equate our completion measures with their scores. Continuity must identify pre-existing work and new integration.
 
+### Chainlink CRE: workflow preparation
+
+The [official CRE track](https://ethglobal.com/events/mumbai/prizes/chainlink) accepts a meaningful CRE CLI simulation connecting a blockchain to an external API/system/agent; deployment is optional. `backend/cre/` now contains a typed workflow reading a Sepolia token balance and Janus's public synthetic risk fixture. The SDK and configuration are installed/prepared, but no CLI account/simulation evidence exists. The account-pending UI is not proof of sponsor qualification. See [WORKBENCH.md](../shared/WORKBENCH.md). Sponsor selection and Classic/Continuity eligibility still require user/organizer verification.
+
 ### Event-wide provenance
 
 The [event rules](https://ethglobal.com/events/mumbai/info/details) distinguish Classic work begun after the event starts from Continuity upgrades, require transparent reuse and AI attribution with meaningful human contribution, and allow up to three partner selections. Preserve Git history, source/assets provenance and relevant spec/prompt artifacts. Verify the team's registered track and sponsor selections in the dashboard; repository dates alone cannot establish them. The published deadline is 7 November 2026, 09:00 IST; recheck the dashboard. A common sponsor video must respect the stricter three-minute EF limit.

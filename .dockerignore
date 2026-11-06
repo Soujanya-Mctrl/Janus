@@ -1,0 +1,16 @@
+**/node_modules
+**/.next
+**/artifacts
+**/.env*
+**/.merchant-state
+**/.runner-state
+**/*.tsbuildinfo
+.git
+.agents
+.codex
+.aws
+docs
+**/evidence
+!contracts/phase1/evidence
+!contracts/phase1/evidence/live-proof.json
+**/.workbench-state

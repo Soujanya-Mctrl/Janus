@@ -62,3 +62,6 @@ next-env.d.ts
 # Durable merchant/runner state (never delete while outcomes are unknown)
 **/.merchant-state/
 **/.runner-state/
+**/.paper-state/
+**/.workbench-state/
+/.tools/

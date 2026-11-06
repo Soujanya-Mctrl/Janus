@@ -1,0 +1,63 @@
+name: janus
+services:
+  contracts:
+    build:
+      context: .
+      target: services
+    command: ["node", "backend/docker/chain.mjs"]
+    init: true
+    ports:
+      - "127.0.0.1:${JANUS_RPC_PORT:-8545}:8545"
+    volumes:
+      - chain-data:/state
+    healthcheck:
+      test: ["CMD", "node", "backend/docker/health.mjs", "chain"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+  backend:
+    build:
+      context: .
+      target: services
+    init: true
+    depends_on:
+      contracts:
+        condition: service_healthy
+    environment:
+      JANUS_RPC_URL: http://contracts:8545
+    volumes:
+      - chain-data:/state:ro
+      - merchant-data:/merchant
+    ports:
+      - "127.0.0.1:${JANUS_BACKEND_PORT:-4023}:4023"
+    healthcheck:
+      test: ["CMD", "node", "backend/docker/health.mjs", "backend"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  frontend:
+    build:
+      context: .
+      target: frontend
+      args:
+        NEXT_PUBLIC_PRIVY_APP_ID: ${NEXT_PUBLIC_PRIVY_APP_ID:-}
+        NEXT_PUBLIC_PRIVY_CLIENT_ID: ${NEXT_PUBLIC_PRIVY_CLIENT_ID:-}
+        NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID:-}
+    init: true
+    environment:
+      PRIVY_VERIFICATION_KEY: ${PRIVY_VERIFICATION_KEY:-}
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${JANUS_FRONTEND_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+volumes:
+  chain-data:
+  merchant-data:

@@ -33,7 +33,7 @@ for (const file of files) {
   }
 }
 
-for (const module of ['', 'frontend/', 'backend/', 'contracts/']) {
+for (const module of ['', 'frontend/', 'backend/', 'contracts/', 'backend/cre/']) {
   try {
     const manifest = readJson(`${module}package.json`);
     const lock = readJson(`${module}package-lock.json`);

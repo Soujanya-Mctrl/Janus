@@ -10,6 +10,6 @@ const exported = { interfaceVersion: INTERFACE_VERSION, authorizationBytes: 96, 
 const output = JSON.stringify(exported, null, 2) + '\n';
 const target = new URL('../../../shared/treasury-interface.json', import.meta.url);
 if (process.argv.includes('--check')) {
-  assert.equal(fs.readFileSync(target, 'utf8'), output, 'Shared treasury interface is stale; review ABI/version then run npm run interface:export --prefix contracts');
+  assert.equal(fs.readFileSync(target, 'utf8').replace(/\r\n/g, '\n'), output, 'Shared treasury interface is stale; review ABI/version then run npm run interface:export --prefix contracts');
 } else fs.writeFileSync(target, output);
 console.log(`${process.argv.includes('--check') ? 'Verified' : 'Exported'} ${INTERFACE_VERSION} (${exported.abiHash})`);

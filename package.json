@@ -20,6 +20,8 @@
     "typecheck": "npm run typecheck --prefix frontend",
     "check": "npm run check:repo && npm run lint && npm run typecheck && npm run contracts:compile && npm test && npm run build",
     "test:protocol": "node --test shared/test/*.test.mjs",
-    "demo:handoff": "npm run demo:handoff --prefix backend"
+    "demo:handoff": "npm run demo:handoff --prefix backend",
+    "sponsors:check": "node scripts/check-sponsors.mjs",
+    "sponsors:ready": "node scripts/check-sponsors.mjs --require-ready"
   }
 }

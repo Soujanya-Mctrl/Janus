@@ -17,3 +17,5 @@ Current cross-module context, architecture and milestone gates live in `shared/R
 ## Phase synchronization workflow
 
 The user authorizes fetching upstream and pushing completed phases to `origin/main`. During active work, fetch `origin` and `upstream` before each phase and again before publishing a completed phase. Inspect incoming changes, integrate `upstream/main` and `origin/main` without discarding local work, resolve conflicts, and run checks appropriate to the resulting changes. Commit each completed phase with an accurate message and push `main` to `origin`. Never force-push or push to upstream. Do not commit credentials or generated caches. A rejected push requires fetching and integrating the new remote changes before retrying. Report blockers rather than publishing a broken phase. This workflow applies while actively working; it does not imply an unattended background service.
+
+The user authorizes unsigned commits for remaining phases whenever SSH signing is unavailable. Use a per-command signing override; do not change the global signing configuration.

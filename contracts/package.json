@@ -17,6 +17,7 @@
     "interface:export": "node phase1/scripts/export-interface.mjs",
     "interface:check": "node phase1/scripts/export-interface.mjs --check",
     "recovery:plan": "node phase1/scripts/recover.mjs",
+    "interface:direct-test": "node --no-wasm-tier-up --wasm-num-compilation-tasks=1 --test phase1/test/interface.test.mjs",
     "recovery:build": "node phase1/scripts/build-recovery.mjs",
     "recovery:test:browser": "node --test phase1/test/browser-wallet.test.mjs"
   },
@@ -30,3 +31,5 @@
     "viem": "2.57.16"
   }
 }
+
+

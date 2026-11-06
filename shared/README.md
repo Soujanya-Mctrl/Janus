@@ -6,4 +6,8 @@ This folder is the common context for frontend, backend, contracts and future co
 
 The root README owns setup instructions. Module READMEs own local usage. `docs/` holds reference research and historical records, not the current execution plan.
 
+Use [demo.md](../demo.md) for the presentation walkthrough, feature coverage and intended track mapping. It labels local proofs, recorded testnet evidence and planned integrations separately; it changes no sponsor verification claim.
+
 See [PAID_WORKFLOW.md](PAID_WORKFLOW.md) for the task-aware SDK, signed HTTP adapter, result durability and local proof boundaries.
+
+Use the [sponsor verification plan](../docs/SPONSOR_VERIFICATION.md) and [evidence register](../docs/evidence/sponsor-status.json) for every phase that changes a sponsor claim. Record measured outcomes, reviewer evidence and unresolved eligibility requirements.

@@ -4,6 +4,10 @@
 
 Follow [demo.md](../demo.md). Preserve the local payment-aware handoff, recorded Hedera payment/replay and independent recovery. Next connect authoritative treasury state and receipt-confirmed actions to the browser, integrate research-model execution with paid artifacts/checkpoints, and make Arkiv query results drive eligible replacement selection. Credential storage and research-role configuration remain preparation rather than an executable browser workflow. No new sponsor acceptance is claimed.
 
+## Dashboard agent creation and monitoring
+
+The next implementation sequence is defined in [DASHBOARD_AGENTS.md](DASHBOARD_AGENTS.md): account-owned agent creation, durable parallel orchestration and monitoring, user-key model execution, payment-aware handoff, then Arkiv replacement and independent owner exit. This is a plan, not an implemented browser runtime.
+
 ## Local orchestration
 
 Docker Compose starts the implemented frontend/backend/contracts together with persistent local chain and merchant state. SDK purchase/replay smoke verification is provided; connected dashboard and production process scheduling remain separate gates. See [DOCKER.md](DOCKER.md). No sponsor claim changes in this phase.

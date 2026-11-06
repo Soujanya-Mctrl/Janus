@@ -4,13 +4,13 @@ The workspace follows [demo.md](../demo.md): task-owned budgets, paid sources, c
 
 ## Current browser scope
 
-Start with root `npm run dev`; open `/dashboard/agents` or `/dashboard/credentials`. The workflow view explains the research-task demo and points to `npm run demo:handoff`. Sign in to save research responsibilities, model IDs and encrypted credentials. These settings do not execute models, allocate on-chain budgets or grant spending authority. The treasury dashboard remains illustrative. Browser run/resume controls and their execution API have been removed; unknown execution actions are rejected.
+Start with root `npm run dev`; open `/dashboard/agents` or `/dashboard/credentials`. The original unified dashboard now supports account-owned agent creation, model/key assignment and encrypted credentials. `/dashboard/runs` starts local fixtures or explicitly billable model research and monitors persisted events, actual worker processes, checkpoint reuse and reports. Pause/resume/cancel affect research execution only. Financial budgets/actions remain separate, and the treasury overview remains illustrative. See [DASHBOARD_RUNTIME.md](DASHBOARD_RUNTIME.md).
 
 The handoff command retains its real local-contract/HTTP fixture: four logical tasks, five unique purchases, 100 local base units spent and paid-result reuse after failure. It does not call a model or spend live funds. See [RUNNER.md](RUNNER.md), [PAID_WORKFLOW.md](PAID_WORKFLOW.md) and [RECOVERY.md](RECOVERY.md).
 
 ## Credentials and storage
 
-Configure Privy through `frontend/.env.local`. All workspace reads and writes require verified identity. Keys are encrypted with AES-256-GCM and identity-bound authenticated data; responses return metadata only. Supported provider adapters remain OpenAI, Anthropic, Gemini, OpenRouter and Groq. Saving a credential makes no provider call. Research-model execution remains an integration gate.
+Configure Privy through `frontend/.env.local`. All workspace reads and writes require verified identity. Keys are encrypted with AES-256-GCM and identity-bound authenticated data; responses return metadata only. Supported provider adapters remain OpenAI, Anthropic, Gemini, OpenRouter and Groq. Saving a credential makes no provider call. Provider calls are brokered through the research runtime; live model verification and paid research-tool integration remain open.
 
 `JANUS_VAULT_KEY` optionally supplies a server-only base64 encoding of 32 random bytes. Development otherwise creates an ignored `.workbench-state/vault/master.key`. Back up the key and vault together; production must inject the master key separately with private persistent storage and HTTPS. Never use `NEXT_PUBLIC_*` for private keys. `JANUS_WORKSPACE_ROOT` identifies the checkout; `JANUS_WORKBENCH_STATE_DIR` selects private state storage.
 

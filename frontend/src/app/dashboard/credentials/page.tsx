@@ -1,2 +1,2 @@
-import AgentWorkbench from '@/components/agent-workbench';
-export default function CredentialsPage() { return <AgentWorkbench initialView="credentials" />; }
+import Dashboard from "@/components/dashboard-shell";
+export default function CredentialsPage() { return <Dashboard initialTab="Credentials" />; }

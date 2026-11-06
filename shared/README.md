@@ -1,5 +1,7 @@
 # Shared Janus context
 
+Dashboard runtime: [DASHBOARD_RUNTIME.md](DASHBOARD_RUNTIME.md) covers agent creation, parallel research, provider brokerage and persisted monitoring in the original dashboard shell.
+
 Research workspace: [WORKBENCH.md](WORKBENCH.md) covers research-role configuration, encrypted provider keys and Hedera/Arkiv preparation. The current product story and runnable handoff are defined in [demo.md](../demo.md).
 
 

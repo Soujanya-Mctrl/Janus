@@ -2,7 +2,7 @@
 
 ## Research workspace boundary
 
-`frontend/src/components/agent-workbench.tsx` owns the research workflow overview, credentials, role configuration and Hedera/Arkiv preparation. `api/workbench` verifies Privy identity and stores encrypted credentials/configuration through `backend/workbench/store.mjs`; it cannot launch processes or execute runs. Fixed-endpoint model adapters remain available for future research integration but are not called by this endpoint. `backend/runner/` and `backend/hedera/` retain the paid task/checkpoint path described in [demo.md](../demo.md). Arkiv profiles advertise research capability without granting spending authority. See [WORKBENCH.md](WORKBENCH.md).
+`frontend/src/components/dashboard-shell.tsx` preserves the unified dashboard shell; `agent-control-center.tsx` owns agent creation, credentials, runs, monitoring and Hedera/Arkiv preparation. `api/workbench` verifies Privy identity and stores encrypted credentials/configuration through `backend/workbench/store.mjs`; it cannot launch processes or execute runs. The separate authenticated `api/research` route starts a detached fixed supervisor in `backend/workbench/`. It brokers fixed-endpoint model calls, manages separate worker processes and persists account-private events/artifacts; it does not submit financial transactions. See [DASHBOARD_RUNTIME.md](DASHBOARD_RUNTIME.md). `backend/runner/` and `backend/hedera/` retain the paid task/checkpoint path described in [demo.md](../demo.md). Arkiv profiles advertise research capability without granting spending authority. See [WORKBENCH.md](WORKBENCH.md).
 
 ## Container orchestration
 

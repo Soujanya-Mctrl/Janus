@@ -2,11 +2,11 @@
 
 ## Current direction: research-task demo
 
-Follow [demo.md](../demo.md). Preserve the local payment-aware handoff, recorded Hedera payment/replay and independent recovery. Next connect authoritative treasury state and receipt-confirmed actions to the browser, integrate research-model execution with paid artifacts/checkpoints, and complete funded live Arkiv discovery evidence. Arkiv query results now drive operator-triggered eligible replacement selection; remote worker transport and browser orchestration remain separate. Credential storage and research-role configuration remain preparation rather than an executable browser workflow. No new sponsor acceptance is claimed.
+Follow [demo.md](../demo.md). Preserve the local payment-aware handoff, recorded Hedera payment/replay and independent recovery. Next connect authoritative treasury state and receipt-confirmed actions to the browser, integrate research-model execution with paid artifacts/checkpoints, and complete funded live Arkiv discovery evidence. Arkiv query results now drive operator-triggered eligible replacement selection; remote worker transport and browser orchestration remain separate. Dashboard agent creation, a single-host parallel research runtime, saved artifacts and account-private monitoring are now implemented. Paid research tools and authoritative treasury controls remain separate integration gates. No new sponsor acceptance is claimed.
 
 ## Dashboard agent creation and monitoring
 
-The next implementation sequence is defined in [DASHBOARD_AGENTS.md](DASHBOARD_AGENTS.md): account-owned agent creation, durable parallel orchestration and monitoring, user-key model execution, payment-aware handoff, then Arkiv replacement and independent owner exit. This is a plan, not an implemented browser runtime.
+The next implementation sequence is defined in [DASHBOARD_AGENTS.md](DASHBOARD_AGENTS.md): account-owned agent creation, durable parallel orchestration and monitoring, user-key model execution, payment-aware handoff, then Arkiv replacement and independent owner exit. The first three phases now have an implemented dashboard/runtime and offline/browser tests; live provider validation remains pending. See [DASHBOARD_RUNTIME.md](DASHBOARD_RUNTIME.md). Paid-tool wiring and discovery-driven research-run reassignment remain open.
 
 ## Local orchestration
 

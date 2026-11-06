@@ -1,6 +1,6 @@
 # Dashboard-created research agents
 
-Status: implementation plan; agent execution and monitoring described below are not yet implemented. Follow [demo.md](../demo.md), preserving the existing paid-task handoff and independent recovery.
+Status: dashboard agent creation, a single-host parallel research supervisor, persisted monitoring and user-key provider brokerage are implemented; see [DASHBOARD_RUNTIME.md](DASHBOARD_RUNTIME.md). Live model validation, paid-tool wiring and research-worker discovery integration remain open. Follow [demo.md](../demo.md), preserving the existing paid-task handoff and independent recovery.
 
 ## Reference and product fit
 

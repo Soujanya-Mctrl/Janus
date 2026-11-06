@@ -1,0 +1,32 @@
+{
+  "network": "hedera:testnet",
+  "operation": "0x8cb0974fb77b37cd518cd72064d8427209d7e63f93f302b00dd846c68899ee2f",
+  "paymentPayload": {
+    "x402Version": 2,
+    "resource": {
+      "url": "http://127.0.0.1:4022/premium",
+      "description": "Hedera testnet USDC token metadata",
+      "mimeType": "application/json"
+    },
+    "accepted": {
+      "scheme": "exact",
+      "network": "hedera:testnet",
+      "amount": "20000",
+      "asset": "0.0.429274",
+      "payTo": "0.0.11339185",
+      "maxTimeoutSeconds": 120,
+      "extra": {
+        "assetTransferMethod": "transferExecutor",
+        "executors": [
+          "0.0.11339236"
+        ]
+      }
+    },
+    "payload": {
+      "payer": "0.0.11339236",
+      "executor": "0.0.11339236",
+      "authorization": "0x8cb0974fb77b37cd518cd72064d8427209d7e63f93f302b00dd846c68899ee2f"
+    }
+  },
+  "reservationTransaction": "0.0.11339183@1793968380.037476034"
+}

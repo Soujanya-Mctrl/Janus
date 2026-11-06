@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Nested package dependencies and generated output
+**/node_modules/
+**/.npm-cache/
+
+**/.next/
+**/coverage/
+**/out/
+**/build/
+**/.env*

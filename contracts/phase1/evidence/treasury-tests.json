@@ -1,0 +1,109 @@
+{
+  "status": "passed",
+  "network": "LOCAL EVM ONLY",
+  "compiler": "0.8.30+commit.73712a01.Emscripten.clang",
+  "generatedAt": "2026-11-06T13:34:12.128Z",
+  "checks": [
+    {
+      "name": "canonical 1000-unit treasury: A handoff and recovery preserve B, C and D",
+      "status": "passed"
+    },
+    {
+      "name": "budgets and per-operation limits cannot borrow from other tasks",
+      "status": "passed"
+    },
+    {
+      "name": "scheduler can assign workers but cannot alter money or owner policy",
+      "status": "passed"
+    },
+    {
+      "name": "same operation ID is task-scoped and exact payment fields cannot change",
+      "status": "passed"
+    },
+    {
+      "name": "expiry boundary and retry attempts fence old payment authorizations",
+      "status": "passed"
+    },
+    {
+      "name": "owner recovery protects reservations and releases expired funds from cancelled tasks",
+      "status": "passed"
+    },
+    {
+      "name": "released budget can fund a fresh task; unsolicited tokens do not inflate accounting",
+      "status": "passed"
+    },
+    {
+      "name": "invalid task policies and malformed reservations never change accounting",
+      "status": "passed"
+    },
+    {
+      "name": "non-exact tokens revert deposit/payment/withdrawal and preserve accounting",
+      "status": "passed"
+    }
+  ],
+  "liveDeployment": false,
+  "canonical": {
+    "taskA": {
+      "cap": "100000000",
+      "available": "0",
+      "reserved": "0",
+      "spent": "30000000",
+      "returned": "70000000",
+      "perOperationLimit": "100000000",
+      "worker": "0x22d491Bde2303f2f43325b2108D26f1eAbA1e32b",
+      "merchant": "0x95cED938F7991cd0dFcb48F0a06a40FA1aF46EBC",
+      "epoch": "3",
+      "cancelled": true
+    },
+    "otherTasks": [
+      {
+        "cap": "200000000",
+        "available": "195000000",
+        "reserved": "0",
+        "spent": "5000000",
+        "returned": "0",
+        "perOperationLimit": "100000000",
+        "worker": "0x22d491Bde2303f2f43325b2108D26f1eAbA1e32b",
+        "merchant": "0x3E5e9111Ae8eB78Fe1CC3bb8915d5D461F3Ef9A9",
+        "epoch": "1",
+        "cancelled": false
+      },
+      {
+        "cap": "150000000",
+        "available": "143000000",
+        "reserved": "0",
+        "spent": "7000000",
+        "returned": "0",
+        "perOperationLimit": "100000000",
+        "worker": "0xE11BA2b4D45Eaed5996Cd0823791E0C93114882d",
+        "merchant": "0x95cED938F7991cd0dFcb48F0a06a40FA1aF46EBC",
+        "epoch": "1",
+        "cancelled": false
+      },
+      {
+        "cap": "150000000",
+        "available": "141000000",
+        "reserved": "0",
+        "spent": "9000000",
+        "returned": "0",
+        "perOperationLimit": "100000000",
+        "worker": "0xd03ea8624C8C5987235048901fB614fDcA89b117",
+        "merchant": "0x3E5e9111Ae8eB78Fe1CC3bb8915d5D461F3Ef9A9",
+        "epoch": "1",
+        "cancelled": false
+      }
+    ],
+    "treasury": {
+      "deposited": "1000000000",
+      "unallocated": "400000000",
+      "totalAvailable": "479000000",
+      "totalReserved": "0",
+      "totalSpent": "51000000",
+      "totalWithdrawn": "70000000",
+      "accountedBalance": "879000000"
+    },
+    "tokenBalance": "879000000",
+    "withdrawalTransaction": "0x1ee69135c97ed2959d176796d6a582f3be0d1124420786b9bced233f7e647e77"
+  },
+  "finishedAt": "2026-11-06T13:36:32.437Z"
+}

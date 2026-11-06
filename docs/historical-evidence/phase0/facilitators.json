@@ -1,0 +1,54 @@
+{
+  "generatedAt": "2026-11-06T11:46:37.609Z",
+  "liveSettlementAttempted": false,
+  "results": [
+    {
+      "baseUrl": "https://x402.org/facilitator",
+      "status": "queried",
+      "kinds": [
+        {
+          "x402Version": 2,
+          "scheme": "exact",
+          "network": "hedera:testnet",
+          "extra": {
+            "feePayer": "0.0.9185802"
+          }
+        }
+      ],
+      "transferExecutorAdvertised": false,
+      "note": "Advertising the method does not admit our undeployed executor or prove live settlement."
+    },
+    {
+      "baseUrl": "https://testnet.facilitator.launa.dev",
+      "status": "queried",
+      "kinds": [
+        {
+          "x402Version": 2,
+          "scheme": "exact",
+          "network": "hedera:testnet",
+          "extra": {
+            "feePayer": "0.0.9839454"
+          }
+        }
+      ],
+      "transferExecutorAdvertised": false,
+      "note": "Advertising the method does not admit our undeployed executor or prove live settlement."
+    },
+    {
+      "baseUrl": "https://api.testnet.blocky402.com",
+      "status": "queried",
+      "kinds": [
+        {
+          "x402Version": 2,
+          "scheme": "exact",
+          "network": "hedera:testnet",
+          "extra": {
+            "feePayer": "0.0.7162784"
+          }
+        }
+      ],
+      "transferExecutorAdvertised": false,
+      "note": "Advertising the method does not admit our undeployed executor or prove live settlement."
+    }
+  ]
+}

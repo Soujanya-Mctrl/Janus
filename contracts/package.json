@@ -1,0 +1,25 @@
+{
+  "name": "@janus/contracts",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "phase0:compile": "node --no-wasm-tier-up --wasm-num-compilation-tasks=1 phase0/scripts/compile.mjs",
+    "phase0:test": "node --no-wasm-tier-up --wasm-num-compilation-tasks=1 --test --test-concurrency=1 phase0/test/payment.test.mjs",
+    "phase0:probe": "node phase0/scripts/probe-facilitators.mjs",
+    "phase1:compile": "node --no-wasm-tier-up --wasm-num-compilation-tasks=1 phase1/scripts/compile.mjs",
+    "phase1:test": "node --no-wasm-tier-up --wasm-num-compilation-tasks=1 --test --test-concurrency=1 phase1/test/treasury.test.mjs",
+    "phase1:live": "node phase1/scripts/live-proof.mjs",
+    "test": "npm run phase0:test && npm run phase1:test"
+  },
+  "devDependencies": {
+    "@hiero-ledger/sdk": "2.90.1",
+    "@openzeppelin/contracts": "5.4.0",
+    "ganache": "7.9.2",
+    "solc": "0.8.30",
+    "viem": "2.57.16"
+  }
+}

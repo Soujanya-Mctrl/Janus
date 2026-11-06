@@ -1,0 +1,32 @@
+{
+  "status": "not_run",
+  "schemaVersion": "0.1",
+  "runId": null,
+  "startedAtUtc": null,
+  "sourceCommit": null,
+  "dirtyWorktree": null,
+  "system": null,
+  "hardware": { "os": null, "cpu": null, "ramGiB": null },
+  "toolVersions": { "node": null, "pnpm": null, "foundry": null, "solc": null, "postgres": null },
+  "dependencyLockHash": null,
+  "chain": {
+    "mode": null,
+    "chainId": null,
+    "rpcRedacted": null,
+    "contractAddress": null,
+    "runtimeBytecodeHash": null,
+    "tokenAddress": null,
+    "tokenId": null,
+    "tokenDecimals": null,
+    "finalityPolicy": null
+  },
+  "payment": { "x402SourceCommit": null, "scheme": null, "assetTransferMethod": null, "facilitatorBuild": null },
+  "workload": { "taskGraphHash": null, "fixtureHash": null, "pricesHash": null, "concurrency": null },
+  "fault": { "scenarioId": null, "seed": null, "injectionPoint": null },
+  "model": { "enabled": false, "provider": null, "identifier": null, "promptHash": null, "samplingParameters": null },
+  "statistics": { "bootstrapSeed": null, "confidenceLevel": 0.95 },
+  "rawEventsPath": null,
+  "receiptPaths": [],
+  "outputValidation": null,
+  "exitCode": null
+}

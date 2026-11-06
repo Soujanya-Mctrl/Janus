@@ -35,17 +35,6 @@ export default function LoginPage() {
             type="video/mp4"
           />
         </video>
-        <div className="bg-overlay" />
-      </div>
-
-      {/* Top Corner HUD */}
-      <div className="corner-hud top-left desktop-only">
-        <span className="hud-code">00 00 000</span>
-        <span>AUTH GATEWAY // TESTNET</span>
-      </div>
-      <div className="corner-hud top-right desktop-only">
-        <span className="hud-code">000000</span>
-        <span>HEDERA 296 · SEPOLIA</span>
       </div>
 
       {/* Login Shell */}

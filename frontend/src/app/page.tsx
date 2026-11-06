@@ -234,17 +234,6 @@ export default function Home() {
             type="video/mp4"
           />
         </video>
-        <div className="bg-overlay" />
-      </div>
-
-      {/* Top Corner HUD elements */}
-      <div className="corner-hud top-left desktop-only">
-        <span className="hud-code">00 00 000</span>
-        <span>HEDERA // TESTNET 296</span>
-      </div>
-      <div className="corner-hud top-right desktop-only">
-        <span className="hud-code">000000</span>
-        <span>SEPOLIA // 11155111</span>
       </div>
 
       {/* ====================================================================

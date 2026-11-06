@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { PrivyProvider, usePrivy, useWallets, useLogin } from "@privy-io/react-auth";
 import network from "../../../shared/network.json";
-import { defineChain, formatEther } from "viem";
+import { defineChain, formatEther, type EIP1193Provider } from "viem";
 
 export const targetChain = defineChain({ ...network, id: network.chainId });
 type AuthState = {
@@ -18,12 +18,16 @@ type AuthState = {
   wallets: { address: string; walletClientType: string }[];
   switchNetwork: () => Promise<void>; refresh: () => Promise<void>;
   verifySession: () => Promise<void>; exportWallet: () => Promise<void>;
+  getAccessToken: () => Promise<string | null>;
+  getWalletProvider: () => Promise<Pick<EIP1193Provider, "request"> | null>;
 };
 const empty: AuthState = {
   configured: false, ready: true, authenticated: false, user: null,
   walletAddress: null, walletType: null, chainId: null, balance: null, error: null, session: "idle",
   login: () => {}, logout: async () => {}, connectWallet: () => {}, selectWallet: () => {},
   wallets: [], switchNetwork: async () => {}, refresh: async () => {}, verifySession: async () => {}, exportWallet: async () => {},
+  getAccessToken: async () => null,
+  getWalletProvider: async () => null,
 };
 const AuthContext = createContext<AuthState>(empty);
 export const useRelayAuth = () => useContext(AuthContext);
@@ -99,7 +103,9 @@ function PrivyBridge({ children }: { children: ReactNode }) {
     connectWallet: () => privy.connectWallet({
       walletList: ["detected_ethereum_wallets", "metamask", "coinbase_wallet", "rainbow", "wallet_connect"],
     }),
-    selectWallet, switchNetwork, refresh, verifySession, exportWallet,
+    selectWallet, switchNetwork, refresh, verifySession, exportWallet, getAccessToken,
+    // Privy and viem expose different generic declarations for the same EIP-1193 request interface.
+    getWalletProvider: async () => wallet ? await wallet.getEthereumProvider() as unknown as Pick<EIP1193Provider, 'request'> : null,
   }}>{children}</AuthContext.Provider>;
 }
 

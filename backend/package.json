@@ -7,7 +7,10 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test hedera/test/*.test.mjs",
+    "test": "node --test hedera/test/*.test.mjs trading/*.test.mjs workbench/*.test.mjs",
+    "test:workbench": "node --test workbench/*.test.mjs",
+    "test:trading": "node --test trading/*.test.mjs",
+    "demo:trading": "node trading/demo.mjs",
     "hedera:init": "node hedera/scripts/init.mjs",
     "hedera:preflight": "node hedera/scripts/preflight.mjs",
     "hedera:status": "node hedera/scripts/status.mjs",

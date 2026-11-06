@@ -1,0 +1,8 @@
+{
+  "schedule": "*/30 * * * * *",
+  "riskApiUrl": "http://localhost:3000/api/risk",
+  "chainName": "ethereum-testnet-sepolia",
+  "tokenAddress": "",
+  "ownerAddress": "",
+  "operatingCost": "500000"
+}

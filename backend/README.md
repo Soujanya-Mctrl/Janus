@@ -1,5 +1,9 @@
 # Janus backend
 
+Agent workspace server libraries live in `workbench/`; run root `npm run test:workbench`. CRE has its own module under `cre/`. See [WORKBENCH.md](../shared/WORKBENCH.md) for frontend execution, encrypted credentials and deferred account setup.
+
+Parallel trading simulation: root `npm run demo:trading` demonstrates concurrent workers, task budgets, profit-funded simulated operating fees, recovery and free-cash reallocation. `npm run test:trading` runs offline regressions. See [PAPER_TRADING.md](../shared/PAPER_TRADING.md). No model provider, network call, real payment or real trade is involved.
+
 Hedera merchant/facilitator and settlement verification. Run `npm ci` here or root `npm run setup`. Run `npm test` for offline settlement validation. Testnet secrets belong in ignored `.env.hedera` here. Live scripts require dedicated testnet accounts and may spend testnet funds.
 
 `.env.hedera.example` contains secret-free configuration names. `npm run hedera:init` generates dedicated testnet keys only if `.env.hedera` does not already exist. Live deployment records and payment journals are tied to their original accounts; changing keys does not create a fresh deployment.

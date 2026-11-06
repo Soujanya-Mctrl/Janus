@@ -1,5 +1,13 @@
 # Janus product and current context
 
+## Connected agent workspace
+
+`/dashboard/agents` and `/dashboard/credentials` now connect to the paper worker runtime through authenticated server routes. Users can save encrypted keys for OpenAI, Anthropic, Gemini, OpenRouter and Groq; assign model IDs and responsibilities; run the credential-free fixture or explicitly billable model proposals; and resume a saved run without repeating known inference. Arkiv wallet profile/read code, read-only Hedera checks and a typed CRE risk workflow are implemented. Sponsor accounts and live verification are deliberately deferred at the user's request. The existing treasury dashboard remains illustrative. See [WORKBENCH.md](WORKBENCH.md).
+
+## Paper-trading prototype
+
+`backend/trading/` simulates parallel bot workers under an orchestrator, with task-owned budgets and replay-safe replacement. Net realized pool and task profits can fund capped simulated operating bills; pinned rules can move free cash between tasks after worker failure without moving open positions. Transfer intents recover after either debit or credit interruption. Root `demo:trading` and `test:trading` use synthetic strategies/prices without credentials, network, model providers or real trading. This changes no sponsor claim. See [PAPER_TRADING.md](PAPER_TRADING.md).
+
 Janus is the current project name. RelayBudget is the original research/prototype name retained in source provenance and historical evidence.
 
 ## Product

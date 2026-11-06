@@ -84,7 +84,7 @@ test('four-task checkpointed handoff reuses a paid result and reconciles assignm
  assert.equal((await makeRunner('A').run({ walletClient: wallets[2] })).completed.length, 2);
  assert.equal(await read('totalSpent'), 100n);
  await assert.rejects(() => makeRunner('A', [{ ...steps.A[0], id: 'incompatible' }]).inspect(), /incompatible/);
- const checkpoint = (await fs.readdir(runnerDirectory)).find(name => name.endsWith('.json'));
+ const checkpoint = (await fs.readdir(runnerDirectory)).find(name => /^[a-f0-9]{64}\.json$/.test(name));
  const original = await fs.readFile(path.join(runnerDirectory, checkpoint), 'utf8');
  await fs.writeFile(path.join(runnerDirectory, checkpoint), '{corrupt');
  const envelopes = await fs.readdir(runnerDirectory);

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import {
   ArrowUpRight,
@@ -39,7 +40,14 @@ const short = (value: string) => `${value.slice(0, 6)}…${value.slice(-4)}`;
 
 export default function Dashboard() {
   const auth = useRelayAuth();
+  const router = useRouter();
   const [tab, setTab] = useState("Overview");
+
+  useEffect(() => {
+    if (auth.ready && !auth.authenticated) {
+      router.replace("/login?redirect=/dashboard");
+    }
+  }, [auth.ready, auth.authenticated, router]);
   const [sample, setSample] = useState(true); // Default to true so user sees the rich interface immediately
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<(typeof tasks)[number] | null>(null);
@@ -101,6 +109,42 @@ export default function Dashboard() {
     link.download = "janus-accounting-example.json";
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  if (!auth.ready || !auth.authenticated) {
+    return (
+      <div className="landing-body" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="bg">
+          <video className="bg-video" autoPlay muted loop playsInline style={{ opacity: 0.18, filter: "blur(24px)" }}>
+            <source
+              src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260809_012548_ef22562c-c0ae-4816-ad9d-f8922af4e6a7.mp4"
+              type="video/mp4"
+            />
+          </video>
+        </div>
+        <div
+          style={{
+            zIndex: 10,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "16px",
+            padding: "36px 44px",
+            background: "rgba(18, 18, 22, 0.8)",
+            border: "1px solid rgba(255, 255, 255, 0.16)",
+            borderRadius: "24px",
+            backdropFilter: "blur(24px)",
+            boxShadow: "0 24px 60px rgba(0, 0, 0, 0.65)",
+          }}
+        >
+          <div style={{ width: "36px", height: "36px", border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "#ffffff", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+          <div style={{ textAlign: "center" }}>
+            <h3 style={{ color: "#ffffff", fontSize: "16px", margin: 0, fontWeight: 600 }}>Authenticating Sovereign Access</h3>
+            <p style={{ color: "#a1a1aa", fontSize: "12px", margin: "6px 0 0" }}>Redirecting to secure login…</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

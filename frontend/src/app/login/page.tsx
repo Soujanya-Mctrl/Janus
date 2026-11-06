@@ -21,7 +21,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (auth.ready && auth.authenticated) {
-      router.replace("/dashboard");
+      const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+      const target = params?.get("redirect") || "/dashboard";
+      router.replace(target);
     }
   }, [auth.ready, auth.authenticated, router]);
 

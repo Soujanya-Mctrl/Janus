@@ -258,17 +258,25 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
           <div className="topbar-actions">
             <div className="network-status-badge">
               <span className="status-dot-white" />
-              <span>Hedera Testnet (296)</span>
+              <span className="network-badge-full">Hedera Testnet (296)</span>
+              <span className="network-badge-short">Hedera 296</span>
+              <span className="network-badge-micro">296</span>
             </div>
 
             {auth.authenticated ? (
-              <button type="button" className="btn-secondary-pill" style={{ padding: "8px 16px", fontSize: "12px" }} onClick={() => setTab("Wallet")}>
+              <button
+                type="button"
+                className="btn-secondary-pill topbar-wallet-btn"
+                style={{ fontSize: "12px" }}
+                onClick={() => setTab("Wallet")}
+              >
                 <Wallet size={14} />
                 <span>{auth.walletAddress ? short(auth.walletAddress) : "Wallet"}</span>
               </button>
             ) : (
-              <Link href="/login" className="cta" style={{ padding: "8px 18px", fontSize: "12px", marginTop: 0 }}>
-                <span>Connect wallet</span>
+              <Link href="/login" className="cta topbar-cta-btn" style={{ fontSize: "12px", marginTop: 0 }}>
+                <span className="cta-label-full">Connect wallet</span>
+                <span className="cta-label-short">Connect</span>
                 <ArrowUpRight size={14} />
               </Link>
             )}
@@ -277,14 +285,22 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
 
         {/* Mode Banner */}
         <div className="dashboard-mode-strip">
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div className="mode-strip-indicator">
             <span className="status-dot-white" />
-            <span>{["Agents", "Runs", "Credentials", "Integrations"].includes(tab) ? "RESEARCH WORKSPACE · PROVIDER BILLING SEPARATE FROM TOOL PAYMENTS" : sample ? "ILLUSTRATIVE ACCOUNTING FIXTURE · MOCK BASE UNITS" : "TESTNET · TREASURY PROJECTION NOT CONNECTED"}</span>
+            <span className="mode-strip-label">
+              {["Agents", "Runs", "Credentials", "Integrations"].includes(tab)
+                ? "RESEARCH WORKSPACE · PROVIDER BILLING SEPARATE FROM TOOL PAYMENTS"
+                : sample
+                ? "ILLUSTRATIVE ACCOUNTING FIXTURE · MOCK BASE UNITS"
+                : "TESTNET · TREASURY PROJECTION NOT CONNECTED"}
+            </span>
           </div>
-          {!["Agents", "Runs", "Credentials", "Integrations"].includes(tab) && <button type="button" className="mode-toggle-link" onClick={() => setSample(!sample)}>
-            <span>{sample ? "Exit fixture view" : "Explore live fixture"}</span>
-            <ArrowRight size={13} />
-          </button>}
+          {!["Agents", "Runs", "Credentials", "Integrations"].includes(tab) && (
+            <button type="button" className="mode-toggle-link" onClick={() => setSample(!sample)}>
+              <span>{sample ? "Exit fixture view" : "Explore live fixture"}</span>
+              <ArrowRight size={13} />
+            </button>
+          )}
         </div>
 
         {/* Page Content */}
@@ -320,7 +336,7 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
             </div>
 
             {sample && (tab === "Overview" || tab === "Tasks") && (
-              <button type="button" className="btn-secondary-pill" onClick={exportExample}>
+              <button type="button" className="btn-secondary-pill dashboard-export-btn" onClick={exportExample}>
                 <Download size={14} />
                 <span>Export fixture</span>
               </button>
@@ -457,8 +473,8 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
               )}
 
               {/* Task Budgets Table */}
-              <div className="spotlight-card" style={{ marginTop: "24px", padding: 0 }}>
-                <div style={{ padding: "24px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="spotlight-card dashboard-table-card" style={{ marginTop: "24px", padding: 0 }}>
+                <div className="dashboard-table-header" style={{ padding: "24px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                   <div>
                     <h3 style={{ fontSize: "18px", color: "#ffffff", margin: "0 0 4px" }}>
                       Task Budgets <span className="hash-tag" style={{ marginLeft: "8px" }}>{sample ? 4 : 0} ACTIVE</span>
@@ -466,7 +482,7 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
                     <small style={{ color: "#777777" }}>Bounded spending authority for each piece of work.</small>
                   </div>
 
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "999px", padding: "6px 14px" }}>
+                  <div className="dashboard-search-box" style={{ display: "flex", alignItems: "center", gap: "10px", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "999px", padding: "6px 14px" }}>
                     <Search size={14} style={{ color: "#777777" }} />
                     <input
                       aria-label="Search tasks"
@@ -478,8 +494,8 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
                   </div>
                 </div>
 
-                <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13px" }}>
+                <div className="dashboard-table-scroll" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13px", minWidth: "620px" }}>
                     <thead>
                       <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", color: "#777777", textTransform: "uppercase", fontSize: "10px", letterSpacing: "1px" }}>
                         <th style={{ padding: "14px 28px" }}>Task</th>
@@ -532,7 +548,7 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
                   </table>
                 </div>
 
-                <div style={{ padding: "16px 28px", borderTop: "1px solid rgba(255,255,255,0.08)", fontSize: "11px", color: "#777777", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div className="dashboard-table-footer" style={{ padding: "16px 28px", borderTop: "1px solid rgba(255,255,255,0.08)", fontSize: "11px", color: "#777777", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span>State invariant verified: Cap = Available + Reserved + Spent</span>
                   <span>Hedera Testnet 296</span>
                 </div>
@@ -576,9 +592,9 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
                 </div>
 
                 {auth.walletAddress && (
-                  <div style={{ margin: "24px 0", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "12px", padding: "14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
-                    <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#e0e0e0" }}>{auth.walletAddress}</span>
-                    <div style={{ display: "flex", gap: "8px" }}>
+                  <div className="dashboard-wallet-address-box" style={{ margin: "24px 0", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "12px", padding: "14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+                    <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#e0e0e0", wordBreak: "break-all", minWidth: 0 }}>{auth.walletAddress}</span>
+                    <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
                       <button type="button" className="btn-secondary-pill" style={{ padding: "6px 10px" }} onClick={() => void copyAddress()}>
                         {copied ? <Check size={14} /> : <Copy size={14} />}
                       </button>

@@ -628,8 +628,13 @@ export default function Home() {
                     startTransition(() => {
                       setActiveNav(item.name);
                       setMenuOpen(false);
-                      const targetEl = document.querySelector(item.href);
-                      targetEl?.scrollIntoView({ behavior: "smooth" });
+                      const lenis = (window as unknown as { __lenis?: Lenis }).__lenis;
+                      if (lenis) {
+                        lenis.scrollTo(item.href, { offset: -20, duration: 1.2 });
+                      } else {
+                        const targetEl = document.querySelector(item.href);
+                        targetEl?.scrollIntoView({ behavior: "smooth" });
+                      }
                     });
                   }}
                 >
@@ -1211,7 +1216,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="features-grid" style={{ gridTemplateColumns: "1.4fr 1fr" }}>
+          <div className="features-grid telemetry-grid">
             {/* Wave Chart Card */}
             <div className="spotlight-card">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "16px" }}>
@@ -1704,7 +1709,7 @@ export default function Home() {
           </div>
 
           {/* Recovery Terminal Card */}
-          <div style={{ marginTop: "32px", background: "rgba(10,10,12,0.8)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "20px", padding: "28px" }}>
+          <div className="recovery-terminal-card">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <IconTerminal size={18} color="#e4e4e7" />
@@ -1742,7 +1747,7 @@ npm run recovery:plan -- ../shared/deployments/hedera-testnet.json TASK_ID OP_ID
             </p>
           </div>
 
-          <div className="milestones-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+          <div className="milestones-grid">
             <div className="milestone-card">
               <span className="milestone-status">Phase 0 Verified</span>
               <h4>Bounded Spend Core</h4>

@@ -20,7 +20,7 @@ export interface ArkivProfileRecord {
 
 export interface WorkerProfile {
   entityKey: string;
-  owner?: string;
+  owner: string;
   expiresAt: string;
   validUntil: string;
   worker: string;
@@ -42,7 +42,7 @@ export async function listArkivWorkers(): Promise<WorkerProfile[]> {
       eq('network', `eip155:${network.chainId}`), eq('scheme', spec.scheme), gt('validUntil', u64(BigInt(Math.floor(Date.now() / 1000)))))).limit(20).fetch();
   const entities = result.entities as unknown as ArkivProfileRecord[];
   return entities.filter(row => row.$owner?.toLowerCase() === row.worker.value.toLowerCase() && row.$expiresAt !== undefined && row.$expiresAt > block)
-    .map(row => ({ entityKey: row.$key, owner: row.$owner, expiresAt: String(row.$expiresAt), validUntil: String(row.validUntil.value),
+    .map(row => ({ entityKey: row.$key, owner: row.$owner ?? '', expiresAt: String(row.$expiresAt), validUntil: String(row.validUntil.value),
     worker: row.worker.value, role: row.role.value, status: row.status.value, capabilities: row.capabilities.value, name: row.name.value }));
 }
 export async function registerArkivWorker(provider: Pick<EIP1193Provider, 'request'>, address: Address, name: string) {

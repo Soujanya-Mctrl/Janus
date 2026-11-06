@@ -45,7 +45,7 @@ export function BlurText({
   const elements = animateBy === "words" ? text.split(" ") : text.split("");
 
   return (
-    <span ref={containerRef} className={`blur-text-wrapper inline-block ${className}`} style={style}>
+    <span ref={containerRef} className={`blur-text-wrapper ${className}`} style={{ textAlign: "inherit", ...style }}>
       {elements.map((segment, index) => {
         const offset = direction === "top" ? "-8px" : "8px";
         const delayMs = index * delay;

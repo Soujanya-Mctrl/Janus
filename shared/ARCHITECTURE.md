@@ -68,3 +68,7 @@ A standalone static recovery page now shares the CLI recovery core and builds th
 ## Arkiv discovery boundary
 
 `backend/arkiv/` owns the independent SDK client, publication/query CLI, policy/readiness selection and runner integration. `shared/arkiv-worker.json` defines v2 constants consumed by frontend/backend. Arkiv owns public, wallet-owned availability records; checkpoint storage owns private progress, and the treasury owns authority and money. Native expiry uses blocks; the availability lease uses Unix seconds. Queries supply candidates, owner policy authorizes them, worker signatures establish current readiness and the owner/scheduler assigns through the treasury. No-result waiting, fail-closed unavailable reads and offline reconciliation are tested. The explicit live demo uses real Rabdi discovery with local treasury/payments, not a combined live deployment. See [ARKIV.md](ARKIV.md).
+
+## Phase 5 paid research acceptance
+
+Completed the bounded CLI research-to-paid-tool-to-replacement gate: separate worker processes, three paid task sources, confirmed onchain replacement, old-worker refusal and original transaction/artifact reuse. Five real Groq calls produced a final report; treasury transactions were local EVM fixtures. Evidence: [phase5-paid-research.json](evidence/phase5-paid-research.json). Reproduction and limitations: [PHASE5.md](PHASE5.md). Trusted supervisor bindings are implemented; connected dashboard financial controls, encrypted checkpoints and production scheduling remain separate gates. No new sponsor qualification is claimed.

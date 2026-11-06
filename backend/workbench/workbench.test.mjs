@@ -38,7 +38,7 @@ test('tampered vault and missing encryption configuration fail closed', async t 
   await assert.rejects(createWorkbenchStore(directory, 'short').list('did:privy:owner'), /32 bytes/);
 });
 test('popular providers use fixed endpoints and return sanitized metadata', async () => {
-  for (const provider of ['openai', 'anthropic', 'gemini', 'openrouter', 'groq']) {
+  for (const provider of ['openai', 'anthropic', 'gemini', 'openrouter', 'groq', 'nvidia']) {
     const result = await callProvider({ credential: { provider, key: 'fixture-private-key' }, model: 'fixture-model', prompt: 'research task',
       fetchImpl: async (endpoint, options) => {
         assert.ok(endpoint.startsWith('https://')); assert.ok(!endpoint.includes('fixture-private-key'));

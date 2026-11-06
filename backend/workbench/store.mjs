@@ -48,7 +48,7 @@ export function createWorkbenchStore(directory, configuredKey = process.env.JANU
   return {
     async list(user) { return (await load(user)).credentials.map(metadata); },
     async saveCredential(user, { provider, label, key }) {
-      if (!['openai', 'anthropic', 'gemini', 'openrouter', 'groq'].includes(provider) || typeof label !== 'string' || !label.trim() || label.length > 60
+      if (!['openai', 'anthropic', 'gemini', 'openrouter', 'groq', 'nvidia'].includes(provider) || typeof label !== 'string' || !label.trim() || label.length > 60
         || typeof key !== 'string' || key.length < 16 || key.length > 4096 || /\s/.test(key)) throw new Error('Enter a provider, label and valid API key');
       return mutate(user, state => {
         if (state.credentials.length >= 12) throw new Error('Credential limit reached');

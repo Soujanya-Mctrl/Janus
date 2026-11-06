@@ -18,7 +18,7 @@ const initial: Config = { workflow: 'research-v1', agents: [
   { id: 'gamma', name: 'Gamma', responsibility: 'Review evidence and assemble the research report.', credentialId: '', model: '' },
 ] };
 const providers = [{ id: 'openai', name: 'OpenAI', url: 'https://platform.openai.com/api-keys' }, { id: 'anthropic', name: 'Anthropic', url: 'https://console.anthropic.com/' },
-  { id: 'gemini', name: 'Google Gemini', url: 'https://aistudio.google.com/apikey' }, { id: 'openrouter', name: 'OpenRouter', url: 'https://openrouter.ai/keys' }, { id: 'groq', name: 'Groq', url: 'https://console.groq.com/keys' }];
+  { id: 'gemini', name: 'Google Gemini', url: 'https://aistudio.google.com/apikey' }, { id: 'openrouter', name: 'OpenRouter', url: 'https://openrouter.ai/keys' }, { id: 'groq', name: 'Groq', url: 'https://console.groq.com/keys' }, { id: 'nvidia', name: 'NVIDIA NIM', url: 'https://build.nvidia.com/' }];
 export default function AgentWorkbench({ initialView = 'workflow' }: { initialView?: View }) {
   const auth = useRelayAuth();
   const { authenticated, getAccessToken } = auth;

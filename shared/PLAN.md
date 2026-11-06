@@ -67,3 +67,7 @@ Follow [SPONSOR_VERIFICATION.md](../docs/SPONSOR_VERIFICATION.md). Update the ev
 ## Arkiv discovery integration
 
 Implemented v2 profiles with execution-network/protocol filters, native block expiry and a Unix-second lease. The backend checks wallet ownership, explicit owner policy and task-bound signed readiness, revalidates before assignment, and persists query/entity evidence. The local four-task demo now selects through this adapter, checks empty/unavailable directory behavior and reconciles a submitted assignment while Arkiv is offline. Independent Rabdi query succeeded; `npm run demo:arkiv` supplies the funded-key live-discovery/local-finance rehearsal. Publication and external-user/sponsor evidence remain open; see [ARKIV.md](ARKIV.md).
+
+## Phase 5 paid research acceptance
+
+Completed the bounded CLI research-to-paid-tool-to-replacement gate: separate worker processes, three paid task sources, confirmed onchain replacement, old-worker refusal and original transaction/artifact reuse. Five real Groq calls produced a final report; treasury transactions were local EVM fixtures. Evidence: [phase5-paid-research.json](evidence/phase5-paid-research.json). Reproduction and limitations: [PHASE5.md](PHASE5.md). Trusted supervisor bindings are implemented; connected dashboard financial controls, encrypted checkpoints and production scheduling remain separate gates. No new sponsor qualification is claimed.

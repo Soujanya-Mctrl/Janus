@@ -11,7 +11,7 @@ type Credential = { id: string; label: string; provider: string };
 type RunSummary = { id: string; question: string; status: string; mode: string; createdAt: string };
 type Artifact = { text: string; agentId: string; provider: string; model: string; requestId: string | null; step: string };
 type Run = RunSummary & { config: Config; events: { sequence: number; at: string; agentId: string; type: string; summary: string; pid?: number }[]; workers: Record<string, { status: string; attempt: number; pid: number | null; heartbeat: string | null }>; artifacts: Record<string, Artifact>; report: Artifact | null; error?: string };
-const providers = ['openai', 'anthropic', 'gemini', 'openrouter', 'groq'];
+const providers = ['openai', 'anthropic', 'gemini', 'openrouter', 'groq', 'nvidia'];
 const emptyAgent = (): Agent => ({ id: crypto.randomUUID(), name: '', responsibility: '', credentialId: '', model: '' });
 const terminal = ['completed', 'cancelled', 'failed'];
 

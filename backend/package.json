@@ -28,7 +28,9 @@
     "arkiv:query": "node --env-file-if-exists=.env.arkiv arkiv/cli.mjs query",
     "arkiv:preflight": "node --env-file-if-exists=.env.arkiv arkiv/cli.mjs preflight",
     "arkiv:publish": "node --env-file-if-exists=.env.arkiv arkiv/cli.mjs publish",
-    "demo:arkiv": "node --env-file-if-exists=.env.arkiv arkiv/live-demo.mjs"
+    "demo:arkiv": "node --env-file-if-exists=.env.arkiv arkiv/live-demo.mjs",
+    "demo:paid-research": "node --test hedera/test/paid-research.test.mjs",
+    "demo:paid-research:live": "node --env-file=.env.providers --test hedera/test/paid-research.test.mjs"
   },
   "dependencies": {
     "@arkiv-network/sdk": "1.0.1",

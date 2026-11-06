@@ -1,0 +1,302 @@
+{
+  "status": "passed",
+  "financialNetwork": "local EVM 1337",
+  "liveModel": true,
+  "model": "openai/gpt-oss-20b",
+  "firstPayment": "0x46bf91bd9344d9066bfea6eb7d880f7f32d6c7e6f3fff21ee98368b551915c63",
+  "reusedPayment": "0x46bf91bd9344d9066bfea6eb7d880f7f32d6c7e6f3fff21ee98368b551915c63",
+  "totalSpent": "60",
+  "taskA": [
+    "100",
+    "80",
+    "0",
+    "20",
+    "0",
+    "30",
+    "0x3E5e9111Ae8eB78Fe1CC3bb8915d5D461F3Ef9A9",
+    "0xE11BA2b4D45Eaed5996Cd0823791E0C93114882d",
+    "2",
+    false
+  ],
+  "paidEvents": [
+    {
+      "transaction": "0x46bf91bd9344d9066bfea6eb7d880f7f32d6c7e6f3fff21ee98368b551915c63",
+      "task": "0x5c4bde8a16f5eeddb0a9f7c73b831b8295b665f7a7952468abb071a6e4841e18",
+      "operation": "0x4c3af2170d19dc32332878232df4eda42bd17fd2542c7aaf1f1136da30e15306"
+    },
+    {
+      "transaction": "0x1c1a07d93e71f4cdf81321f75e5d2be6fa68129d165b9c9a5195f97c9ab1133e",
+      "task": "0x308e006fb6b2b818eaf2d4a0ea3850d829d1df1bdae142137bb12b2cd241fe31",
+      "operation": "0x351d0f0fffb9d6bfb579f0c9754996675b639eb28ce29a1574f1a43910f7cbbe"
+    },
+    {
+      "transaction": "0x277d18b2c2904470e78f9a16ea9779293de1802ffa770caa9ce486dc471d7ff3",
+      "task": "0x80593ba6e18570268bfc76b25c91c287803cbcd62f5d6c9916f7424b0ae8969d",
+      "operation": "0x0601147220cd4d9df581f7a3243476b93beca6a517eac7178acb6bbf1bc425b7"
+    }
+  ],
+  "providerRequests": [
+    {
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "requestId": "chatcmpl-0c5f4e86-bb6e-4fa4-a5db-e1d6468714d5",
+      "step": "plan"
+    },
+    {
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "requestId": "chatcmpl-c0ad5cee-f0e8-4f0b-82bd-e3cca4fd86cc",
+      "step": "research:alpha"
+    },
+    {
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "requestId": "chatcmpl-3b7ab69d-8c30-4aff-816a-98693eb0ae0f",
+      "step": "research:gamma"
+    },
+    {
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "requestId": "chatcmpl-508d44db-c490-43cb-afca-b5d2c9343d15",
+      "step": "research:beta"
+    },
+    {
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "requestId": "chatcmpl-654b82d0-b08d-4ec9-adf9-88a3ca1af9aa",
+      "step": "report"
+    }
+  ],
+  "events": [
+    {
+      "sequence": 1,
+      "at": "2026-11-06T21:37:52.902Z",
+      "type": "run-started",
+      "agentId": "orchestrator",
+      "summary": "Janus supervisor started with authorized paid research tools."
+    },
+    {
+      "sequence": 2,
+      "at": "2026-11-06T21:37:52.925Z",
+      "type": "provider-requested",
+      "agentId": "orchestrator",
+      "summary": "Request submitted to the configured model.",
+      "step": "plan"
+    },
+    {
+      "sequence": 3,
+      "at": "2026-11-06T21:37:54.845Z",
+      "type": "artifact-saved",
+      "agentId": "orchestrator",
+      "summary": "Response persisted as a checkpoint artifact.",
+      "step": "plan",
+      "requestId": "chatcmpl-0c5f4e86-bb6e-4fa4-a5db-e1d6468714d5"
+    },
+    {
+      "sequence": 4,
+      "at": "2026-11-06T21:37:55.810Z",
+      "type": "worker-started",
+      "agentId": "gamma",
+      "summary": "Independent worker process started.",
+      "pid": 69875,
+      "attempt": 1
+    },
+    {
+      "sequence": 5,
+      "at": "2026-11-06T21:37:55.865Z",
+      "type": "worker-started",
+      "agentId": "beta",
+      "summary": "Independent worker process started.",
+      "pid": 69874,
+      "attempt": 1
+    },
+    {
+      "sequence": 6,
+      "at": "2026-11-06T21:37:55.969Z",
+      "type": "worker-started",
+      "agentId": "alpha",
+      "summary": "Independent worker process started.",
+      "pid": 69873,
+      "attempt": 1
+    },
+    {
+      "sequence": 7,
+      "at": "2026-11-06T21:38:10.116Z",
+      "type": "tool-payment-confirmed",
+      "agentId": "alpha",
+      "summary": "Paid research artifact confirmed.",
+      "transaction": "0x46bf91bd9344d9066bfea6eb7d880f7f32d6c7e6f3fff21ee98368b551915c63"
+    },
+    {
+      "sequence": 8,
+      "at": "2026-11-06T21:38:10.121Z",
+      "type": "worker-interrupted",
+      "agentId": "alpha",
+      "summary": "Worker stopped after paid result, before checkpoint acknowledgement."
+    },
+    {
+      "sequence": 9,
+      "at": "2026-11-06T21:38:11.750Z",
+      "type": "worker-replaced",
+      "agentId": "alpha",
+      "summary": "Replacement authority confirmed on chain; resuming original paid operations."
+    },
+    {
+      "sequence": 10,
+      "at": "2026-11-06T21:38:12.047Z",
+      "type": "worker-started",
+      "agentId": "alpha",
+      "summary": "Independent worker process started.",
+      "pid": 69877,
+      "attempt": 2
+    },
+    {
+      "sequence": 11,
+      "at": "2026-11-06T21:38:12.732Z",
+      "type": "tool-payment-confirmed",
+      "agentId": "alpha",
+      "summary": "Paid research artifact confirmed.",
+      "transaction": "0x46bf91bd9344d9066bfea6eb7d880f7f32d6c7e6f3fff21ee98368b551915c63"
+    },
+    {
+      "sequence": 12,
+      "at": "2026-11-06T21:38:12.944Z",
+      "type": "paid-artifacts-ready",
+      "agentId": "alpha",
+      "summary": "Purchased artifacts loaded from durable task checkpoints."
+    },
+    {
+      "sequence": 13,
+      "at": "2026-11-06T21:38:12.989Z",
+      "type": "provider-requested",
+      "agentId": "alpha",
+      "summary": "Request submitted to the configured model.",
+      "step": "research:alpha"
+    },
+    {
+      "sequence": 14,
+      "at": "2026-11-06T21:38:14.369Z",
+      "type": "artifact-saved",
+      "agentId": "alpha",
+      "summary": "Response persisted as a checkpoint artifact.",
+      "step": "research:alpha",
+      "requestId": "chatcmpl-c0ad5cee-f0e8-4f0b-82bd-e3cca4fd86cc"
+    },
+    {
+      "sequence": 15,
+      "at": "2026-11-06T21:38:14.386Z",
+      "type": "worker-completed",
+      "agentId": "alpha",
+      "summary": "Research branch completed."
+    },
+    {
+      "sequence": 16,
+      "at": "2026-11-06T21:38:15.805Z",
+      "type": "tool-payment-confirmed",
+      "agentId": "gamma",
+      "summary": "Paid research artifact confirmed.",
+      "transaction": "0x1c1a07d93e71f4cdf81321f75e5d2be6fa68129d165b9c9a5195f97c9ab1133e"
+    },
+    {
+      "sequence": 17,
+      "at": "2026-11-06T21:38:15.996Z",
+      "type": "paid-artifacts-ready",
+      "agentId": "gamma",
+      "summary": "Purchased artifacts loaded from durable task checkpoints."
+    },
+    {
+      "sequence": 18,
+      "at": "2026-11-06T21:38:16.034Z",
+      "type": "provider-requested",
+      "agentId": "gamma",
+      "summary": "Request submitted to the configured model.",
+      "step": "research:gamma"
+    },
+    {
+      "sequence": 19,
+      "at": "2026-11-06T21:38:17.222Z",
+      "type": "artifact-saved",
+      "agentId": "gamma",
+      "summary": "Response persisted as a checkpoint artifact.",
+      "step": "research:gamma",
+      "requestId": "chatcmpl-3b7ab69d-8c30-4aff-816a-98693eb0ae0f"
+    },
+    {
+      "sequence": 20,
+      "at": "2026-11-06T21:38:17.248Z",
+      "type": "worker-completed",
+      "agentId": "gamma",
+      "summary": "Research branch completed."
+    },
+    {
+      "sequence": 21,
+      "at": "2026-11-06T21:38:22.495Z",
+      "type": "tool-payment-confirmed",
+      "agentId": "beta",
+      "summary": "Paid research artifact confirmed.",
+      "transaction": "0x277d18b2c2904470e78f9a16ea9779293de1802ffa770caa9ce486dc471d7ff3"
+    },
+    {
+      "sequence": 22,
+      "at": "2026-11-06T21:38:22.685Z",
+      "type": "paid-artifacts-ready",
+      "agentId": "beta",
+      "summary": "Purchased artifacts loaded from durable task checkpoints."
+    },
+    {
+      "sequence": 23,
+      "at": "2026-11-06T21:38:22.708Z",
+      "type": "provider-requested",
+      "agentId": "beta",
+      "summary": "Request submitted to the configured model.",
+      "step": "research:beta"
+    },
+    {
+      "sequence": 24,
+      "at": "2026-11-06T21:38:24.032Z",
+      "type": "artifact-saved",
+      "agentId": "beta",
+      "summary": "Response persisted as a checkpoint artifact.",
+      "step": "research:beta",
+      "requestId": "chatcmpl-508d44db-c490-43cb-afca-b5d2c9343d15"
+    },
+    {
+      "sequence": 25,
+      "at": "2026-11-06T21:38:24.092Z",
+      "type": "worker-completed",
+      "agentId": "beta",
+      "summary": "Research branch completed."
+    },
+    {
+      "sequence": 26,
+      "at": "2026-11-06T21:38:24.134Z",
+      "type": "provider-requested",
+      "agentId": "orchestrator",
+      "summary": "Request submitted to the configured model.",
+      "step": "report"
+    },
+    {
+      "sequence": 27,
+      "at": "2026-11-06T21:38:25.434Z",
+      "type": "artifact-saved",
+      "agentId": "orchestrator",
+      "summary": "Response persisted as a checkpoint artifact.",
+      "step": "report",
+      "requestId": "chatcmpl-654b82d0-b08d-4ec9-adf9-88a3ca1af9aa"
+    },
+    {
+      "sequence": 28,
+      "at": "2026-11-06T21:38:25.447Z",
+      "type": "run-completed",
+      "agentId": "orchestrator",
+      "summary": "Run completed."
+    }
+  ],
+  "reportCharacters": 2800,
+  "limitations": [
+    "Ephemeral local treasury/token; no new live Hedera payment",
+    "Paid dataset is a deterministic reference source",
+    "CLI trusted bindings; dashboard financial wiring remains phase 6",
+    "No encrypted checkpoint or anonymity claim"
+  ]
+}

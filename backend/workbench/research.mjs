@@ -68,7 +68,7 @@ export async function controlRun(root, user, id, action) {
   return run;
 }
 
-export async function executeResearch({ root, user, id, providerCall = callProvider }) {
+export async function executeResearch({ root, user, id, providerCall = callProvider, paidTools, interruptAfterPaid = false }) {
   const directory = runDirectory(root, user, id), lockPath = path.join(directory, 'supervisor.lock');
   const lock = await fs.open(lockPath, 'wx', 0o600).catch(() => { throw new Error('Supervisor already active or stale lock; reconcile before retry'); });
   let run, queue = Promise.resolve();
@@ -86,7 +86,7 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
       try { return JSON.parse(await fs.readFile(path.join(directory, 'control.json'), 'utf8')).action; } catch (e) { if (e.code === 'ENOENT') return 'resume'; throw e; }
     };
     const stopped = async () => ['pause', 'cancel'].includes(await control());
-    run.status = 'running'; await event('run-started', 'orchestrator', 'Janus supervisor started. Research only; no wallet or payment calls.');
+    run.status = 'running'; await event('run-started', 'orchestrator', paidTools ? 'Janus supervisor started with authorized paid research tools.' : 'Janus supervisor started. Research only; no wallet or payment calls.');
     const vault = createWorkbenchStore(path.join(root, 'vault'));
     const infer = async (agent, step, prompt) => {
       if (run.artifacts[step]) { await event('artifact-reused', agent.id, 'Reused the saved response without another provider request.', { step }); return run.artifacts[step]; }
@@ -134,7 +134,19 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
             if (await stopped()) return child.send({ type: 'stop' });
             run.workers[agent.id] = { ...run.workers[agent.id], status: 'running', pid: child.pid, heartbeat: new Date().toISOString() };
             await event('worker-started', agent.id, 'Independent worker process started.', { pid: child.pid, attempt });
-            const artifact = await infer(agent, 'research:' + agent.id, `Question: ${run.question}\nResponsibility: ${agent.responsibility}\nCoordinator plan: ${plan.text}\nProduce concise findings based only on supplied material. State limitations and do not invent web access or citations.`);
+            let purchased = [];
+            if (paidTools) {
+              purchased = await paidTools.acquire(agent.id, async result => {
+                await event('tool-payment-confirmed', agent.id, 'Paid research artifact confirmed.', { transaction: result.receipt.transaction });
+                if (interruptAfterPaid && agent.id === workers[0].id && attempt === 1) {
+                  await event('worker-interrupted', agent.id, 'Worker stopped after paid result, before checkpoint acknowledgement.');
+                  const fault = new Error('PAID_WORKER_INTERRUPTED'); fault.code = 'PAID_WORKER_INTERRUPTED'; throw fault;
+                }
+              }).catch(error => { if (error.code === 'PAID_WORKER_INTERRUPTED') { child.kill(); return null; } throw error; });
+              if (purchased === null) return;
+              await event('paid-artifacts-ready', agent.id, 'Purchased artifacts loaded from durable task checkpoints.');
+            }
+            const artifact = await infer(agent, 'research:' + agent.id, `Question: ${run.question}\nResponsibility: ${agent.responsibility}\nCoordinator plan: ${plan.text}\nPurchased source material: ${JSON.stringify(purchased)}\nProduce concise findings based only on supplied material. State limitations and do not invent web access or citations.`);
             if (run.interrupt && agent.id === workers[0].id && attempt === 1) {
               await event('worker-interrupted', agent.id, 'Fixture interruption after checkpoint, before worker acknowledgement.');
               child.kill(); return;
@@ -146,7 +158,7 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
           inflight.then(async () => { run.workers[agent.id].status = 'completed'; await event('worker-completed', agent.id, 'Research branch completed.'); finish(); }).catch(finish);
         }
       });
-      const timeout = setTimeout(() => finish(new Error('Worker response timeout; reconcile before resuming')), 65000);
+      const timeout = setTimeout(() => finish(new Error('Worker response timeout; reconcile before resuming')), paidTools ? 180000 : 65000);
       child.once('error', finish);
       child.once('exit', () => {
         clearTimeout(timeout);
@@ -155,9 +167,10 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
           if (settled) return;
           children.delete(child); settled = true;
           if (await stopped()) { run.workers[agent.id].status = 'paused'; await save(); resolve(); }
-          else if (attempt < 2 && run.artifacts['research:' + agent.id]) {
+          else if (attempt < 2 && (run.artifacts['research:' + agent.id] || paidTools)) {
+            if (paidTools) await paidTools.replace(agent.id);
             run.workers[agent.id].status = 'replacing';
-            await event('worker-replaced', agent.id, 'Replacement resumes the saved local research checkpoint. No on-chain assignment is implied.');
+            await event('worker-replaced', agent.id, paidTools ? 'Replacement authority confirmed on chain; resuming original paid operations.' : 'Replacement resumes the saved local research checkpoint. No on-chain assignment is implied.');
             launch(agent).then(resolve, reject);
           } else reject(new Error('Worker stopped; reconcile its saved checkpoint before retry'));
         }).catch(reject);
@@ -170,7 +183,7 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
     if (failed) throw failed.reason;
     if (!await stopped()) {
       const sources = workers.map(agent => ({ agent: agent.name, artifact: run.artifacts['research:' + agent.id]?.text }));
-      run.report = await infer(coordinator, 'report', `Answer the research question: ${run.question}\nSynthesize these worker findings: ${JSON.stringify(sources)}\nDistinguish evidence, uncertainties and missing external sources. No tool purchase has occurred.`);
+      run.report = await infer(coordinator, 'report', `Answer the research question: ${run.question}\nSynthesize these worker findings: ${JSON.stringify(sources)}\nDistinguish evidence, uncertainties and missing external sources. ${paidTools ? 'Purchased sources were supplied to workers; distinguish them from model knowledge.' : 'No tool purchase has occurred.'}`);
     }
     const action = await control();
     run.status = action === 'cancel' ? 'cancelled' : action === 'pause' ? 'paused' : 'completed';

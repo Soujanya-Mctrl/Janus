@@ -16,7 +16,7 @@ The request budget is one coordinator planning call, one call per active worker 
 
 The new research runtime has actual parallel worker processes. The supervisor owns event ordering, provider brokerage, checkpoints and bounded replacement. Workers receive no provider keys or signing tools. A replacement reuses a saved inference response; fixture failure/replacement is a local process demonstration, not an on-chain assignment epoch. The supervisor uses the existing fixed-endpoint provider adapters. It does not fetch the web, buy sources, reserve treasury funds or claim citations that were not supplied. Findings are based on supplied context/model knowledge and must identify missing evidence.
 
-Payment-aware research tools, authoritative financial projections and discovery-driven research-worker reassignment remain separate integration gates. The existing paid SDK/handoff and independent recovery continue to be verified through their own commands. The browser research fixture must not be presented as that paid handoff. Existing Arkiv work is preserved separately.
+Payment-aware research tools are now available through trusted supervisor bindings and verified by the CLI phase-five demo; see [PHASE5.md](PHASE5.md). Dashboard financial projections and discovery-driven research-worker reassignment remain separate integration gates. The existing paid SDK/handoff and independent recovery continue to be verified through their own commands. The browser research fixture must not be presented as that paid handoff. Existing Arkiv work is preserved separately.
 
 ## Persistence and deployment
 

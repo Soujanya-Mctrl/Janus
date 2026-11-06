@@ -3,7 +3,7 @@ export async function callProvider({ credential, model, prompt, fetchImpl = fetc
   if (typeof model !== 'string' || !/^[a-zA-Z0-9._:/-]{1,100}$/.test(model)) throw new Error('Enter an explicit provider model ID');
   const openai = credential.provider === 'openai';
   const anthropic = credential.provider === 'anthropic', gemini = credential.provider === 'gemini';
-  const compatible = { openrouter: 'https://openrouter.ai/api/v1/chat/completions', groq: 'https://api.groq.com/openai/v1/chat/completions' }[credential.provider];
+  const compatible = { openrouter: 'https://openrouter.ai/api/v1/chat/completions', groq: 'https://api.groq.com/openai/v1/chat/completions', nvidia: 'https://integrate.api.nvidia.com/v1/chat/completions' }[credential.provider];
   if (!openai && !anthropic && !gemini && !compatible) throw new Error('Unsupported provider');
   if (gemini && !/^[a-zA-Z0-9._-]+$/.test(model)) throw new Error('Use a Gemini model ID without a path');
   const endpoint = openai ? 'https://api.openai.com/v1/responses' : anthropic ? 'https://api.anthropic.com/v1/messages'

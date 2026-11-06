@@ -17,7 +17,7 @@ export async function buyTaskDataset({ publicClient, walletClient, endpoint, tas
  const attempt = Number(op.status) === 0 || Number(op.status) === 3 ? op.attempt + 1n : op.attempt;
  const authorization = encodeAuthorization(taskId, opId, attempt.toString());
  const post = async (route, value) => {
-  const response = await fetch(new URL(route, endpoint), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(value), signal: AbortSignal.timeout(30000), redirect: 'error' });
+  const response = await fetch(new URL(route, endpoint), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(value), signal: AbortSignal.timeout(120000), redirect: 'error' });
   if (!response.ok) throw new Error('Merchant rejected request or payment requires reconciliation; do not blindly retry');
   return response.json();
  };

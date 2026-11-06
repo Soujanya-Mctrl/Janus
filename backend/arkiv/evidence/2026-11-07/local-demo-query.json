@@ -1,0 +1,31 @@
+{
+  "source": "arkiv-rabdi",
+  "chainId": 7794095,
+  "block": "311370",
+  "queriedAt": "1794008511",
+  "latencyMs": 502,
+  "pages": [
+    {
+      "block": "311369",
+      "skipped": 0
+    }
+  ],
+  "records": [
+    {
+      "entityKey": "0xb5f309c4358e973b37705a0f6085c4a9e44bf2b8eb78a89cd829774c5bf2ebaa",
+      "owner": "0xf4F1a10309FCb1514bF6b0eb1E4813E220D936F0",
+      "expiresAtBlock": "313168",
+      "updatedAtBlock": "311368",
+      "address": "0xf4F1a10309FCb1514bF6b0eb1E4813E220D936F0",
+      "role": "researcher",
+      "status": "ready",
+      "capabilities": [
+        "research"
+      ],
+      "network": "eip155:1337",
+      "scheme": "janus-task-v1",
+      "validUntil": "1794012105",
+      "name": "Janus local-handoff test worker"
+    }
+  ]
+}

@@ -75,7 +75,8 @@
       "evidencePaths": [
         "backend/arkiv/cli.mjs",
         "backend/arkiv/live-demo.mjs",
-        "shared/ARKIV.md"
+        "shared/ARKIV.md",
+        "backend/arkiv/evidence/2026-11-07/README.md"
       ],
       "verificationRecord": null
     },
@@ -84,12 +85,13 @@
       "sponsor": "arkiv",
       "requirement": "Visible handoff driven by reproducible Arkiv reads and independent query",
       "mandatory": true,
-      "status": "partial",
+      "status": "recorded",
       "evidencePaths": [
         "backend/arkiv/discovery.mjs",
         "backend/hedera/test/checkpoint-runner.test.mjs",
         "shared/ARKIV.md",
-        "docs/evidence/arkiv-discovery-2026-11-07.json"
+        "docs/evidence/arkiv-discovery-2026-11-07.json",
+        "backend/arkiv/evidence/2026-11-07/README.md"
       ],
       "verificationRecord": null
     },
@@ -102,7 +104,8 @@
       "evidencePaths": [
         "backend/arkiv/discovery.test.mjs",
         "backend/hedera/test/checkpoint-runner.test.mjs",
-        "docs/evidence/arkiv-discovery-2026-11-07.json"
+        "docs/evidence/arkiv-discovery-2026-11-07.json",
+        "backend/arkiv/evidence/2026-11-07/README.md"
       ],
       "verificationRecord": null
     },
@@ -118,7 +121,8 @@
         "arkiv/reach.md",
         "arkiv/why-arkiv.md",
         "arkiv/how-you-use-arkiv.md",
-        "README.md"
+        "README.md",
+        "backend/arkiv/evidence/2026-11-07/README.md"
       ],
       "verificationRecord": null
     },

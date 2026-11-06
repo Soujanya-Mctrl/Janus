@@ -1,0 +1,12 @@
+{
+  "hedera-profile.json": "7070812a1292c7df4e86cdd1b118c92d942e337d2d0dab78554b162bb55c8f01",
+  "hedera-query.json": "8da3601d08e895a059f50086295df7fdf4a110064296d741f66ea12aa4b5b3d8",
+  "local-demo-publication.json": "de99f1f5daad32adaa51d2a10af74ae8d10c84b3533e9ff2ce8068fedd61df51",
+  "local-demo-query.json": "98bfd92b156c21b5db3e065be7631def29ce9abb61f2a17c4f6bdded06d249e8",
+  "local-demo-report.json": "4ea7b5adddeed2ed4e7ade0e75f799c98bfc4fa2b7ba2aaa1575cf2f7763401c",
+  "provenance.json": "f51d0972b861a481ef46bee7938bcab6b109bb2e7b8e974370a9bcf5ff8c5121",
+  "publication-receipts.json": "f039d2d796d48980945083877650a18c45549f6a3a21eb574c4ac7332f49e823",
+  "browser-read.json": "c9f3c84365708f5ea549c68ead3acb1f901addfe86e749f995ee0eb23e09edfe",
+  "browser-directory.png": "ddd769f12ab71113c04bc73d4bc3725d383604f2cf001907d43074040a96f7e5",
+  "README.md": "d910f67555cd33e98ca893f1b39c2a34daff2e76f774120fec6d09962c6232e8"
+}

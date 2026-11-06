@@ -98,3 +98,7 @@ CLI recovery and checkpointed handoff have source/tests and documented local obs
 ## Phase discipline
 
 Every phase must update this register with implemented behavior, measured outcomes, raw evidence and remaining gaps, or explicitly state that it changes no sponsor claim. Fetch/integrate, verify the phase, then commit and push to origin/main under the repository workflow. Keep historical evidence intact and use append-only per-run reports. Never change an expected threshold after seeing a failed result without recording the reason and previous threshold.
+
+## Funded Arkiv follow-up, 7 November 2026
+
+The previous missing-writer/publication blocker is cleared by [live publication, independent reads, browser read and discovery-driven local handoff evidence](../backend/arkiv/evidence/2026-11-07/README.md). Two entities were published by one writer. This does not complete provenance, FOSS, AI disclosure, external adoption, video or independent review gates; sponsor readiness remains false. The broader combined live Hedera/Arkiv/research journey is separate.

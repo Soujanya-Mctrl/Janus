@@ -1,0 +1,26 @@
+{
+  "chainId": 7794095,
+  "verifiedAt": "2026-11-06T23:45:44.477Z",
+  "writer": "0xf4F1a10309FCb1514bF6b0eb1E4813E220D936F0",
+  "initialBalanceWei": "5000000000000000000",
+  "remainingBalanceWei": "4999650525000000000",
+  "observedBalanceDecreaseWei": "349475000000000",
+  "receipts": [
+    {
+      "transaction": "0x0806e4d792d42742c2bc6f8a5e4808a68a735fdf9a157883fc408533538fcf43",
+      "entityKey": "0xb5f309c4358e973b37705a0f6085c4a9e44bf2b8eb78a89cd829774c5bf2ebaa",
+      "status": "success",
+      "block": "311368",
+      "gasUsed": "183270",
+      "effectiveGasPrice": "1000000000"
+    },
+    {
+      "transaction": "0x42574c616d1718a47cdf12f61d2c6b718ec674dd0584497c7c91eedc3827bf30",
+      "entityKey": "0x5ef681df509ab05db26d69a921c502a75771321bd8e283a74cfabd4af477e302",
+      "status": "success",
+      "block": "311391",
+      "gasUsed": "166205",
+      "effectiveGasPrice": "1000000000"
+    }
+  ]
+}

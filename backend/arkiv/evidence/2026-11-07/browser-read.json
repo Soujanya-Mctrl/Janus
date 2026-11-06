@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "checkedAt": "2026-11-06T23:47:13.673Z",
+  "scope": "actual React component and live public Arkiv SDK reads; account/API fixture; no browser publication or authenticated-user proof",
+  "writer": "0xf4F1a10309FCb1514bF6b0eb1E4813E220D936F0",
+  "expectedEntity": "0x5ef681df509ab05db26d69a921c502a75771321bd8e283a74cfabd4af477e302",
+  "rpcRequests": [
+    {
+      "host": "rpc.rabdi.db-chain.testnet.arkiv.network",
+      "method": "POST"
+    },
+    {
+      "host": "rpc.rabdi.db-chain.testnet.arkiv.network",
+      "method": "POST"
+    }
+  ],
+  "pageErrors": []
+}

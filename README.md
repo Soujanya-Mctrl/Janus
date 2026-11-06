@@ -66,3 +66,5 @@ This is a development prototype, not audited or production-ready software. Histo
 macOS AppleDouble files (`._*`) are ignored by Git, ESLint and TypeScript. Do not commit them. If Git reports `non-monotonic index` for a `._pack-*.idx` file on an external drive, remove only the verified AppleDouble sidecar, never the real `.idx` or `.pack` file.
 
 Independent owner recovery is documented in [shared/RECOVERY.md](shared/RECOVERY.md). The CLI defaults to a read-only plan, validates deployment identity and only submits transactions with an explicit execution flag and owner key. Its local proof is separate from the historical Hedera proof.
+
+Run `npm run demo:handoff` after setup/compilation for the local four-task checkpoint/replacement proof. Observed evidence is saved under ignored `backend/.runner-state/demo/report.json`; see [RUNNER.md](shared/RUNNER.md) for scope and limitations.

@@ -48,3 +48,7 @@ Keep modules together in this repository so a paid request can eventually be tra
 Network selection, versioned treasury interface and operation encoding are established. Next adapt the merchant to the 96-byte task authorization, persist payment intent/results, and implement checkpointed worker replacement before exposing receipt-confirmed task controls. Shared configuration and historical proofs alone do not constitute an integrated paid workflow. See [TREASURY_INTERFACE.md](TREASURY_INTERFACE.md) and [RECOVERY.md](RECOVERY.md) for accepted limitations and direct exit.
 
 The task-aware reference SDK/server and durable result store are described in [PAID_WORKFLOW.md](PAID_WORKFLOW.md). Their local EVM integration is separate from the preserved Phase-0 service and historical Hedera proof. Backend integration tests require contract dependencies/artifacts. Checkpointed workers and connected dashboard remain later phases.
+
+## Checkpoint runner reference
+
+`backend/runner/` owns the local checkpointed runner and demo controller. Its financial calls use the shared task SDK; it stores execution progress rather than a second budget ledger. Per-task state and assignment intents are private filesystem records with fail-closed locks. Four logical task clients and deterministic faults are verified on a local EVM, not four OS worker processes or a production task API. See [RUNNER.md](RUNNER.md).

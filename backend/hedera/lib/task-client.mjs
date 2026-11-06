@@ -1,5 +1,6 @@
 import { validateTreasury } from '../../../contracts/phase1/lib/recovery.mjs';
-import { verifyMessage } from 'viem';
+import { verifyMessage, parseEventLogs } from 'viem';
+import { createHash } from 'node:crypto';
 import { operationId, encodeAuthorization, baseUnits } from '../../../shared/protocol.mjs';
 import { taskTreasuryAbi as abi } from './treasury.mjs';
 import { accessMessage, quoteMessage, requestHash } from './task-merchant.mjs';
@@ -30,5 +31,12 @@ export async function buyTaskDataset({ publicClient, walletClient, endpoint, tas
  } else if (op.requestHash !== requestHash(request) || op.amount !== baseUnits(request.amount)) throw new Error('Operation conflict');
  const expiresAt = String(Math.floor(Date.now() / 1000) + 120);
  const principal = { address: walletClient.account.address, expiresAt, signature: await walletClient.signMessage({ message: accessMessage(authorization, request, expiresAt) }) };
- return post('/purchase', { quote, authorization, request, principal });
+ const result = await post('/purchase', { quote, authorization, request, principal });
+ if (result.status !== 'ready' || typeof result.result !== 'string' || createHash('sha256').update(result.result).digest('hex') !== result.resultHash || !/^0x[0-9a-fA-F]{64}$/.test(result.receipt?.transaction ?? '')) throw new Error('Invalid merchant result');
+ const settled = await read('getOperation', [taskId, opId]);
+ if (Number(settled.status) !== 2 || settled.amount !== baseUnits(request.amount) || settled.requestHash !== requestHash(request)) throw new Error('Payment is not reconciled');
+ const paidReceipt = await publicClient.getTransactionReceipt({ hash: result.receipt.transaction });
+ const paid = parseEventLogs({ abi, logs: paidReceipt.logs, eventName: 'Paid' }).find(log => log.address.toLowerCase() === request.treasury.toLowerCase() && log.args.taskId === taskId.toLowerCase() && log.args.operationId === opId && log.args.attempt === settled.attempt && log.args.amount === settled.amount && log.args.merchant.toLowerCase() === request.merchant.toLowerCase());
+ if (paidReceipt.status !== 'success' || !paid) throw new Error('Result receipt does not prove this payment');
+ return result;
 }

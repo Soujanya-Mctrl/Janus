@@ -36,6 +36,8 @@ export async function createTaskMerchant({ directory, publicClient, walletClient
     if ((await publicClient.getBlock()).timestamp >= op.deadline) throw new Error('Reservation expired');
     return { status: 'unpaid' };
   };
+  let settlementQueue = Promise.resolve();
+  const serialize = action => { const pending = settlementQueue.then(action); settlementQueue = pending.catch(() => {}); return pending; };
   const store = createOperationStore({ directory, produce, reconcile,
     authenticate: async ({ identity, request, principal }) => {
       const task = await validate({ identity, request });
@@ -46,7 +48,7 @@ export async function createTaskMerchant({ directory, publicClient, walletClient
       if (address !== owner && (task[9] || address !== task[6].toLowerCase())) throw new Error('Unauthorized task access');
       if (!await verifyMessage({ address: principal.address, message: accessMessage(encodeIdentity(identity), request, principal.expiresAt), signature: principal.signature })) throw new Error('Invalid access signature');
     },
-    submit: async ({ identity, request, authorization }) => {
+    submit: ({ identity, request, authorization }) => serialize(async () => {
       const observed = await reconcile({ identity, request });
       if (observed.status === 'paid') return observed.receipt;
       if (observed.status !== 'unpaid') throw new Error('Payment outcome unknown');
@@ -58,7 +60,7 @@ export async function createTaskMerchant({ directory, publicClient, walletClient
         && log.args.taskId === identity.taskId && log.args.operationId === identity.operationId && log.args.amount === baseUnits(request.amount));
       if (receipt.status !== 'success' || !paid) throw new Error('Settlement not confirmed');
       return { confirmed: true, transaction };
-    },
+    }),
   });
   return { purchase: store.purchase,
     async quote({ authorization, request }) {

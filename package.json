@@ -19,6 +19,7 @@
     "check:repo": "node scripts/check-repository.mjs",
     "typecheck": "npm run typecheck --prefix frontend",
     "check": "npm run check:repo && npm run lint && npm run typecheck && npm run contracts:compile && npm test && npm run build",
-    "test:protocol": "node --test shared/test/*.test.mjs"
+    "test:protocol": "node --test shared/test/*.test.mjs",
+    "demo:handoff": "npm run demo:handoff --prefix backend"
   }
 }

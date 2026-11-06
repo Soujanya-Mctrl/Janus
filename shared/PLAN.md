@@ -35,3 +35,7 @@ Existing frontend wallet/authentication advisories and peer-dependency compatibi
 ## Phase publication workflow
 
 Before starting each phase and before publishing it: fetch origin/upstream, inspect incoming changes, and integrate both remote main branches while preserving local work. After the phase exit gate and relevant checks pass, commit and push to `origin/main`. Resolve non-fast-forward rejection by fetching and integrating, never force-pushing. Keep shared context current in the phase commit. Upstream checks happen during active work, not through an unattended scheduled task.
+
+## Checkpointed handoff reference milestone
+
+Implemented and locally verified: durable checkpoint/assignment intent, stable paid-step replay, deterministic replacement selection, four independently progressing logical tasks and reconciliation after assignment acknowledgement loss. Reproduce with `npm run demo:handoff`; see [RUNNER.md](RUNNER.md). This is the core of the next phase, not completion of the broader process scheduler: authenticated task API, process-isolated workers, production storage/locking, encrypted checkpoints and a real model report remain required. Connected dashboard and browser-wallet validation remain separate gates.

@@ -27,6 +27,7 @@ import {
   CircleHelp,
   Layers,
 } from "lucide-react";
+import TreasuryPanel from "@/components/treasury-panel";
 import AgentControlCenter from "@/components/agent-control-center";
 import { BrandLogo } from "@/components/brand-logo";
 import { useRelayAuth, targetChain } from "@/context/privy-auth-context";
@@ -50,7 +51,7 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
       router.replace("/login?redirect=/dashboard");
     }
   }, [auth.ready, auth.authenticated, router]);
-  const [sample, setSample] = useState(true); // Default to true so user sees the rich interface immediately
+  const [sample, setSample] = useState(false);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<(typeof tasks)[number] | null>(null);
   const [copied, setCopied] = useState(false);
@@ -279,10 +280,10 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
         <div className="dashboard-mode-strip">
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span className="status-dot-white" />
-            <span>{["Agents", "Runs", "Credentials", "Integrations"].includes(tab) ? "RESEARCH WORKSPACE · PROVIDER BILLING SEPARATE FROM TOOL PAYMENTS" : sample ? "ILLUSTRATIVE ACCOUNTING FIXTURE · MOCK BASE UNITS" : "TESTNET · TREASURY PROJECTION NOT CONNECTED"}</span>
+            <span>{["Agents", "Runs", "Credentials", "Integrations"].includes(tab) ? "RESEARCH WORKSPACE · PROVIDER BILLING SEPARATE FROM TOOL PAYMENTS" : sample ? "ILLUSTRATIVE ACCOUNTING FIXTURE · MOCK BASE UNITS" : "TESTNET · VALIDATED CHAIN READS · WALLET-APPROVED ACTIONS"}</span>
           </div>
           {!["Agents", "Runs", "Credentials", "Integrations"].includes(tab) && <button type="button" className="mode-toggle-link" onClick={() => setSample(!sample)}>
-            <span>{sample ? "Exit fixture view" : "Explore live fixture"}</span>
+            <span>{sample ? "Exit fixture view" : "Explore accounting fixture"}</span>
             <ArrowRight size={13} />
           </button>}
         </div>
@@ -357,7 +358,8 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
           )}
 
           {/* OVERVIEW OR TASKS TAB */}
-          {(tab === "Overview" || tab === "Tasks") && (
+          {!sample && ["Overview", "Tasks", "Recovery"].includes(tab) && <TreasuryPanel />}
+          {sample && (tab === "Overview" || tab === "Tasks") && (
             <>
               {/* Metrics Grid */}
               <div className="dashboard-metrics-grid">

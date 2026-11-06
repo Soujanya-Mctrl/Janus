@@ -30,3 +30,6 @@ jobs:
         run: npm run recovery:test:browser --prefix contracts
       - name: Verify dashboard agent browser flow
         run: node frontend/scripts/verify-research-browser.mjs
+
+      - name: Verify authoritative treasury dashboard and independent exit
+        run: npm run dashboard:test:browser --prefix contracts

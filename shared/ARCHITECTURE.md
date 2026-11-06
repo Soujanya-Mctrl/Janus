@@ -72,3 +72,7 @@ A standalone static recovery page now shares the CLI recovery core and builds th
 ## Phase 5 paid research acceptance
 
 Completed the bounded CLI research-to-paid-tool-to-replacement gate: separate worker processes, three paid task sources, confirmed onchain replacement, old-worker refusal and original transaction/artifact reuse. Five real Groq calls produced a final report; treasury transactions were local EVM fixtures. Evidence: [phase5-paid-research.json](evidence/phase5-paid-research.json). Reproduction and limitations: [PHASE5.md](PHASE5.md). Trusted supervisor bindings are implemented; connected dashboard financial controls, encrypted checkpoints and production scheduling remain separate gates. No new sponsor qualification is claimed.
+
+## Phase 6 authoritative treasury dashboard
+
+Overview/Tasks now default to validated chain reads, block-pinned balances, bounded event discovery and receipt-confirmed owner/scheduler actions. A separately downloadable static recovery copy is generated before frontend dev/build, with configurable RPC and no application dependency. Local Chromium acceptance covers actual dashboard actions and independent recovery with the dashboard server stopped; static wallet recovery has its own acceptance test. See [PHASE6.md](PHASE6.md). No manual live recovery, production readiness or new sponsor acceptance is claimed.

@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "rulesReviewedOn": "2026-11-06",
+  "timezone": "Asia/Calcutta",
+  "scope": "Internal evidence readiness; not sponsor eligibility or award confirmation",
+  "requirements": [
+    {
+      "id": "EVENT-01",
+      "sponsor": "event",
+      "requirement": "Registered track, build provenance, reused assets and meaningful human/AI contribution disclosure",
+      "mandatory": true,
+      "status": "missing",
+      "evidencePaths": [],
+      "verificationRecord": null
+    },
+    {
+      "id": "EVENT-02",
+      "sponsor": "event",
+      "requirement": "Public repo, appropriate FOSS license, reproducible setup and dashboard sponsor selection",
+      "mandatory": true,
+      "status": "partial",
+      "evidencePaths": [
+        "README.md"
+      ],
+      "verificationRecord": null
+    },
+    {
+      "id": "HED-01",
+      "sponsor": "hedera",
+      "requirement": "Actual x402 protocol trace and self-run/accepted facilitator on the submitted payment path",
+      "mandatory": true,
+      "status": "partial",
+      "evidencePaths": [
+        "shared/PAID_WORKFLOW.md"
+      ],
+      "verificationRecord": null
+    },
+    {
+      "id": "HED-02",
+      "sponsor": "hedera",
+      "requirement": "Autonomous paid request with real Hedera settlement and identical replay result",
+      "mandatory": true,
+      "status": "recorded",
+      "evidencePaths": [
+        "backend/hedera/evidence/task-aware-live-proof.json"
+      ],
+      "verificationRecord": null
+    },
+    {
+      "id": "HED-03",
+      "sponsor": "hedera",
+      "requirement": "Budgets, stale authority and conserved pending payments tested",
+      "mandatory": true,
+      "status": "partial",
+      "evidencePaths": [
+        "contracts/phase1/test/treasury.test.mjs"
+      ],
+      "verificationRecord": null
+    },
+    {
+      "id": "HED-04",
+      "sponsor": "hedera",
+      "requirement": "Public payment setup, transaction ID/HashScan and compliant final video",
+      "mandatory": true,
+      "status": "missing",
+      "evidencePaths": [],
+      "verificationRecord": null
+    },
+    {
+      "id": "ARK-01",
+      "sponsor": "arkiv",
+      "requirement": "Track-appropriate provenance and actual current-testnet entity writes",
+      "mandatory": true,
+      "status": "missing",
+      "evidencePaths": [],
+      "verificationRecord": null
+    },
+    {
+      "id": "ARK-02",
+      "sponsor": "arkiv",
+      "requirement": "Visible handoff driven by reproducible Arkiv reads and independent query",
+      "mandatory": true,
+      "status": "missing",
+      "evidencePaths": [],
+      "verificationRecord": null
+    },
+    {
+      "id": "ARK-03",
+      "sponsor": "arkiv",
+      "requirement": "Expiry, ownership, capability and no-result adversarial discovery evidence",
+      "mandatory": true,
+      "status": "missing",
+      "evidencePaths": [],
+      "verificationRecord": null
+    },
+    {
+      "id": "ARK-04",
+      "sponsor": "arkiv",
+      "requirement": "Root arkiv criterion/schema files, README writer wallets/query, FOSS and AI disclosure",
+      "mandatory": true,
+      "status": "missing",
+      "evidencePaths": [],
+      "verificationRecord": null
+    },
+    {
+      "id": "CROPS-01",
+      "sponsor": "crops",
+      "requirement": "Independent owner recovery with services stopped and reserved funds protected",
+      "mandatory": true,
+      "status": "partial",
+      "evidencePaths": [
+        "shared/RECOVERY.md"
+      ],
+      "verificationRecord": null
+    },
+    {
+      "id": "CROPS-02",
+      "sponsor": "crops",
+      "requirement": "Browser recovery UX, shutdown/network trace and three reset measurements",
+      "mandatory": true,
+      "status": "missing",
+      "evidencePaths": [],
+      "verificationRecord": null
+    },
+    {
+      "id": "CROPS-03",
+      "sponsor": "crops",
+      "requirement": "Root license, README CROPS section, third-party visibility/key protection and no-trackers review",
+      "mandatory": true,
+      "status": "missing",
+      "evidencePaths": [],
+      "verificationRecord": null
+    },
+    {
+      "id": "CROPS-04",
+      "sponsor": "crops",
+      "requirement": "At-most-three-minute property demo and correct EF category/provenance",
+      "mandatory": true,
+      "status": "missing",
+      "evidencePaths": [],
+      "verificationRecord": null
+    },
+    {
+      "id": "DEMO-01",
+      "sponsor": "event",
+      "requirement": "Combined live/local-labelled sponsor flow with measurements and independently reviewed evidence",
+      "mandatory": true,
+      "status": "missing",
+      "evidencePaths": [],
+      "verificationRecord": null
+    }
+  ]
+}

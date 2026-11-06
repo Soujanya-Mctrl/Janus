@@ -68,3 +68,9 @@ macOS AppleDouble files (`._*`) are ignored by Git, ESLint and TypeScript. Do no
 Independent owner recovery is documented in [shared/RECOVERY.md](shared/RECOVERY.md). The CLI defaults to a read-only plan, validates deployment identity and only submits transactions with an explicit execution flag and owner key. Its local proof is separate from the historical Hedera proof.
 
 Run `npm run demo:handoff` after setup/compilation for the local four-task checkpoint/replacement proof. Observed evidence is saved under ignored `backend/.runner-state/demo/report.json`; see [RUNNER.md](shared/RUNNER.md) for scope and limitations.
+
+## Sponsor verification and submission readiness
+
+The [sponsor verification plan](docs/SPONSOR_VERIFICATION.md) maps official Hedera, EF CROPS and Arkiv requirements to meaningful product behavior, measurable pass/fail gates, removal experiments and reproducible reviewer evidence. The [evidence register](docs/evidence/sponsor-status.json) tracks open requirements without treating a working component as prize eligibility.
+
+Run `npm run sponsors:check` to validate the register and local references; it does not rerun experiments. Run `npm run sponsors:ready` for the stricter internal submission gate, which currently fails because required evidence is missing. Recheck official rules, registered track/provenance, root FOSS license, AI attribution, actual x402 compliance and final public demo materials before submission. No track is currently marked submission-ready.

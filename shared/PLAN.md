@@ -43,3 +43,7 @@ Implemented and locally verified: durable checkpoint/assignment intent, stable p
 ## Live task-aware payment verified
 
 The bounded 0.02-test-USDC Hedera payment and original-result replay are verified. Allocation uncertainty was resolved through nonce reconciliation and a journaled signed transaction before one broadcast. Public evidence: `backend/hedera/evidence/task-aware-live-proof.json`. The completed-run guard submits nothing further. RPC availability, native child-record verification and broader production release gates remain distinct from this successful testnet check.
+
+## Sponsor acceptance gate for every phase
+
+Follow [SPONSOR_VERIFICATION.md](../docs/SPONSOR_VERIFICATION.md). Update the evidence register or state that the phase changes no sponsor claim. Keep local/live experiments separate; record expected and observed outcomes with source commits and raw artifacts. Meaningful Hedera enforcement, Arkiv-driven discovery and backend-independent CROPS recovery need their own positive and removal tests. `sponsors:check` validates bookkeeping; `sponsors:ready` requires independent review records, not a package install or recorded-but-unverified result. Track registration/provenance, FOSS licensing, AI/human contribution disclosure and sponsor rules remain mandatory submission gates.

@@ -8,3 +8,5 @@ Current project context and plan live in [shared](../shared/README.md). Setup an
 - `historical-evidence/`: saved baseline evidence before restructuring. Local contract tests regenerate reports under ignored `contracts/phase*/artifacts/`; backend network records remain under `backend/hedera/evidence/`.
 
 The original dossier ZIP preserves the initial package. `legacy-extracted-revisions.zip` preserves only the two extracted documents that differ from the retained current dossier. The redundant extracted tree was removed after byte comparison. Financial proof snapshots are retained deliberately as historical evidence.
+
+Current sponsor acceptance and reviewer workflow: [SPONSOR_VERIFICATION.md](SPONSOR_VERIFICATION.md). Machine-readable status: [sponsor-status.json](evidence/sponsor-status.json).

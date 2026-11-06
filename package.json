@@ -15,6 +15,8 @@
     "test:treasury": "npm run phase1:test --prefix contracts",
     "prototype": "npm test",
     "contracts:compile": "npm run phase0:compile --prefix contracts && npm run phase1:compile --prefix contracts",
-    "backend:serve": "npm run hedera:serve --prefix backend"
+    "backend:serve": "npm run hedera:serve --prefix backend",
+    "interface:export": "npm run interface:export --prefix contracts",
+    "interface:check": "npm run interface:check --prefix contracts"
   }
 }

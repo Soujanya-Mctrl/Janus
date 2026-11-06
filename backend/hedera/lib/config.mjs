@@ -1,17 +1,18 @@
 import fs from 'node:fs';
+import network from '../../../shared/protocol/network.json' with { type: 'json' };
 import { fileURLToPath } from 'node:url';
 import { createPublicClient, http, defineChain, getAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 
 export const envPath = fileURLToPath(new URL('../../.env.hedera', import.meta.url));
 if (fs.existsSync(envPath)) process.loadEnvFile(envPath);
-export const NETWORK = 'hedera:testnet';
-export const TOKEN_ID = '0.0.429274';
-export const TOKEN = getAddress(`0x${BigInt(429274).toString(16).padStart(40, '0')}`);
+export const NETWORK = network.network;
+export const TOKEN_ID = network.token.id;
+export const TOKEN = getAddress(network.token.address);
 export const GAS = 500_000;
 export const BUDGET = 100_000n; // 0.10 testnet USDC
 export const PRICE = 20_000n; // 0.02 testnet USDC
-export const chain = defineChain({ id: 296, name: 'Hedera Testnet', nativeCurrency: { name: 'HBAR', symbol: 'HBAR', decimals: 18 }, rpcUrls: { default: { http: ['https://testnet.hashio.io/api'] } } });
+export const chain = defineChain(network);
 export const rpcUrl = process.env.HEDERA_RPC_URL || chain.rpcUrls.default.http[0];
 export const mirrorUrl = process.env.HEDERA_MIRROR_URL || 'https://testnet.mirrornode.hedera.com';
 export const publicClient = createPublicClient({ chain, transport: http(rpcUrl, { timeout: 20_000, retryCount: 2 }), cacheTime: 0 });
@@ -22,7 +23,7 @@ export function role(name) {
   return { key, ...privateKeyToAccount(key) };
 }
 export async function assertTestnet() {
-  if (await publicClient.getChainId() !== 296) throw new Error('Refusing to use a non-Hedera-testnet RPC');
+  if (await publicClient.getChainId() !== network.id) throw new Error('Refusing to use a non-Hedera-testnet RPC');
   if (process.env.HEDERA_TOKEN_ID && process.env.HEDERA_TOKEN_ID !== TOKEN_ID) throw new Error('Only the pinned Circle testnet USDC token is enabled');
 }
 export async function mirror(path, options = {}) {

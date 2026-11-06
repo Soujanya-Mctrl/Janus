@@ -18,6 +18,8 @@ Historical Hedera evidence is not a fresh chain verification. No live funds were
 
 ## Important boundaries
 
-The frontend targets Sepolia; historical live proofs use Hedera testnet. They are not integrated. Phase-0 payment authorization is 32 bytes; Phase-1 requires 96 bytes encoding task ID, operation ID and uint64 attempt. Merchant result durability, task-aware SDK, real checkpointed agent resumption and independent browser recovery are unfinished. No audit, production readiness, transaction anonymity or validated demand is claimed.
+Frontend and backend now share Hedera testnet configuration (chain 296). The illustrative dashboard is still not connected to treasury state. Phase-0 payment authorization is 32 bytes; Phase-1 requires 96 bytes encoding task ID, operation ID and uint64 attempt. Merchant result durability, task-aware SDK, real checkpointed agent resumption and independent browser recovery are unfinished. No audit, production readiness, transaction anonymity or validated demand is claimed.
 
 Available, reserved, spent, released-to-reserve and withdrawn are distinct quantities. Cancellation does not refund settled purchases or invalidate existing reservations. Unknown payment outcomes require reconciliation before retrying.
+
+Phase 1 integration adds generated treasury ABI/version metadata and a direct RPC owner client. The new recovery integration test passes without application services and preserves pending settlement. Interface freshness, frontend build and lint passed.

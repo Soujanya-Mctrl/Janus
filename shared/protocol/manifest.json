@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "interfaceVersion": "1.0.0",
+  "compiler": "0.8.30+commit.73712a01.Emscripten.clang",
+  "abiSha256": "f85e3d9cad3b71dae3a4643a92419f1594072d5cf2078ff218933cfd45ba6ac1",
+  "authorization": [
+    "bytes32 taskId",
+    "bytes32 operationId",
+    "uint64 attempt"
+  ],
+  "authorizationBytes": 96,
+  "tokenDecimals": 6,
+  "sourceSha256": {
+    "TaskTreasury": "197e59fcde600c213477f4562a44e86e689ef0b44d1a4f2f7ea5e914bf33d68d",
+    "HederaTaskTreasury": "dc99e17f7a28d5cfe76599989c3343d15468aeb791f61bf57d7dbf6ad19365e4"
+  }
+}

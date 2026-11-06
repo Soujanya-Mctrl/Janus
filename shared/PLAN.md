@@ -4,14 +4,14 @@
 
 Use top-level `backend/`, `frontend/`, `contracts/` and `shared/`. Keep separate dependency lockfiles, root orchestration commands, preserved proof evidence, and one current context set. Keep archived research distinct from implementation status.
 
-## Next: finish Phase 1 integration readiness
+## Phase 1: integration readiness completed locally
 
 1. Review the treasury acceptance scenarios and accounting invariants against the intended MVP. Preserve existing pending-payment, epoch and owner-recovery behavior.
 2. Confirm the target settlement network; reconcile Sepolia frontend configuration with the existing Hedera route before wiring transactions.
 3. Establish the treasury interface and ABI/version export for backend/frontend consumption, with integer base units and distinct available/reserved/spent/returned/withdrawn fields.
 4. Verify deployment configuration and direct owner recovery without application services. Keep local proof and historical/live proof clearly labelled.
 
-Exit gate: reproducible contract tests, explicit network/configuration choice, stable integration interface and documented direct owner recovery. A successful dashboard build alone does not complete this gate.
+Evidence: shared Hedera testnet configuration (chain 296), generated ABI and source/ABI hash manifest, export freshness check, direct owner recovery integration test without services, and frontend build/lint. Solidity financial behavior was preserved. Historical live proof was not rerun. See `RECOVERY.md`; browser recovery remains in the next workflow phase.
 
 ## Then: complete the paid workflow prototype
 

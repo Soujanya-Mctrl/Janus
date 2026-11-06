@@ -12,7 +12,7 @@ shared/      Common product context, architecture and implementation plan
 docs/        One research dossier, archived references and historical evidence
 ```
 
-Start with [shared context](shared/CONTEXT.md), [our plan](shared/PLAN.md), and [architecture/configuration](shared/ARCHITECTURE.md). Each executable module owns its package manifest and lockfile. Root scripts orchestrate the modules. `shared/` currently contains maintained context; runtime types, schemas and ABI exports will be added as integration consumers are built.
+Start with [shared context](shared/CONTEXT.md), [our plan](shared/PLAN.md), and [architecture/configuration](shared/ARCHITECTURE.md). Each executable module owns its package manifest and lockfile. Root scripts orchestrate the modules. `shared/` currently contains maintained context; `shared/protocol/` now supplies network configuration and generated ABI/version exports.
 
 ## Setup
 
@@ -39,9 +39,9 @@ npm run prototype
 
 ## Current status and next work
 
-The financial core implements task-isolated caps, reservation/settlement/expiry, worker epochs, cancellation and owner recovery. The frontend has identity plumbing and illustrative accounting. Existing live proof records use Hedera testnet; the frontend currently targets Sepolia. These pieces are not yet connected.
+The financial core implements task-isolated caps, reservation/settlement/expiry, worker epochs, cancellation and owner recovery. The frontend has identity plumbing and illustrative accounting. Existing live proof records use Hedera testnet; frontend and backend now share Hedera testnet configuration. The dashboard remains illustrative.
 
-Our next milestone is **Phase 1 integration readiness**: review treasury acceptance and accounting, confirm the settlement network, establish the shared treasury interface, and verify independently usable owner recovery. Then build the task-aware payment SDK, durable merchant results, checkpointed worker replacement, connected dashboard and independent recovery UI. Detailed gates are in [PLAN.md](shared/PLAN.md).
+**Phase 1 integration readiness is verified locally**: shared network/ABI exports, direct owner recovery client and a service-independent recovery test. Next build the task-aware payment SDK, durable merchant results, checkpointed worker replacement, connected dashboard and independent recovery UI. Detailed gates are in [PLAN.md](shared/PLAN.md).
 
 ## Live backend and configuration
 
@@ -56,3 +56,5 @@ The Phase-0 authorization is 32 bytes; Phase-1 uses 96 bytes (task ID, operation
 Next.js generates **only `frontend/.next/`** for this layout. It is ignored build/cache output, not source; it can be deleted while the frontend is stopped and is recreated by `dev` or `build`. The stale root `.next/` was removed. Never copy build output into other modules.
 
 This is a development prototype, not audited or production-ready software. Historical live evidence is not a fresh network verification.
+
+Run `npm run interface:export` to regenerate the shared treasury interface and `npm run interface:check` to check freshness. The export records source/ABI hashes, compiler and authorization version. See [direct recovery](shared/RECOVERY.md).

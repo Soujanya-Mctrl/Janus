@@ -106,7 +106,7 @@ export function PrivyAuthWrapper({ children }: { children: ReactNode }) {
     return <AuthContext.Provider value={empty}>{children}</AuthContext.Provider>;
   }
   return <PrivyProvider appId={appId} config={{
-    appearance: { theme: "dark", accentColor: "#c5f277", walletChainType: "ethereum-only" },
+    appearance: { theme: "dark", accentColor: "#e4e4e7", walletChainType: "ethereum-only" },
     loginMethods: ["email", "wallet"], defaultChain: targetChain, supportedChains: [targetChain],
     embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" } },
   }}><PrivyBridge>{children}</PrivyBridge></PrivyProvider>;

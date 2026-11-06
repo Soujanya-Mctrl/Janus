@@ -29,9 +29,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable}`}
     >
-      <body className="min-h-full flex flex-col bg-[#080809] text-zinc-100">
+      <body>
         <PrivyAuthWrapper>
           {children}
         </PrivyAuthWrapper>

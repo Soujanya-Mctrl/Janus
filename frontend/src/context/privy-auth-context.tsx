@@ -96,7 +96,10 @@ function PrivyBridge({ children }: { children: ReactNode }) {
     error, session: privy.authenticated ? session : "idle", wallets,
     login: (method) => { setError(null); login(method ? { loginMethods: [method] } : undefined); },
     logout: async () => { await privy.logout(); setSession("idle"); setBalance(null); setChainId(null); selectWallet(null); setError(null); },
-    connectWallet: () => privy.connectWallet(), selectWallet, switchNetwork, refresh, verifySession, exportWallet,
+    connectWallet: () => privy.connectWallet({
+      walletList: ["detected_ethereum_wallets", "metamask", "coinbase_wallet", "rainbow", "wallet_connect"],
+    }),
+    selectWallet, switchNetwork, refresh, verifySession, exportWallet,
   }}>{children}</AuthContext.Provider>;
 }
 
@@ -105,9 +108,36 @@ export function PrivyAuthWrapper({ children }: { children: ReactNode }) {
   if (!appId || appId.includes("your-") || appId.includes("replace-")) {
     return <AuthContext.Provider value={empty}>{children}</AuthContext.Provider>;
   }
-  return <PrivyProvider appId={appId} clientId={process.env.NEXT_PUBLIC_PRIVY_CLIENT_ID?.trim() || undefined} config={{
-    appearance: { theme: "dark", accentColor: "#e4e4e7", walletChainType: "ethereum-only" },
-    loginMethods: ["email", "wallet"], defaultChain: targetChain, supportedChains: [targetChain],
-    embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" } },
-  }}><PrivyBridge>{children}</PrivyBridge></PrivyProvider>;
+  const walletConnectProjectId =
+    process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID?.trim() ||
+    "459ea8ddb5b684323cd0680dba3daaaa";
+
+  return (
+    <PrivyProvider
+      key="privy-provider"
+      appId={appId}
+      clientId={process.env.NEXT_PUBLIC_PRIVY_CLIENT_ID?.trim() || undefined}
+      config={{
+        appearance: {
+          theme: "dark",
+          accentColor: "#e4e4e7",
+          walletChainType: "ethereum-only",
+          walletList: [
+            "detected_ethereum_wallets",
+            "metamask",
+            "coinbase_wallet",
+            "rainbow",
+            "wallet_connect",
+          ],
+        },
+        walletConnectCloudProjectId: walletConnectProjectId,
+        loginMethods: ["email", "wallet"],
+        defaultChain: targetChain,
+        supportedChains: [targetChain],
+        embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" } },
+      }}
+    >
+      <PrivyBridge key="privy-bridge">{children}</PrivyBridge>
+    </PrivyProvider>
+  );
 }

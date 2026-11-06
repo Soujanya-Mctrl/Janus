@@ -19,7 +19,8 @@
     "hedera:buy": "node hedera/scripts/buy.mjs",
     "hedera:recover": "node hedera/scripts/recover.mjs",
     "hedera:verify-live": "node hedera/scripts/verify-live.mjs",
-    "hedera:final-check": "node hedera/scripts/final-check.mjs"
+    "hedera:final-check": "node hedera/scripts/final-check.mjs",
+    "task:serve": "node hedera/scripts/task-server.mjs"
   },
   "dependencies": {
     "@hiero-ledger/sdk": "2.90.1",

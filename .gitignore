@@ -58,3 +58,7 @@ next-env.d.ts
 # Local compiler output
 **/artifacts/
 **/.lockbuild/
+
+# Durable merchant/runner state (never delete while outcomes are unknown)
+**/.merchant-state/
+**/.runner-state/

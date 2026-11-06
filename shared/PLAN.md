@@ -16,10 +16,12 @@ Consistency gate verified on 6 November 2026 with Node.js 22.23.4: `npm run setu
 
 Exit gate: reproducible contract/model tests, explicit network configuration, stable exported integration interface and independently usable owner recovery. No live spending or contract redeployment is part of this phase.
 
-## Next: complete the paid workflow prototype
+## Paid merchant completed locally
 
-1. Build task-aware SDK and payment adapter with the 96-byte authorization envelope and task-specific quote validation.
-2. Persist merchant operation identity, settlement intent and immutable results; authenticate result retrieval and reconcile ambiguous payments across restart.
+The task-aware quote/payment SDK, durable merchant store and authenticated result-retrieval adapter are implemented and tested with real local contracts over HTTP. See [PAID_WORKFLOW.md](PAID_WORKFLOW.md). Live network interoperability and production finality remain unqualified.
+
+## Next: checkpointed workflow prototype
+
 3. Implement deterministic checkpointed A-to-B handoff. Lose a response after payment; retrieve the original result without another charge; reject new old-worker commitments; keep an unrelated task progressing.
 4. Connect the dashboard to authoritative contract state and receipt-confirmed actions. Add a separately usable owner recovery client.
 5. Run the demonstration from reset, save evidence and document limitations before adding optional discovery, privacy or sponsor integrations.

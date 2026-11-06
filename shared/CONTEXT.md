@@ -25,6 +25,10 @@ Available, reserved, spent, released-to-reserve and withdrawn are distinct quant
 
 Repository phase names describe implementation slices: Phase 1 is the multi-task financial core. In the original dossier, that work maps largely to Phase 2. The independent reference model and bounded differential traces are implemented. Full dossier contract-spec acceptance, durable merchant results and working agent handoff remain incomplete; no dossier phase should be declared complete solely from the folder name.
 
+## Paid merchant phase completed locally
+
+Task-aware SDK, pinned treasury adapter, merchant-signed quotes, current-worker/owner request authentication, fsynced operation/result storage and HTTP retrieval are implemented. Local EVM/HTTP regressions verify a paid-response failure, restart, replacement result access, no duplicate debit, missing-result owner decision and an independent task purchase. This is a custom signed HTTP reference adapter, not a general x402 interoperability certification or a fresh live Hedera proof. See `PAID_WORKFLOW.md` for durability assumptions and limits. Checkpointed workflow execution is the next phase.
+
 ## Dependency maintenance
 
 The 6 November 2026 frontend production dependency audit reported 28 advisories (17 high, 11 moderate), largely in the existing Privy/wallet integration tree. The suggested Privy replacement is a breaking version change/downgrade, so it was not applied automatically as part of repository cleanup. Passing local checks does not clear these advisories. Review supported Privy/wallet versions, transitive updates and authentication regressions as a dedicated dependency migration before a production release.

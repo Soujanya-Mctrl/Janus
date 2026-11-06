@@ -6,18 +6,17 @@ Use top-level `backend/`, `frontend/`, `contracts/` and `shared/`. Keep separate
 
 Consistency gate verified on 6 November 2026 with Node.js 22.23.4: `npm run setup` installs module-local dependencies; `npm run check` validates source/lockfiles, lint, types, compilation, tests and frontend build. CI uses the same path. Generated contract reports stay in ignored artifacts rather than rewriting historical proof. Runtime configuration templates live with their owning frontend/backend modules.
 
-## Next: finish Phase 1 integration readiness
+## Treasury integration readiness completed
 
-1. Review the treasury acceptance scenarios and accounting invariants against the intended MVP. Preserve existing pending-payment, epoch and owner-recovery behavior.
-   Explicitly resolve dossier differences: direct onchain reservation versus signed intent/quote, assignment leases, task suspension/closure, reservation bounds, pause/excess-token handling, and separate cancellation/release/withdrawal semantics. Implement or document the selected narrower scope before freezing the interface. Add an independent reference model and stateful accounting tests.
-2. Confirm the target settlement network; reconcile Sepolia frontend configuration with the existing Hedera route before wiring transactions.
-3. Establish the treasury interface and ABI/version export for backend/frontend consumption, with integer base units and distinct available/reserved/spent/returned/withdrawn fields.
-4. Verify deployment configuration and direct owner recovery without application services. Keep local proof and historical/live proof clearly labelled.
-5. Review frontend production dependency advisories and the existing peer-dependency compatibility setting. Migrate the wallet/authentication stack with session and wallet regression checks; do not use an unreviewed forced audit downgrade.
+- Selected Hedera testnet and aligned frontend/backend through shared network configuration.
+- Exported the versioned treasury ABI/hash and decimal-string operation/authorization interface, with drift checks in the normal compile path.
+- Documented accepted narrower contract semantics in [TREASURY_INTERFACE.md](TREASURY_INTERFACE.md), preserving the existing contract and historical deployment.
+- Added an independent event-history accounting model, fixed-seed model histories and onchain differential traces.
+- Added a backend-independent owner recovery client with manifest/chain/code/owner/token checks and local recovery/restart tests. Browser recovery and fresh live proof remain later work; see [RECOVERY.md](RECOVERY.md).
 
-Exit gate: reproducible contract tests, explicit network/configuration choice, stable integration interface and documented direct owner recovery. A successful dashboard build alone does not complete this gate.
+Exit gate: reproducible contract/model tests, explicit network configuration, stable exported integration interface and independently usable owner recovery. No live spending or contract redeployment is part of this phase.
 
-## Then: complete the paid workflow prototype
+## Next: complete the paid workflow prototype
 
 1. Build task-aware SDK and payment adapter with the 96-byte authorization envelope and task-specific quote validation.
 2. Persist merchant operation identity, settlement intent and immutable results; authenticate result retrieval and reconcile ambiguous payments across restart.
@@ -26,6 +25,10 @@ Exit gate: reproducible contract tests, explicit network/configuration choice, s
 5. Run the demonstration from reset, save evidence and document limitations before adding optional discovery, privacy or sponsor integrations.
 
 No production deployment or live spending is part of repository cleanup. The historical midnight timetable is archived reference, not the current schedule.
+
+## Production dependency follow-up
+
+Existing frontend wallet/authentication advisories and peer-dependency compatibility settings require a reviewed migration with wallet/browser regressions before production. The readiness phase reviews and records this debt; it does not apply a forced downgrade or claim to clear the advisories.
 
 ## Phase publication workflow
 

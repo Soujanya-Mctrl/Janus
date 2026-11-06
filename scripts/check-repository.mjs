@@ -9,6 +9,7 @@ const readJson = file => JSON.parse(fs.readFileSync(path.join(root, file), 'utf8
 const files = execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard'], { cwd: root })
   .toString().split('\0').filter(Boolean);
 const failures = [];
+if (fs.existsSync(path.join(root, '.next'))) failures.push('Root .next output is unsupported; run Next.js through frontend/ and remove stale generated root output while the server is stopped');
 
 for (const file of files) {
   if (!fs.existsSync(path.join(root, file))) continue;
@@ -48,7 +49,7 @@ for (const module of ['', 'frontend/', 'backend/', 'contracts/']) {
 }
 
 // Parse executable JavaScript without importing it: live scripts must never run in checks.
-for (const file of files.filter(file => /^(?:scripts|backend|contracts)\/.*\.mjs$/.test(file))) {
+for (const file of files.filter(file => /^(?:scripts|backend|contracts|shared)\/.*\.mjs$/.test(file))) {
   try { execFileSync(process.execPath, ['--check', path.join(root, file)], { stdio: 'pipe' }); }
   catch (error) { failures.push(`${file}: ${error.stderr?.toString() || error.message}`); }
 }

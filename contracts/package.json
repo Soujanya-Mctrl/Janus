@@ -13,7 +13,10 @@
     "phase1:compile": "node --no-wasm-tier-up --wasm-num-compilation-tasks=1 phase1/scripts/compile.mjs",
     "phase1:test": "node --no-wasm-tier-up --wasm-num-compilation-tasks=1 --test --test-concurrency=1 phase1/test/treasury.test.mjs",
     "phase1:live": "node phase1/scripts/live-proof.mjs",
-    "test": "npm run phase0:test && npm run phase1:test"
+    "test": "npm run phase0:test && npm run phase1:test",
+    "interface:export": "node phase1/scripts/export-interface.mjs",
+    "interface:check": "node phase1/scripts/export-interface.mjs --check",
+    "recovery:plan": "node phase1/scripts/recover.mjs"
   },
   "devDependencies": {
     "@hiero-ledger/sdk": "2.90.1",

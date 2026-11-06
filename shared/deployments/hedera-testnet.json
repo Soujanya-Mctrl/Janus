@@ -1,0 +1,13 @@
+{
+  "interfaceVersion": "janus-task-treasury/1",
+  "abiHash": "0x03d9c3dfe08d90cf1b4681490af193f61c505d1e913c57643853d78b709e3d9a",
+  "mode": "historical-testnet",
+  "chainId": 296,
+  "treasury": "0xacba74cfbc1fd132b758d4f313fffa0ea287a382",
+  "runtimeCodeHash": "0xc5e6307b8c7465fb44d86eda5797bf488fa3a651f4ccfc6cb14b4721cc201077",
+  "owner": "0x99a5aa34c43639266FB7E1bCe6a5f8130a20ad5c",
+  "token": "0x0000000000000000000000000000000000068cda",
+  "evidence": "contracts/phase1/evidence/live-proof.json",
+  "recordedAt": "2026-11-06T12:58:18.945Z",
+  "freshlyVerified": false
+}

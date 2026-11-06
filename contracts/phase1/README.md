@@ -37,7 +37,7 @@ npm run phase1:test
 
 The test runner compiles Solidity 0.8.30 with the Shanghai target and optimizer/viaIR, then executes actual contracts on an ephemeral local EVM. It needs no testnet credentials or funds. It writes its observed status and canonical scenario to `artifacts/treasury-tests.json`.
 
-The nine scenarios cover:
+The original nine scenarios cover:
 
 1. The 1,000-unit example: A=100, B=200, C=150, D=150, reserve=400. A spends 20 and reserves 10. The replacement has 70 available; owner recovery and the remaining commitment preserve B/C/D.
 2. Cross-task spending isolation, per-operation caps and duplicate task rejection.
@@ -118,3 +118,7 @@ Phase 0 used a single 32-byte operation ID. Its old HTTP client and facilitator 
 - Dashboard, browser recovery interface, encrypted checkpoints, identity/privacy features and public hosting.
 
 The local tests use four distinct worker keys. To reuse existing funded accounts, the live financial proof uses the owner key as the replacement worker and for B/D. That is a test convenience, not the proposed production worker key arrangement. No LLM agents or concurrent workflow engine ran in this phase. Contracts are testnet prototypes and have not been audited.
+
+## Integration-readiness verification
+
+Three additional scenarios compare seeded transitions with the independent history-based accounting model, exercise the standalone recovery client through cancellation/pending expiry and identity rejection, and resume withdrawal after a release-before-withdraw interruption. The shared authorization codec is used in actual contract executor calls. Shared protocol tests also run 100 fixed-seed model histories. See [the supported interface](../../shared/TREASURY_INTERFACE.md) and [recovery usage](../../shared/RECOVERY.md). These are bounded local checks, not an audit or fresh live proof.

@@ -2,7 +2,7 @@
 
 ## Frontend
 
-`frontend/` owns Next.js source, public assets, TypeScript/ESLint/Next configuration, dependencies and lockfile. The root forwards dev/build/start/lint commands here. TypeScript resolves `@/*` to `frontend/src/*`.
+`frontend/` owns Next.js source, public assets, TypeScript/ESLint/Next configuration, dependencies and lockfile. The root forwards dev/build/start/lint commands here. TypeScript resolves `@/*` to `frontend/src/*`. Turbopack covers the repository root so the app can import `shared/network.json`; dependencies remain module-local and build output remains `frontend/.next/`.
 
 Configure `NEXT_PUBLIC_PRIVY_APP_ID`, optional `NEXT_PUBLIC_PRIVY_CLIENT_ID`, and server-only `PRIVY_VERIFICATION_KEY` in `frontend/.env.local`. Login identity does not grant treasury spending authority. The existing Privy/x402 Solana peer conflict requires the supplied frontend `.npmrc` compatibility setting pending dependency cleanup.
 
@@ -18,9 +18,9 @@ Historical RelayBudget references and dossier archives retain their original ide
 
 ## Verification and integration boundary
 
-Root `setup` installs all three independent lockfiles; the root package has no runtime dependencies. Root `check` validates structure and lockfiles, frontend lint/types, compilation, contract/backend/authentication tests and the production build. CI uses Node.js 22 and these same commands. `prototype` runs only the test suites. Neither command submits live transactions. Local contract reports are regenerated in ignored phase `artifacts/` directories; committed evidence and `docs/historical-evidence/` remain historical snapshots.
+Root `setup` installs all three independent lockfiles; the root package has no runtime dependencies. Root `check` validates structure and lockfiles, frontend lint/types, compilation, shared protocol/model and contract/backend/authentication tests and the production build. CI uses Node.js 22 and these same commands. `prototype` runs only the test suites. Neither command submits live transactions. Local contract reports are regenerated in ignored phase `artifacts/` directories; committed evidence and `docs/historical-evidence/` remain historical snapshots.
 
-The frontend still targets Sepolia while historical settlement proof uses Hedera. The next integration must choose the network, build task-aware authorization (96-byte task ID/operation ID/attempt instead of Phase-0 32-byte authorization), persist merchant operations/results, implement checkpointed resumption, and connect authoritative contract state plus independent owner recovery to the UI.
+Frontend and backend now consume the same Hedera testnet configuration in `shared/network.json`. `shared/treasury-interface.json` exports the reviewed ABI/version/hash; `shared/protocol.mjs` defines canonical operation identity and 96-byte task authorization. The existing merchant still uses the separate Phase-0 probe. The next integration must adapt that merchant, persist operations/results, implement checkpointed resumption, and connect authoritative state and independent recovery to the UI.
 
 Cancellation, release to reserve and owner withdrawal are separate actions. Reserved commitments survive cancellation/handoff. Unknown payment outcomes must be reconciled before another charge.
 
@@ -37,12 +37,12 @@ Owner browser -> frontend/ (Privy identity, wallet; illustrative task data)
                      v
                  contracts/ (Phase-0 probe; Phase-1 multi-task treasury)
 
-Owner wallet -> direct treasury calls (scripted historical proof)
+Owner wallet -> contracts/phase1/lib/recovery.mjs -> chain (independent CLI; local proof)
 Owner browser -> independent static recovery client [planned]
 
-shared/ defines current context and integration boundaries for all modules.
+shared/ owns network, wire rules, versioned ABI and accounting oracle for all modules.
 ```
 
 Keep modules together in this repository so a paid request can eventually be traced from UI/API through operation identity, reservation, settlement, result and checkpoint. Do not add a second financial ledger in the browser. A backend projection must reconcile with chain state, and independent recovery must not depend on that backend.
 
-Before connecting modules: choose one network, export a versioned treasury ABI and canonical operation schema, adapt the merchant to the 96-byte task authorization, persist payment intent/results, and implement checkpointed worker replacement. Only then expose receipt-confirmed task controls. Sepolia login and a Hedera proof do not constitute an integrated deployment.
+Network selection, versioned treasury interface and operation encoding are established. Next adapt the merchant to the 96-byte task authorization, persist payment intent/results, and implement checkpointed worker replacement before exposing receipt-confirmed task controls. Shared configuration and historical proofs alone do not constitute an integrated paid workflow. See [TREASURY_INTERFACE.md](TREASURY_INTERFACE.md) and [RECOVERY.md](RECOVERY.md) for accepted limitations and direct exit.

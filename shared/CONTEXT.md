@@ -19,12 +19,18 @@ Historical Hedera evidence is not a fresh chain verification. No live funds were
 
 ## Important boundaries
 
-The frontend targets Sepolia; historical live proofs use Hedera testnet. They are not integrated. Phase-0 payment authorization is 32 bytes; Phase-1 requires 96 bytes encoding task ID, operation ID and uint64 attempt. Merchant result durability, task-aware SDK, real checkpointed agent resumption and independent browser recovery are unfinished. No audit, production readiness, transaction anonymity or validated demand is claimed.
+Frontend and backend share Hedera testnet configuration. The dashboard remains illustrative and is not connected to a treasury. Phase-0 payment authorization is 32 bytes; Phase-1 requires 96 bytes encoding task ID, operation ID and uint64 attempt. Merchant result durability, task-aware SDK, real checkpointed agent resumption and independent browser recovery are unfinished. An independently usable Node.js recovery client now exists and is verified locally against deployment identity and current contract state. No audit, production readiness, transaction anonymity or validated demand is claimed.
 
 Available, reserved, spent, released-to-reserve and withdrawn are distinct quantities. Cancellation does not refund settled purchases or invalidate existing reservations. Unknown payment outcomes require reconciliation before retrying.
 
-Repository phase names describe implementation slices: Phase 1 is the multi-task financial core. In the original dossier, that work maps largely to Phase 2. The pure reference model, full contract-spec acceptance, durable merchant results and working agent handoff are still incomplete; no dossier phase should be declared complete solely from the folder name.
+Repository phase names describe implementation slices: Phase 1 is the multi-task financial core. In the original dossier, that work maps largely to Phase 2. The independent reference model and bounded differential traces are implemented. Full dossier contract-spec acceptance, durable merchant results and working agent handoff remain incomplete; no dossier phase should be declared complete solely from the folder name.
 
 ## Dependency maintenance
 
 The 6 November 2026 frontend production dependency audit reported 28 advisories (17 high, 11 moderate), largely in the existing Privy/wallet integration tree. The suggested Privy replacement is a breaking version change/downgrade, so it was not applied automatically as part of repository cleanup. Passing local checks does not clear these advisories. Review supported Privy/wallet versions, transitive updates and authentication regressions as a dedicated dependency migration before a production release.
+
+## Treasury integration readiness
+
+Hedera testnet is the selected single settlement network. Shared network configuration, versioned ABI/hash, canonical string-based operation identity and 96-byte authorization now define the integration boundary. The supported narrower contract scope is explicit in `TREASURY_INTERFACE.md`; the existing deployed contract was not modified or redeployed. The independent accounting model derives balances from accepted operation histories. `RECOVERY.md` documents direct owner recovery through contracts/shared only, including pending expiry, reserve-wide withdrawal and restart semantics. New evidence is local; the committed testnet manifest remains historical. Wallet-stack advisory migration stays a production follow-up.
+
+Readiness verification on 6 November 2026, Node.js 22.23.4: repository/ABI drift checks, lint, types and compilation passed; 21 contract scenarios, 13 backend checks, 5 protocol/model checks (including 100 fixed-seed histories) and 5 authentication checks passed. Contract/model differential traces used seeds 7, 19 and 41. The production build and HTTP smoke checks passed after disabling Turbopack disk persistence for this external volume's cache reload failure. New direct recovery proof is local, with no application services or live transactions.

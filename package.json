@@ -11,13 +11,14 @@
     "start": "npm run start --prefix frontend",
     "build": "npm run build --prefix frontend",
     "lint": "npm run lint --prefix frontend",
-    "test": "npm test --prefix contracts && npm test --prefix backend && npm test --prefix frontend",
+    "test": "npm run test:protocol && npm test --prefix contracts && npm test --prefix backend && npm test --prefix frontend",
     "test:treasury": "npm run phase1:test --prefix contracts",
     "prototype": "npm test",
-    "contracts:compile": "npm run phase0:compile --prefix contracts && npm run phase1:compile --prefix contracts",
+    "contracts:compile": "npm run phase0:compile --prefix contracts && npm run phase1:compile --prefix contracts && npm run interface:check --prefix contracts",
     "backend:serve": "npm run hedera:serve --prefix backend",
     "check:repo": "node scripts/check-repository.mjs",
     "typecheck": "npm run typecheck --prefix frontend",
-    "check": "npm run check:repo && npm run lint && npm run typecheck && npm run contracts:compile && npm test && npm run build"
+    "check": "npm run check:repo && npm run lint && npm run typecheck && npm run contracts:compile && npm test && npm run build",
+    "test:protocol": "node --test shared/test/*.test.mjs"
   }
 }

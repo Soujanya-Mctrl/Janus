@@ -2,10 +2,10 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { PrivyProvider, usePrivy, useWallets, useLogin } from "@privy-io/react-auth";
-import { sepolia } from "viem/chains";
-import { formatEther } from "viem";
+import network from "../../../shared/network.json";
+import { defineChain, formatEther } from "viem";
 
-export const targetChain = sepolia;
+export const targetChain = defineChain({ ...network, id: network.chainId });
 type AuthState = {
   configured: boolean; ready: boolean; authenticated: boolean;
   user: { id: string; email?: string } | null;
@@ -81,7 +81,7 @@ function PrivyBridge({ children }: { children: ReactNode }) {
   async function switchNetwork() {
     setError(null);
     try { await wallet?.switchChain(targetChain.id); await refresh(); }
-    catch { setError("Network switch was declined or failed. Select Sepolia in your wallet and retry."); }
+    catch { setError("Network switch was declined or failed. Select Hedera Testnet in your wallet and retry."); }
   }
   async function exportWallet() {
     setError(null);

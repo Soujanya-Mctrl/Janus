@@ -14,7 +14,7 @@ scripts/     Repository consistency checks (no live transactions)
 docs/        One research dossier, archived references and historical evidence
 ```
 
-Start with [shared context](shared/CONTEXT.md), [our plan](shared/PLAN.md), and [architecture/configuration](shared/ARCHITECTURE.md). Each executable module owns its package manifest and lockfile. Root scripts orchestrate the modules. `shared/` currently contains maintained context; runtime types, schemas and ABI exports will be added as integration consumers are built.
+Start with [shared context](shared/CONTEXT.md), [our plan](shared/PLAN.md), and [architecture/configuration](shared/ARCHITECTURE.md). Each executable module owns its package manifest and lockfile. Root scripts orchestrate the modules. `shared/` currently contains maintained context; network configuration, wire rules, independent accounting model and versioned ABI export live under `shared/`.
 
 ## Setup
 
@@ -27,7 +27,7 @@ npm run dev
 
 Open http://localhost:3000. Copy `frontend/.env.example` to `frontend/.env.local` for authentication, then configure `NEXT_PUBLIC_PRIVY_APP_ID`, optional `NEXT_PUBLIC_PRIVY_CLIENT_ID`, and server-only `PRIVY_VERIFICATION_KEY`. Local verification needs no credentials.
 
-The root package only orchestrates commands; it has no application dependencies. `npm install` at the root is not a substitute for `npm run setup`. Each module has its own lockfile and `node_modules/`. Install frontend dependencies locally rather than widening the Next.js root to include an unrelated root installation.
+The root package only orchestrates commands; it has no application dependencies. `npm install` at the root is not a substitute for `npm run setup`. Each module has its own lockfile and `node_modules/`. Install frontend dependencies locally. The Next.js resolution root includes the repository for shared configuration; this does not move dependencies or build output out of `frontend/`.
 
 ## Verify
 
@@ -35,7 +35,7 @@ The root package only orchestrates commands; it has no application dependencies.
 npm run check
 ```
 
-`check` validates repository/lockfile consistency, lints and typechecks the frontend, compiles contracts, runs tests, and builds the frontend. CI runs the same command after `setup`. `check:repo`, `lint`, `typecheck`, `contracts:compile`, `test`, and `build` are also independently runnable.
+`check` validates repository/lockfile consistency, lints and typechecks the frontend, compiles contracts, runs tests, and builds the frontend. CI runs the same command after `setup`. `check:repo`, `lint`, `typecheck`, `contracts:compile`, `test`, `test:protocol`, and `build` are also independently runnable.
 
 `prototype` is an alias for the test suites: actual contracts on an ephemeral local EVM, offline backend settlement checks, and frontend session-verification tests. It does not submit live transactions or demonstrate a complete browser-to-agent workflow. Fresh local contract reports go into ignored `contracts/phase0/artifacts/` and `contracts/phase1/artifacts/`; committed evidence remains a historical snapshot.
 
@@ -43,9 +43,9 @@ npm run check
 
 ## Current status and next work
 
-The financial core implements task-isolated caps, reservation/settlement/expiry, worker epochs, cancellation and owner recovery. The frontend has identity plumbing and illustrative accounting. Existing live proof records use Hedera testnet; the frontend currently targets Sepolia. These pieces are not yet connected.
+The financial core implements task-isolated caps, reservation/settlement/expiry, worker epochs, cancellation and owner recovery. The frontend has identity plumbing and illustrative accounting. Frontend and backend now share Hedera testnet configuration. The dashboard remains illustrative and the Phase-0 merchant is not yet adapted to the multi-task treasury.
 
-Our next milestone is **Phase 1 integration readiness**: review treasury acceptance and accounting, confirm the settlement network, establish the shared treasury interface, and verify independently usable owner recovery. Then build the task-aware payment SDK, durable merchant results, checkpointed worker replacement, connected dashboard and independent recovery UI. Detailed gates are in [PLAN.md](shared/PLAN.md).
+Treasury integration readiness establishes the shared network/ABI/version, canonical operation encoding, independent accounting model and direct owner recovery client. The narrower supported contract scope is documented in [the treasury interface](shared/TREASURY_INTERFACE.md). The next milestone is the task-aware payment SDK and durable merchant results, followed by checkpointed replacement, a connected dashboard and independent recovery UI. Detailed gates are in [PLAN.md](shared/PLAN.md).
 
 ## Live backend and configuration
 
@@ -64,3 +64,5 @@ Next.js generates **only `frontend/.next/`** for this layout. It is ignored buil
 This is a development prototype, not audited or production-ready software. Historical live evidence is not a fresh network verification.
 
 macOS AppleDouble files (`._*`) are ignored by Git, ESLint and TypeScript. Do not commit them. If Git reports `non-monotonic index` for a `._pack-*.idx` file on an external drive, remove only the verified AppleDouble sidecar, never the real `.idx` or `.pack` file.
+
+Independent owner recovery is documented in [shared/RECOVERY.md](shared/RECOVERY.md). The CLI defaults to a read-only plan, validates deployment identity and only submits transactions with an explicit execution flag and owner key. Its local proof is separate from the historical Hedera proof.

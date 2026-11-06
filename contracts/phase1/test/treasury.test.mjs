@@ -2,15 +2,19 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { test } from 'node:test';
 import ganache from 'ganache';
-import { createPublicClient, createWalletClient, custom, defineChain, encodeAbiParameters, encodeFunctionData, decodeErrorResult, keccak256, stringToHex, zeroAddress } from 'viem';
+import { createPublicClient, createWalletClient, custom, defineChain, encodeFunctionData, decodeErrorResult, keccak256, stringToHex, zeroAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { compile } from '../scripts/compile.mjs';
+import { projectLedger } from '../../../shared/accounting-model.mjs';
+import { encodeAuthorization } from '../../../shared/protocol.mjs';
+import { executeRecovery, planRecovery } from '../lib/recovery.mjs';
+import fsSync from 'node:fs';
 
 const artifacts = compile();
 const U = 1_000_000n;
 const id = value => keccak256(stringToHex(value));
 const TASK = Object.fromEntries(['A', 'B', 'C', 'D'].map(name => [name, id(`task-${name}`)]));
-const authorization = (task, operation, attempt = 1n) => encodeAbiParameters([{ type: 'bytes32' }, { type: 'bytes32' }, { type: 'uint64' }], [task, operation, attempt]);
+const authorization = (task, operation, attempt = 1n) => encodeAuthorization(task, operation, attempt.toString());
 const chain = defineChain({ id: 1337, name: 'RelayBudget LOCAL', nativeCurrency: { name: 'Local Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: ['http://127.0.0.1:8545'] } } });
 const taskFields = ['cap', 'available', 'reserved', 'spent', 'returned', 'perOperationLimit', 'worker', 'merchant', 'epoch', 'cancelled'];
 
@@ -59,7 +63,7 @@ async function fixture(run, tokenName = 'TestToken') {
       assert.ok(await balance(vault) >= root.accountedBalance);
       return root;
     }
-    await run({ provider, addresses, token, vault, read, send, task, reserve, pay, rejected, accounting, balance, tokenCall });
+    await run({ provider, publicClient, wallets, addresses, token, vault, read, send, task, reserve, pay, rejected, accounting, balance, tokenCall });
   } finally { await provider.disconnect(); }
 }
 
@@ -211,6 +215,83 @@ test('Phase 1: isolated task budgets and owner-controlled financial recovery', a
     assert.equal(await f.balance(f.addresses[5]), 0n); await f.accounting();
     await f.tokenCall('setTaxed', [false]); await f.pay(TASK.A, id('taxed'), 20n); await f.accounting();
   }, 'AdversarialToken');
+
+  await check('seeded contract transitions match independent event-history accounting after every action', async f => {
+    const events = [{ type: 'deposit', amount: 1000n * U },
+      ...[['A', 100n], ['B', 200n], ['C', 150n], ['D', 150n]].map(([name, amount]) => ({ type: 'create', taskId: TASK[name], amount: amount * U, limit: 100n * U }))];
+    const workers = { A: 1, B: 2, C: 3, D: 4 };
+    const compare = async () => {
+      const model = projectLedger(events);
+      for (const name of ['deposited', 'unallocated', 'totalAvailable', 'totalReserved', 'totalSpent', 'totalWithdrawn', 'accountedBalance']) assert.equal(await f.read(name), model[name], name);
+      assert.equal(await f.balance(f.vault), model.tokenBalance);
+      for (const taskId of Object.values(TASK)) {
+        const actual = await f.task(taskId);
+        for (const [field, expected] of Object.entries(model.tasks[taskId])) assert.equal(actual[field], expected, `${taskId}:${field}`);
+      }
+    };
+    await compare();
+    for (const seed of [7, 19, 41]) {
+      let random = seed;
+      for (let step = 0; step < 6; step++) {
+        random = (Math.imul(random, 1664525) + 1013904223) >>> 0;
+        const name = ['A', 'B', 'C', 'D'][random % 4], taskId = TASK[name], operationId = id(`model:${seed}:${step}`);
+        const amount = BigInt(1 + random % 4), epoch = (await f.task(taskId)).epoch;
+        await f.reserve(workers[name], taskId, operationId, amount, epoch, 1n, 300n);
+        events.push({ type: 'reserve', taskId, operationId, amount: amount * U, epoch, attempt: 1n, fingerprint: 'fixed' }); await compare();
+        if (random & 8) {
+          workers[name] = workers[name] === 1 ? 2 : 1;
+          await f.send(0, 'assignWorker', [taskId, f.addresses[workers[name]]]); events.push({ type: 'assign', taskId }); await compare();
+        }
+        if (random % 3 === 0) {
+          await f.provider.request({ method: 'evm_increaseTime', params: [301] }); await f.provider.request({ method: 'evm_mine', params: [] });
+          await f.send(8, 'expire', [taskId, operationId, 1n]); events.push({ type: 'expire', taskId, operationId, attempt: 1n });
+        } else { await f.pay(taskId, operationId, amount); events.push({ type: 'settle', taskId, operationId, attempt: 1n }); }
+        await compare();
+      }
+    }
+    const release = (await f.task(TASK.A)).available / 2n;
+    await f.send(0, 'releaseAvailable', [TASK.A, release]); events.push({ type: 'release', taskId: TASK.A, amount: release }); await compare();
+    const withdraw = projectLedger(events).unallocated / 3n;
+    await f.send(0, 'withdrawUnallocated', [withdraw]); events.push({ type: 'withdraw', amount: withdraw }); await compare();
+    await f.tokenCall('transfer', [f.vault, 7n * U]); events.push({ type: 'donate', amount: 7n * U }); await compare();
+    await f.send(0, 'cancelTask', [TASK.A]); events.push({ type: 'cancel', taskId: TASK.A }); await compare();
+    report.modelSeeds = [7, 19, 41];
+  });
+  const recoveryManifest = async f => {
+    const descriptor = JSON.parse(fsSync.readFileSync(new URL('../../../shared/treasury-interface.json', import.meta.url), 'utf8'));
+    assert.deepEqual(descriptor.abi, artifacts.TaskTreasury.abi);
+    return { interfaceVersion: descriptor.interfaceVersion, abiHash: descriptor.abiHash, mode: 'local', chainId: 1337,
+      treasury: f.vault, token: f.token, owner: f.addresses[0], runtimeCodeHash: keccak256(await f.publicClient.getBytecode({ address: f.vault })) };
+  };
+  await check('independent owner recovery validates deployment, preserves pending obligations and resumes after expiry', async f => {
+    const manifest = await recoveryManifest(f), operation = id('direct-recovery-pending');
+    await f.reserve(1, TASK.A, operation, 30n, 1n, 1n, 300n);
+    const args = { publicClient: f.publicClient, walletClient: f.wallets[0], manifest, taskId: TASK.A, operationIds: [operation] };
+    for (const changed of [{ chainId: 296 }, { owner: f.addresses[1] }, { token: f.addresses[5] }, { runtimeCodeHash: id('wrong-code') }, { abiHash: id('wrong-abi') }]) {
+      await assert.rejects(() => planRecovery({ ...args, manifest: { ...manifest, ...changed } }));
+    }
+    await assert.rejects(() => executeRecovery({ ...args, walletClient: f.wallets[1] }), /not the owner/);
+    const others = await Promise.all([TASK.B, TASK.C, TASK.D].map(f.task));
+    const before = await f.balance(f.addresses[0]);
+    const first = await executeRecovery(args);
+    assert.deepEqual(first.receipts.map(receipt => receipt.action), ['cancelTask', 'releaseAvailable', 'withdrawUnallocated']);
+    assert.equal(first.task.reserved, (30n * U).toString());
+    assert.equal(await f.balance(f.addresses[0]), before + 470n * U);
+    await f.provider.request({ method: 'evm_increaseTime', params: [301] }); await f.provider.request({ method: 'evm_mine', params: [] });
+    const second = await executeRecovery(args);
+    assert.deepEqual(second.receipts.map(receipt => receipt.action), ['expire', 'releaseAvailable', 'withdrawUnallocated']);
+    assert.equal(await f.balance(f.addresses[0]), before + 500n * U);
+    assert.deepEqual(await Promise.all([TASK.B, TASK.C, TASK.D].map(f.task)), others);
+    assert.deepEqual((await executeRecovery(args)).receipts, []);
+    report.directRecovery = { network: 'LOCAL EVM ONLY', applicationServicesUsed: false, first: first.receipts, afterExpiry: second.receipts };
+  });
+  await check('recovery restart after release-before-withdraw retrieves unallocated reserve', async f => {
+    const manifest = await recoveryManifest(f);
+    await f.send(0, 'cancelTask', [TASK.A]); await f.send(0, 'releaseAvailable', [TASK.A, 100n * U]);
+    const result = await executeRecovery({ publicClient: f.publicClient, walletClient: f.wallets[0], manifest, taskId: TASK.A });
+    assert.deepEqual(result.receipts.map(receipt => receipt.action), ['withdrawUnallocated']);
+    assert.equal(await f.read('totalWithdrawn'), 500n * U); await f.accounting();
+  });
 
   report.status = report.checks.every(c => c.status === 'passed') ? 'passed' : 'failed'; report.finishedAt = new Date().toISOString();
   await save(); assert.equal(report.status, 'passed');

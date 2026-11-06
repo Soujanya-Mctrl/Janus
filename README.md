@@ -78,3 +78,9 @@ Run `npm run demo:handoff` after setup/compilation for the local four-task check
 The [sponsor verification plan](docs/SPONSOR_VERIFICATION.md) maps official Hedera, EF CROPS and Arkiv requirements to meaningful product behavior, measurable pass/fail gates, removal experiments and reproducible reviewer evidence. The [evidence register](docs/evidence/sponsor-status.json) tracks open requirements without treating a working component as prize eligibility.
 
 Run `npm run sponsors:check` to validate the register and local references; it does not rerun experiments. Run `npm run sponsors:ready` for the stricter internal submission gate, which currently fails because required evidence is missing. Recheck official rules, registered track/provenance, root FOSS license, AI attribution, actual x402 compliance and final public demo materials before submission. No track is currently marked submission-ready.
+
+## Arkiv worker discovery
+
+Run `npm run arkiv:query` to query public research-worker records independently of the Janus backend. Set up a dedicated funded Rabdi wallet with `backend/.env.arkiv.example`, then use `npm run arkiv:preflight` (read-only) and `npm run arkiv:publish` (test-gas write). Writer addresses, entity keys and transaction hashes are printed by publication and must be recorded from actual runs; no funded writer/publication is claimed yet.
+
+`npm run demo:handoff` verifies discovery-driven replacement against a labelled fixture directory and local payments. `npm run demo:arkiv` explicitly publishes on Rabdi and uses live reads for that same local treasury/payment flow. It does not submit live Hedera payments. Read [the Arkiv setup guide](shared/ARKIV.md) for schema, owner policy, signed readiness, failure cases and evidence paths. The current adapter uses `janus-task-v1`; it is not a standard x402 compliance claim.

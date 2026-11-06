@@ -6,7 +6,7 @@ Before a paid call the runner saves the pending step. After independently reconc
 
 Handoff checks scheduler authority and replacement eligibility, saves assignment intent before the transaction, then waits for a successful receipt and verifies the exact incremented epoch. A restart can recognize an already-confirmed assignment without incrementing again. If the chain still shows old authority after an earlier uncertain submission, the runner stops for reconciliation rather than sending another assignment. Owner cancellation is respected, and the old worker cannot commit a new checkpoint after an epoch change.
 
-The selector uses an owner-provided worker directory: authorized, non-busy, unexpired records with required capabilities, ordered deterministically by address. These declarations are not independent capability proofs or an Arkiv integration. No eligible worker is a valid waiting condition. An operator drives failure detection and reassignment through the API; no unattended scheduler service is started.
+The underlying selector orders authorized, non-busy, unexpired workers with required capabilities by address. The Arkiv adapter now supplies those candidates from v2 queries, separately verifies owner policy and signed readiness, and rechecks eligibility before assignment. The default demo injects a labelled fixture directory; `npm run demo:arkiv` uses real Rabdi discovery with local payments. No eligible worker is a valid waiting condition. Failure detection/reassignment are operator-triggered; no unattended scheduler service or browser task API is started. See [ARKIV.md](ARKIV.md).
 
 ## Reproduce from reset
 

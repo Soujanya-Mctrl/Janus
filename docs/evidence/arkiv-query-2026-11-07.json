@@ -1,0 +1,14 @@
+{
+  "source": "arkiv-rabdi",
+  "chainId": 7794095,
+  "block": "305920",
+  "queriedAt": "1793997610",
+  "latencyMs": 384,
+  "pages": [
+    {
+      "block": "305920",
+      "skipped": 0
+    }
+  ],
+  "records": []
+}

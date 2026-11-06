@@ -64,3 +64,7 @@ A standalone static recovery page now shares the CLI recovery core and builds th
 ## Checkpoint runner reference
 
 `backend/runner/` owns the local checkpointed runner and demo controller. Its financial calls use the shared task SDK; it stores execution progress rather than a second budget ledger. Per-task state and assignment intents are private filesystem records with fail-closed locks. Four logical task clients and deterministic faults are verified on a local EVM, not four OS worker processes or a production task API. See [RUNNER.md](RUNNER.md).
+
+## Arkiv discovery boundary
+
+`backend/arkiv/` owns the independent SDK client, publication/query CLI, policy/readiness selection and runner integration. `shared/arkiv-worker.json` defines v2 constants consumed by frontend/backend. Arkiv owns public, wallet-owned availability records; checkpoint storage owns private progress, and the treasury owns authority and money. Native expiry uses blocks; the availability lease uses Unix seconds. Queries supply candidates, owner policy authorizes them, worker signatures establish current readiness and the owner/scheduler assigns through the treasury. No-result waiting, fail-closed unavailable reads and offline reconciliation are tested. The explicit live demo uses real Rabdi discovery with local treasury/payments, not a combined live deployment. See [ARKIV.md](ARKIV.md).

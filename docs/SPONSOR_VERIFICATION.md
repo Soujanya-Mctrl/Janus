@@ -33,7 +33,7 @@ The [event rules](https://ethglobal.com/events/mumbai/info/details) distinguish 
 
 ## What makes each integration meaningful
 
-Hedera is the shared financial enforcement boundary: a database display cannot replace epoch checks, conserved reservations and owner exit enforced by the treasury. Arkiv is planned as an independently queryable replacement-worker directory: it must affect which eligible replacement is selected, not just collect activity logs. CROPS is a property, not an installed dependency: the owner must retain a usable exit when Janus services are unavailable.
+Hedera is the shared financial enforcement boundary: a database display cannot replace epoch checks, conserved reservations and owner exit enforced by the treasury. Arkiv is implemented as an independently queryable replacement-worker directory, with funded publication evidence pending: it must affect which eligible replacement is selected, not just collect activity logs. CROPS is a property, not an installed dependency: the owner must retain a usable exit when Janus services are unavailable.
 
 For each integration record the user problem, implementing files, actual runtime call, visible outcome and a removal experiment. A sponsor logo, package import, standalone token transfer, manually supplied worker list, or recovery button that still needs the main API is insufficient.
 
@@ -93,7 +93,7 @@ The register validator checks bookkeeping and existence, not truth, external acc
 
 Hedera task-aware payment/replay evidence is recorded in `backend/hedera/evidence/task-aware-live-proof.json`; the source was dirty and its executed-script hash is recorded, so independently reconcile the patch/provenance before promoting it. The record's scope is JSON-RPC receipt/event and exact balances, not native consensus child-record verification. Current custom HTTP compliance is still an open gate.
 
-CLI recovery and checkpointed handoff have source/tests and documented local observations. Browser recovery and the connected dashboard remain open. Arkiv implementation/evidence and root FOSS license are absent at this review. Classic versus Continuity registration, full provenance, AI/human contribution disclosure, final sponsor docs and videos remain unverified. No sponsor is marked submission-ready.
+CLI recovery and checkpointed handoff have source/tests and documented local observations. Browser recovery and the connected dashboard remain open. Arkiv v2 discovery and runner integration now have local adversarial/handoff proof and an independent live read; funded publication and combined live discovery evidence remain pending. Root FOSS licensing remains unverified. Classic versus Continuity registration, full provenance, AI/human contribution disclosure, final sponsor docs and videos remain unverified. No sponsor is marked submission-ready.
 
 ## Phase discipline
 

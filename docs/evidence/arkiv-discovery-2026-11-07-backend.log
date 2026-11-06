@@ -1,0 +1,63 @@
+
+> @janus/backend@0.0.1 test
+> node --test hedera/test/*.test.mjs workbench/*.test.mjs arkiv/*.test.mjs
+
+Rabdi: no access key, so requests go to the public endpoint, which is heavily rate limited. Get a free key at https://hub.arkiv.network/access-keys and pass it as rabdi({ accessKey }).
+✔ signed readiness is bound to the task, treasury, epoch, entity and fresh nonce (21.363ms)
+✔ ownership, lease seconds, expiry blocks, compatibility and policy reject unsafe workers (1.257416ms)
+✔ copied signatures, busy and unreachable workers cannot be selected; RPC failure has no fallback (13.787708ms)
+✔ duplicate publications resolve deterministically to the newest valid wallet record (10.979458ms)
+✔ expired readiness response and lease expiry during the probe are rejected (3.730334ms)
+✔ real SDK sends typed v2 filters and decodes expiry as blocks (9.071167ms)
+✔ SDK pagination counts schema-skipped rows and refuses a truncated directory (16.27925ms)
+✔ wrong-chain RPC is rejected before querying a directory (0.578583ms)
+This version of µWS is not compatible with your Node.js build:
+
+Error: Cannot find module '../binaries/uws_darwin_arm64_131.node'
+Require stack:
+- /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/contracts/node_modules/ganache/node_modules/@trufflesuite/uws-js-unofficial/src/uws.js
+- /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/contracts/node_modules/ganache/dist/node/core.js
+Falling back to a NodeJS implementation; performance may be degraded.
+
+
+✔ four-task checkpointed handoff reuses a paid result and reconciles assignment acknowledgement loss (24389.249ms)
+▶ merchant HTTP flow preserves facilitator reconciliation on paid retries
+  ✔ unpaid request returns a challenge without settlement (37.89625ms)
+  ✔ paid request and retry return the same original transaction (19.200167ms)
+  ✔ invalid JSON and rejected authorization do not release the resource (46.936292ms)
+  ✔ explicit verify route remains available and unknown paths return 404 (9.404375ms)
+✔ merchant HTTP flow preserves facilitator reconciliation on paid retries (127.339375ms)
+✔ durable purchase survives response loss and refuses ambiguous repurchase (115.314834ms)
+✔ exact USDC payment and only the declared HBAR fee pass (1.920875ms)
+✔ SUCCESS without an actual merchant credit fails (0.418042ms)
+✔ wrong payer debit fails even if merchant received funds (0.267667ms)
+✔ additional token transfers fail (0.133291ms)
+✔ third account HBAR debit fails (0.13725ms)
+✔ fee payer debit beyond declared fee fails (0.200834ms)
+✔ NFT movement fails (0.270375ms)
+✔ transfer log exposing a facilitator-controlled debit fails (0.179667ms)
+✔ signer lock prevents duplicate writers and releases idempotently (42.391291ms)
+This version of µWS is not compatible with your Node.js build:
+
+Error: Cannot find module '../binaries/uws_darwin_arm64_131.node'
+Require stack:
+- /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/contracts/node_modules/ganache/node_modules/@trufflesuite/uws-js-unofficial/src/uws.js
+- /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/contracts/node_modules/ganache/dist/node/core.js
+Falling back to a NodeJS implementation; performance may be degraded.
+
+
+✔ local EVM paid HTTP request survives response loss, restart and worker replacement (15074.986917ms)
+✔ testnet fee ceiling and HTTPS endpoint guard fail closed (2.525ms)
+✔ backend consumes the shared chain, asset, version and task ABI (6.100375ms)
+✔ vault encrypts keys, scopes records to identities, and revokes credentials (142.178875ms)
+✔ tampered vault and missing encryption configuration fail closed (31.591375ms)
+✔ popular providers use fixed endpoints and return sanitized metadata (55.09625ms)
+✔ research configuration rejects the removed execution configuration (2.033084ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 26321.017459

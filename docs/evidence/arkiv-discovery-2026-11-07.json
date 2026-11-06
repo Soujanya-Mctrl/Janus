@@ -1,0 +1,111 @@
+{
+  "requirementIds": [
+    "ARK-02",
+    "ARK-03"
+  ],
+  "sourceCommit": "89ce3d31a0781d8b29df40c66e4445427ee7d7a2",
+  "sourceState": "dirty; only the listed Arkiv source patch was copied into an isolated worktree; concurrent dashboard edits excluded",
+  "sourcePatch": "docs/evidence/arkiv-discovery-2026-11-07.patch",
+  "sourcePatchSha256": "7be9514b957cca5ab5a92434ca94de8bf7f7b124f44a453ba762932262f69cc5",
+  "sourceFilesSha256": {
+    "backend/hedera/test/checkpoint-runner.test.mjs": "f00c9878ba3add9c05bfb719517d6c0d3811b06e15434d6c0b392fa6eb04edae",
+    "backend/package-lock.json": "bbcea31b1542bb997121c13a5ff5bf8cefca9a203998efe576ac9a330510d343",
+    "backend/package.json": "77d3d16474e2d9f9d02cdd4b99456b21d7faf11aa2b0893c3e73acb68d42601e",
+    "backend/runner/checkpoint-runner.mjs": "0b81912eeb0742b5641d099be99babf3e0aed35bffa2116c41d8fb2a66132998",
+    "frontend/scripts/query-arkiv.mjs": "77cd08d460ba6ae5e21b503e2dca1d7b0c049e18254ceddeb95ade84119979f3",
+    "frontend/src/components/agent-workbench.tsx": "9b6fc0fbc2eb7592ce4382beedde69893641c0fcd846e495b1e94df74d8f3fa4",
+    "frontend/src/lib/arkiv-directory.ts": "f85aed22ff50a01248acf66c187c9a1c19ee274d297078673f683e99592916e5",
+    "package.json": "6cd71f7ff3cd319bc8be43276020ee0fd294d9890c64b7d9be80bdd12df35927",
+    "shared/arkiv-worker.json": "c5de872211f6e83fa41d6b5fdb05e52b327505ac95b969d2bf3a01a00aef8343",
+    "backend/arkiv/directory.mjs": "d492b0a46195ef549d404f2d8f3bb99a7b2a80bbf196f1aa7132d48edca682dd",
+    "backend/arkiv/discovery.mjs": "f88b5be4a047e433b69627b6291d3a9187be3f91536f54355cbd3ca67c71a566",
+    "backend/arkiv/cli.mjs": "9a848c30df7541ea3cb9d37ea77be81d789c1b976d9345915bcab3973685a63c",
+    "backend/arkiv/discovery.test.mjs": "82698ab66324dda7b016fe34dadeda37e94bfa60e27ecaa41d3cea3469d6ba05",
+    "backend/arkiv/live-demo.mjs": "5bcbc72b2c6f9617096a6448e96f2d032820ac071f599da115b41820bf6f18db"
+  },
+  "recordedAtUTC": "2026-11-06T20:44:24.661870+00:00",
+  "runtime": "v23.3.0",
+  "os": "Darwin-25.1.0-arm64-arm-64bit-Mach-O",
+  "mode": "local EVM payments + fixture directory; separate read-only Rabdi query",
+  "commands": [
+    {
+      "command": "npm run demo:handoff",
+      "exitCode": 0,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "command": "node --test backend/arkiv/discovery.test.mjs",
+      "exitCode": 0,
+      "tests": 8,
+      "passed": 8,
+      "failed": 0
+    },
+    {
+      "command": "npm test --prefix backend (isolated Arkiv source copy)",
+      "exitCode": 0,
+      "tests": 31,
+      "passed": 31,
+      "failed": 0
+    },
+    {
+      "command": "npm test --prefix frontend (isolated Arkiv source copy)",
+      "exitCode": 0,
+      "tests": 8,
+      "passed": 8,
+      "failed": 0
+    },
+    {
+      "command": "npm run lint && npm run typecheck",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run arkiv:query",
+      "exitCode": 0,
+      "writes": false
+    },
+    {
+      "command": "npm run build --prefix frontend -- --webpack (isolated Arkiv source copy)",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run contracts:compile; protocol and contract suites from npm run check",
+      "exitCode": 0,
+      "protocolTests": 5,
+      "contractTests": 23,
+      "note": "These completed before the unrelated shared-workspace backend configuration failure."
+    }
+  ],
+  "expected": {
+    "logicalPurchases": 5,
+    "totalSpent": "100",
+    "sameOriginalPaymentOnResume": true,
+    "assignmentEpoch": "2",
+    "noResult": "waiting without assignment",
+    "unavailableReads": "failure without fallback",
+    "revalidationFailure": "no assignment",
+    "reconciliation": "works with directory offline"
+  },
+  "observed": {
+    "handoff": "docs/evidence/arkiv-discovery-2026-11-07-handoff.json",
+    "backendLog": "docs/evidence/arkiv-discovery-2026-11-07-backend.log",
+    "independentLiveQuery": "docs/evidence/arkiv-query-2026-11-07.json",
+    "buildLog": "docs/evidence/arkiv-discovery-2026-11-07-build.log"
+  },
+  "artifactsSha256": {
+    "docs/evidence/arkiv-discovery-2026-11-07-handoff.json": "7288ba9d3b96c50db759496c74fe8d0bb4212762d257059ea8ea974ea1713b5b",
+    "docs/evidence/arkiv-discovery-2026-11-07-backend.log": "80259c14b44094f1c3763bde861cab0b20f4ec0a5efd209aaed98a2456986c3f",
+    "docs/evidence/arkiv-query-2026-11-07.json": "2d45f36ef080099b90d58ac5f9f5e37b628269deed758c6daf882b0b4b05ed9e",
+    "docs/evidence/arkiv-discovery-2026-11-07-build.log": "16413c981e5219bc84669cb588c574515959469dff68a8d43ce3c9be7c20a8bb"
+  },
+  "reviewer": null,
+  "limitations": [
+    "No dedicated funded Arkiv writer configured; no testnet publication or live-discovery handoff recorded.",
+    "No independent reviewer; not sponsor-ready.",
+    "Worker readiness uses local logical worker wallets, not remote worker processes or real model execution.",
+    "Original shared-workspace full check was interrupted by a concurrent research-config change; isolated backend suite passes.",
+    "Native Turbopack isolated build cannot follow dependency links outside its root; webpack production verification is recorded separately.",
+    "A temporary dependency installation exhausted host disk; its partial install was removed."
+  ]
+}

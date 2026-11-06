@@ -1,0 +1,8 @@
+{
+  "schema": "janus.worker.v2",
+  "role": "researcher",
+  "capability": "research",
+  "scheme": "janus-task-v1",
+  "leaseSeconds": 3600,
+  "chainId": 7794095
+}

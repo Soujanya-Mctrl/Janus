@@ -2,7 +2,7 @@
 
 ## Research-task workspace
 
-The current implementation follows [demo.md](../demo.md): task-owned budgets, paid-source reuse, checkpointed worker handoff and independent owner recovery. `/dashboard/agents` explains this flow and provides research-role configuration; `/dashboard/credentials` retains encrypted provider-key storage. Model execution is not connected to the research runner. Arkiv profile publication/query code now targets research workers; automatic discovery-driven replacement and live evidence remain pending. Read-only Hedera checks remain available. See [WORKBENCH.md](WORKBENCH.md).
+The current implementation follows [demo.md](../demo.md): task-owned budgets, paid-source reuse, checkpointed worker handoff and independent owner recovery. `/dashboard/agents` explains this flow and provides research-role configuration; `/dashboard/credentials` retains encrypted provider-key storage. Model execution is not connected to the research runner. Arkiv v2 profile publication/query now feeds operator-triggered checkpoint replacement with owner policy and signed readiness. Local fixture-directory handoff and a live independent query pass; funded testnet publication, remote worker transport and combined live evidence remain pending. See [ARKIV.md](ARKIV.md). Read-only Hedera checks remain available. See [WORKBENCH.md](WORKBENCH.md).
 
 Local container orchestration is available through root Docker Compose: persistent local EVM, automatic token/treasury/task bootstrap, task-aware merchant and frontend. See [DOCKER.md](DOCKER.md). This changes no live-network or sponsor verification claim and does not connect the illustrative dashboard to local treasury state.
 

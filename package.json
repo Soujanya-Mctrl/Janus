@@ -23,6 +23,10 @@
     "demo:handoff": "npm run demo:handoff --prefix backend",
     "test:workbench": "npm run test:workbench --prefix backend",
     "sponsors:check": "node scripts/check-sponsors.mjs",
-    "sponsors:ready": "node scripts/check-sponsors.mjs --require-ready"
+    "sponsors:ready": "node scripts/check-sponsors.mjs --require-ready",
+    "arkiv:query": "npm run arkiv:query --prefix backend",
+    "arkiv:preflight": "npm run arkiv:preflight --prefix backend",
+    "arkiv:publish": "npm run arkiv:publish --prefix backend",
+    "demo:arkiv": "npm run demo:arkiv --prefix backend"
   }
 }

@@ -1,2 +1,3 @@
-import { listArkivWorkers } from '../src/lib/arkiv-directory.ts';
-console.log(JSON.stringify(await listArkivWorkers(), null, 2));
+// Compatibility entry point; the independent query belongs to the backend SDK client.
+process.env.ARKIV_ACCESS_KEY ??= process.env.NEXT_PUBLIC_ARKIV_ACCESS_KEY ?? '';
+await import('../../backend/arkiv/cli.mjs');

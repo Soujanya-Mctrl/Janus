@@ -2,7 +2,7 @@
 
 ## Current direction: research-task demo
 
-Follow [demo.md](../demo.md). Preserve the local payment-aware handoff, recorded Hedera payment/replay and independent recovery. Next connect authoritative treasury state and receipt-confirmed actions to the browser, integrate research-model execution with paid artifacts/checkpoints, and make Arkiv query results drive eligible replacement selection. Credential storage and research-role configuration remain preparation rather than an executable browser workflow. No new sponsor acceptance is claimed.
+Follow [demo.md](../demo.md). Preserve the local payment-aware handoff, recorded Hedera payment/replay and independent recovery. Next connect authoritative treasury state and receipt-confirmed actions to the browser, integrate research-model execution with paid artifacts/checkpoints, and complete funded live Arkiv discovery evidence. Arkiv query results now drive operator-triggered eligible replacement selection; remote worker transport and browser orchestration remain separate. Credential storage and research-role configuration remain preparation rather than an executable browser workflow. No new sponsor acceptance is claimed.
 
 ## Dashboard agent creation and monitoring
 
@@ -63,3 +63,7 @@ The bounded 0.02-test-USDC Hedera payment and original-result replay are verifie
 ## Sponsor acceptance gate for every phase
 
 Follow [SPONSOR_VERIFICATION.md](../docs/SPONSOR_VERIFICATION.md). Update the evidence register or state that the phase changes no sponsor claim. Keep local/live experiments separate; record expected and observed outcomes with source commits and raw artifacts. Meaningful Hedera enforcement, Arkiv-driven discovery and backend-independent CROPS recovery need their own positive and removal tests. `sponsors:check` validates bookkeeping; `sponsors:ready` requires independent review records, not a package install or recorded-but-unverified result. Track registration/provenance, FOSS licensing, AI/human contribution disclosure and sponsor rules remain mandatory submission gates.
+
+## Arkiv discovery integration
+
+Implemented v2 profiles with execution-network/protocol filters, native block expiry and a Unix-second lease. The backend checks wallet ownership, explicit owner policy and task-bound signed readiness, revalidates before assignment, and persists query/entity evidence. The local four-task demo now selects through this adapter, checks empty/unavailable directory behavior and reconciles a submitted assignment while Arkiv is offline. Independent Rabdi query succeeded; `npm run demo:arkiv` supplies the funded-key live-discovery/local-finance rehearsal. Publication and external-user/sponsor evidence remain open; see [ARKIV.md](ARKIV.md).

@@ -16,3 +16,5 @@ Use [demo.md](../demo.md) for the presentation walkthrough, feature coverage and
 See [PAID_WORKFLOW.md](PAID_WORKFLOW.md) for the task-aware SDK, signed HTTP adapter, result durability and local proof boundaries.
 
 Use the [sponsor verification plan](../docs/SPONSOR_VERIFICATION.md) and [evidence register](../docs/evidence/sponsor-status.json) for every phase that changes a sponsor claim. Record measured outcomes, reviewer evidence and unresolved eligibility requirements.
+
+Use [ARKIV.md](ARKIV.md) for wallet setup, independent queries, discovery-driven handoff and the live-discovery/local-payment demo.

@@ -64,8 +64,8 @@ export function createCheckpointRunner({ directory, publicClient, manifest, endp
     return state;
    });
   },
-  async handoff({ schedulerWallet, replacement, eligible, afterAssignment = async () => {} }) {
-   if (typeof eligible !== 'function' || !await eligible(replacement)) throw new Error('No eligible replacement');
+  async handoff({ schedulerWallet, replacement, eligible, discovery, afterAssignment = async () => {} }) {
+   if (typeof eligible !== 'function') throw new Error('No eligible replacement');
    if (!/^0x[0-9a-fA-F]{40}$/.test(replacement) || /^0x0{40}$/.test(replacement)) throw new Error('Invalid replacement');
    return locked(async () => {
     await validateTreasury(publicClient, manifest);
@@ -77,8 +77,10 @@ export function createCheckpointRunner({ directory, publicClient, manifest, endp
     let fresh = false;
     if (task[9]) throw new Error('Task cancelled');
     if (!state.handoff || state.handoff.status === 'confirmed') {
+     if (!await eligible(replacement)) throw new Error('No eligible replacement');
      fresh = true;
      state.handoff = { status: 'intent', fromWorker: task[6].toLowerCase(), fromEpoch: task[8].toString(), replacement: replacement.toLowerCase() };
+     if (discovery) state.handoff.discovery = discovery;
      await save(state); // assignment outbox persisted before touching the chain
     }
     const intent = state.handoff;

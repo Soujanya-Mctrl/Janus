@@ -11,6 +11,8 @@ import ganache from '../../../contracts/node_modules/ganache/dist/node/core.js';
 import { createTaskMerchant, taskMerchantHandler, accessMessage, requestHash } from '../lib/task-merchant.mjs';
 import { buyTaskDataset } from '../lib/task-client.mjs';
 import { createCheckpointRunner, selectReplacement } from '../../runner/checkpoint-runner.mjs';
+import { handoffFromArkiv } from '../../arkiv/discovery.mjs';
+import { createArkivDirectory } from '../../arkiv/directory.mjs';
 
 test('four-task checkpointed handoff reuses a paid result and reconciles assignment acknowledgement loss', async t => {
  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'janus-runner-'));
@@ -20,6 +22,13 @@ test('four-task checkpointed handoff reuses a paid result and reconciles assignm
  const chain = defineChain({ id: 1337, name: 'Local', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: ['http://localhost'] } } });
  const transport = custom(provider), publicClient = createPublicClient({ chain, transport, cacheTime: 0, pollingInterval: 10 });
  const wallets = Object.values(provider.getInitialAccounts()).map(entry => createWalletClient({ account: privateKeyToAccount(entry.secretKey), chain, transport }));
+ const liveDiscovery = process.env.JANUS_ARKIV_LIVE_DEMO === '1';
+ if (liveDiscovery) {
+  // Dedicated TESTNET identity controls the replacement; balances/payments remain local.
+  const account = privateKeyToAccount(process.env.ARKIV_WRITER_PRIVATE_KEY);
+  wallets[2] = createWalletClient({ account, chain, transport });
+  await provider.request({ method: 'evm_setAccountBalance', params: [account.address, '0x56bc75e2d63100000'] });
+ }
  const artifact = name => fs.readFile(new URL(`../../../contracts/phase1/artifacts/${name}.json`, import.meta.url), 'utf8').then(JSON.parse);
  const tokenArtifact = await artifact('TestToken'), treasuryArtifact = await artifact('TaskTreasury');
  const receipt = async hash => { const result = await publicClient.waitForTransactionReceipt({ hash }); assert.equal(result.status, 'success'); return result; };
@@ -67,10 +76,32 @@ test('four-task checkpointed handoff reuses a paid result and reconciles assignm
  assert.equal(selectReplacement(workers.map(worker => ({ ...worker, busy: true })), { requiredCapabilities: ['research'] }), undefined);
  const handoff = { schedulerWallet: wallets[0], replacement: selected.address, eligible: async address => address === selected.address };
  await assert.rejects(() => makeRunner('A').handoff({ ...handoff, schedulerWallet: wallets[1] }), /Unauthorized scheduler/);
- await assert.rejects(() => makeRunner('A').handoff({ ...handoff, afterAssignment: async () => { throw new Error('Scheduler lost acknowledgement'); } }), /acknowledgement/);
+ let queries = 0;
+ const records = workers.map((worker, index) => ({ ...worker, owner: worker.address, entityKey: id(`entity:${index}`),
+  role: 'researcher', status: 'ready', network: 'eip155:1337', scheme: 'janus-task-v1', updatedAtBlock: '90', expiresAtBlock: '200', validUntil: '9999999999' }));
+ const liveRegistry = liveDiscovery ? createArkivDirectory() : null;
+ const registry = { query: async query => { queries++; return liveRegistry ? liveRegistry.query(query) : { source: 'fixture-not-testnet', chainId: 7794095, block: '100', queriedAt: String(Math.floor(Date.now() / 1000)), records }; } };
+ const discovery = { runner: makeRunner('A'), directory: registry, publicClient, manifest, taskId: ids.A, schedulerWallet: wallets[0],
+  authorize: async address => workers.find(worker => worker.address === address)?.authorized === true,
+  probe: async ({ worker, message }) => {
+   const wallet = wallets.find(wallet => wallet.account.address === worker.address);
+   return { busy: workers.find(item => item.address === worker.address)?.busy, signature: await wallet.signMessage({ message }) };
+  } };
+ const beforeDiscovery = await read('tasks', [ids.A]);
+ assert.equal((await handoffFromArkiv({ ...discovery, directory: { query: async () => ({ chainId: 7794095, block: '100', records: [] }) } })).status, 'waiting');
+ await assert.rejects(() => handoffFromArkiv({ ...discovery, directory: { query: async () => { throw new Error('Arkiv unavailable'); } } }), /Arkiv unavailable/);
+ let staleQueries = 0;
+ await assert.rejects(() => handoffFromArkiv({ ...discovery, directory: { query: async () => ({ chainId: 7794095, block: '100', records: ++staleQueries === 1 ? records : [] }) } }), /No eligible replacement/);
+ assert.equal(staleQueries, 2);
+ assert.deepEqual(await read('tasks', [ids.A]), beforeDiscovery);
+ await assert.rejects(() => handoffFromArkiv({ ...discovery, afterAssignment: async () => { throw new Error('Scheduler lost acknowledgement'); } }), /acknowledgement/);
+ assert.equal(queries, 2); // discovery plus fresh pre-assignment validation
+ const savedDiscovery = (await makeRunner('A').inspect()).handoff.discovery;
+ assert.equal(savedDiscovery.selected.entityKey, liveDiscovery ? process.env.JANUS_ARKIV_ENTITY_KEY : records[0].entityKey);
  assert.equal((await read('tasks', [ids.A]))[8], 2n);
  // Restart recognizes the confirmed chain assignment instead of incrementing twice.
- await makeRunner('A').handoff(handoff);
+ assert.equal((await handoffFromArkiv({ ...discovery, directory: { query: async () => { throw new Error('Directory offline during reconciliation'); } } })).status, 'reconciled');
+ await handoffFromArkiv({ ...discovery, directory: { query: async () => { throw new Error('Directory offline after confirmation'); } } });
  await makeRunner('A').handoff(handoff);
  assert.equal((await read('tasks', [ids.A]))[8], 2n);
  await assert.rejects(() => makeRunner('A').run({ walletClient: wallets[1] }), /not currently assigned/);
@@ -104,6 +135,8 @@ test('four-task checkpointed handoff reuses a paid result and reconciles assignm
    faultSchedule: ['A stops after confirmed payment before checkpoint', 'B/C/D complete independently', 'assignment acknowledgement is lost', 'scheduler reconciles assignment', 'B reuses A artifact and completes followup'],
    taskA: await read('tasks', [ids.A]), otherTasks: others, totalSpent: await read('totalSpent'), logicalPurchases: paidLogs.length,
    firstPayment: originalTransaction, reusedPayment: resumed.completed[0].result.receipt.transaction, completedSteps: resumed.completed.map(step => step.id), assignmentEpoch: (await read('tasks', [ids.A]))[8] };
+  report.discovery = { ...savedDiscovery, queries, removalChecks: ['empty directory waits without assignment', 'RPC unavailable propagates without assignment', 'pending assignment reconciles with directory offline'] };
+  report.liveArkivDiscovery = liveDiscovery;
   await fs.writeFile(path.join(process.env.JANUS_DEMO_EVIDENCE_DIR, 'report.json'), JSON.stringify(report, (_, value) => typeof value === 'bigint' ? value.toString() : value, 2) + '\n');
  }
 });

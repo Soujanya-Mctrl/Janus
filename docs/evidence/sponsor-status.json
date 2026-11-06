@@ -71,8 +71,12 @@
       "sponsor": "arkiv",
       "requirement": "Track-appropriate provenance and actual current-testnet entity writes",
       "mandatory": true,
-      "status": "missing",
-      "evidencePaths": [],
+      "status": "partial",
+      "evidencePaths": [
+        "backend/arkiv/cli.mjs",
+        "backend/arkiv/live-demo.mjs",
+        "shared/ARKIV.md"
+      ],
       "verificationRecord": null
     },
     {
@@ -80,8 +84,13 @@
       "sponsor": "arkiv",
       "requirement": "Visible handoff driven by reproducible Arkiv reads and independent query",
       "mandatory": true,
-      "status": "missing",
-      "evidencePaths": [],
+      "status": "partial",
+      "evidencePaths": [
+        "backend/arkiv/discovery.mjs",
+        "backend/hedera/test/checkpoint-runner.test.mjs",
+        "shared/ARKIV.md",
+        "docs/evidence/arkiv-discovery-2026-11-07.json"
+      ],
       "verificationRecord": null
     },
     {
@@ -89,8 +98,12 @@
       "sponsor": "arkiv",
       "requirement": "Expiry, ownership, capability and no-result adversarial discovery evidence",
       "mandatory": true,
-      "status": "missing",
-      "evidencePaths": [],
+      "status": "partial",
+      "evidencePaths": [
+        "backend/arkiv/discovery.test.mjs",
+        "backend/hedera/test/checkpoint-runner.test.mjs",
+        "docs/evidence/arkiv-discovery-2026-11-07.json"
+      ],
       "verificationRecord": null
     },
     {
@@ -98,8 +111,15 @@
       "sponsor": "arkiv",
       "requirement": "Root arkiv criterion/schema files, README writer wallets/query, FOSS and AI disclosure",
       "mandatory": true,
-      "status": "missing",
-      "evidencePaths": [],
+      "status": "partial",
+      "evidencePaths": [
+        "arkiv/schema.md",
+        "arkiv/friction.md",
+        "arkiv/reach.md",
+        "arkiv/why-arkiv.md",
+        "arkiv/how-you-use-arkiv.md",
+        "README.md"
+      ],
       "verificationRecord": null
     },
     {

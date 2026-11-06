@@ -1,0 +1,615 @@
+diff --git a/backend/arkiv/cli.mjs b/backend/arkiv/cli.mjs
+new file mode 100644
+index 0000000..2a69025
+--- /dev/null
++++ b/backend/arkiv/cli.mjs
+@@ -0,0 +1,28 @@
++import { privateKeyToAccount } from 'viem/accounts';
++import { createPublicClient, http } from 'viem';
++import { rabdi } from '@arkiv-network/sdk/chains';
++import { createArkivDirectory, spec } from './directory.mjs';
++
++const command = process.argv[2] ?? 'query';
++const network = process.env.ARKIV_WORKER_NETWORK ?? 'eip155:296';
++try {
++ const directory = createArkivDirectory();
++ if (command === 'query') console.log(JSON.stringify(await directory.query({ network }), null, 2));
++ else if (command === 'preflight' || command === 'publish') {
++  const key = process.env.ARKIV_WRITER_PRIVATE_KEY;
++  if (!/^0x[0-9a-fA-F]{64}$/.test(key ?? '')) throw new Error('Configure a dedicated testnet ARKIV_WRITER_PRIVATE_KEY in backend/.env.arkiv');
++  const account = privateKeyToAccount(key);
++  const client = createPublicClient({ chain: rabdi({ accessKey: process.env.ARKIV_ACCESS_KEY ?? '' }), transport: http(undefined, { timeout: 12000, retryCount: 0 }) });
++  if (await client.getChainId() !== spec.chainId) throw new Error('Arkiv chain mismatch');
++  const balance = await client.getBalance({ address: account.address });
++  if (balance === 0n) throw new Error(`Fund dedicated Rabdi writer ${account.address} with test tGLM through https://hub.arkiv.network/faucet`);
++  if (command === 'preflight') console.log(JSON.stringify({ chainId: spec.chainId, writer: account.address, balanceWei: balance.toString(), network, writes: false }, null, 2));
++  else console.log(JSON.stringify({ writer: account.address, network,
++   ...await directory.publish({ account, name: process.env.ARKIV_WORKER_NAME ?? 'Janus research worker', network }) }, (_, value) => typeof value === 'bigint' ? value.toString() : value, 2));
++ } else throw new Error('Use query, preflight or publish');
++} catch (error) {
++ // SDK transport errors can contain private RPC access URLs; only print our own setup errors.
++ const message = error.message ?? '';
++ console.error(/^(Configure|Fund dedicated|Arkiv chain mismatch|Use query)/.test(message) ? message : 'Arkiv request failed. Check connectivity, access-key configuration and testnet status. No fallback was used.');
++ process.exitCode = 1;
++}
+diff --git a/backend/arkiv/directory.mjs b/backend/arkiv/directory.mjs
+new file mode 100644
+index 0000000..697d731
+--- /dev/null
++++ b/backend/arkiv/directory.mjs
+@@ -0,0 +1,52 @@
++import { createPublicClient, createWalletClient, ExpirationTime } from '@arkiv-network/sdk';
++import { rabdi } from '@arkiv-network/sdk/chains';
++import { addr, defineSchema, str, u64 } from '@arkiv-network/sdk/schema';
++import { and, asc, eq, gt } from '@arkiv-network/sdk/query';
++import { http } from 'viem';
++import spec from '../../shared/arkiv-worker.json' with { type: 'json' };
++
++export { spec };
++export const WorkerProfiles = defineSchema(spec.schema, {
++ worker: addr().indexed(), role: str().indexed(), status: str().indexed(),
++ capabilities: str().indexed(), network: str().indexed(), scheme: str().indexed(),
++ validUntil: u64().indexed(), name: str(),
++});
++
++export function createArkivDirectory({ accessKey = process.env.ARKIV_ACCESS_KEY ?? '', transport } = {}) {
++ const chain = rabdi({ accessKey });
++ const rpc = transport ?? http(undefined, { timeout: 12000, retryCount: 0 });
++ const client = createPublicClient({ chain, transport: rpc });
++ return {
++  async query({ network, capability = spec.capability, scheme = spec.scheme, now = BigInt(Math.floor(Date.now() / 1000)) }) {
++   if (!/^eip155:[1-9][0-9]*$/.test(network) || capability !== spec.capability || scheme !== spec.scheme) throw new Error('Unsupported worker query');
++   if (await client.getChainId() !== spec.chainId) throw new Error('Arkiv chain mismatch');
++   const started = performance.now(), records = [], pages = [];
++   // Bounded, ordered pagination. Never silently select from a truncated directory.
++   for (let offset = 0; offset < 1000; offset += 100) {
++    const page = await client.select({ $key: true, $owner: true, $expiresAt: true, $updatedAt: true,
++     worker: true, role: true, status: true, capabilities: true, network: true, scheme: true, validUntil: true, name: true })
++     .from(WorkerProfiles).where(and(eq('role', spec.role), eq('status', 'ready'), eq('capabilities', capability),
++      eq('network', network), eq('scheme', scheme), gt('validUntil', u64(now))))
++     .orderBy(asc('$key')).limit(100).offset(offset).fetch();
++    pages.push({ block: String(page.blockNumber), skipped: page.skipped });
++    records.push(...page.entities.map(row => ({ entityKey: row.$key, owner: row.$owner, expiresAtBlock: String(row.$expiresAt),
++     updatedAtBlock: String(row.$updatedAt), address: row.worker.value, role: row.role.value, status: row.status.value,
++     capabilities: [row.capabilities.value], network: row.network.value, scheme: row.scheme.value,
++     validUntil: String(row.validUntil.value), name: row.name.value })));
++    if (page.entities.length + page.skipped < 100) {
++     return { source: 'arkiv-rabdi', chainId: spec.chainId, block: String(await client.getBlockNumber({ cacheTime: 0 })),
++      queriedAt: now.toString(), latencyMs: Math.round(performance.now() - started), pages, records };
++    }
++   }
++   throw new Error('Arkiv directory exceeds 1000 records; narrow the query');
++  },
++  async publish({ account, name, network }) {
++   if (!name?.trim() || name.length > 50 || !/^eip155:[1-9][0-9]*$/.test(network)) throw new Error('Invalid public worker profile');
++   if (await client.getChainId() !== spec.chainId) throw new Error('Arkiv chain mismatch');
++   const wallet = createWalletClient({ chain, transport: rpc, account });
++   return wallet.createEntity(WorkerProfiles, { worker: addr(account.address), role: spec.role, status: 'ready',
++    capabilities: spec.capability, network, scheme: spec.scheme, validUntil: u64(BigInt(Math.floor(Date.now() / 1000) + spec.leaseSeconds)), name: name.trim() },
++    { expiration: ExpirationTime.fromHours(1) });
++  },
++ };
++}
+diff --git a/backend/arkiv/discovery.mjs b/backend/arkiv/discovery.mjs
+new file mode 100644
+index 0000000..c7d7222
+--- /dev/null
++++ b/backend/arkiv/discovery.mjs
+@@ -0,0 +1,92 @@
++import { randomBytes } from 'node:crypto';
++import { verifyMessage } from 'viem';
++import { selectReplacement } from '../runner/checkpoint-runner.mjs';
++import spec from '../../shared/arkiv-worker.json' with { type: 'json' };
++
++const same = (a, b) => typeof a === 'string' && typeof b === 'string' && a.toLowerCase() === b.toLowerCase();
++const address = value => /^0x[0-9a-fA-F]{40}$/.test(value ?? '') && !/^0x0{40}$/.test(value);
++const integer = value => typeof value === 'string' && /^[0-9]+$/.test(value);
++async function readiness(probe, input) {
++ const controller = new AbortController();
++ let timer;
++ try {
++  return await Promise.race([probe({ ...input, signal: controller.signal }), new Promise((_, reject) => {
++   timer = setTimeout(() => { controller.abort(); reject(new Error('Readiness timeout')); }, 5000);
++  })]);
++ } finally { clearTimeout(timer); }
++}
++
++export async function discoverReplacement({ directory, network, taskId, treasury, epoch, failedWorker,
++ authorize, probe, now = () => BigInt(Math.floor(Date.now() / 1000)) }) {
++ if (typeof authorize !== 'function' || typeof probe !== 'function') throw new Error('Discovery requires owner policy and authenticated worker readiness');
++ const queriedAt = now();
++ // RPC errors propagate: no local-directory or cached fallback.
++ const snapshot = await directory.query({ network, capability: spec.capability, scheme: spec.scheme, now: queriedAt });
++ if (snapshot.chainId !== spec.chainId || !integer(snapshot.block) || !Array.isArray(snapshot.records)) throw new Error('Invalid Arkiv snapshot');
++ const rejected = [], latest = new Map();
++ for (const record of snapshot.records) {
++  let reason;
++  if (!address(record.address) || !same(record.owner, record.address)) reason = 'owner-worker mismatch';
++  else if (!/^0x[0-9a-fA-F]{64}$/.test(record.entityKey ?? '') || !integer(record.updatedAtBlock)
++    || BigInt(record.updatedAtBlock) > BigInt(snapshot.block)) reason = 'invalid entity';
++  else if (!integer(record.expiresAtBlock) || BigInt(record.expiresAtBlock) <= BigInt(snapshot.block)
++    || !integer(record.validUntil) || BigInt(record.validUntil) <= now()) reason = 'expired';
++  else if (record.network !== network || record.scheme !== spec.scheme || record.role !== spec.role
++    || record.status !== 'ready' || !Array.isArray(record.capabilities) || !record.capabilities.includes(spec.capability)) reason = 'incompatible';
++  else if (same(record.address, failedWorker)) reason = 'failed worker';
++  if (reason) { rejected.push({ entityKey: record.entityKey ?? null, reason }); continue; }
++  const key = record.address.toLowerCase(), prior = latest.get(key);
++  // Repeated wallet publications cannot create duplicate worker identities.
++  if (!prior || BigInt(record.updatedAtBlock) > BigInt(prior.updatedAtBlock)
++    || (record.updatedAtBlock === prior.updatedAtBlock && record.entityKey < prior.entityKey)) latest.set(key, record);
++ }
++ const candidates = [];
++ for (const record of [...latest.values()].sort((a, b) => a.address.toLowerCase().localeCompare(b.address.toLowerCase()))) {
++  if (await authorize(record.address, record) !== true) { rejected.push({ entityKey: record.entityKey, reason: 'not owner-authorized' }); continue; }
++  const deadline = now() + 30n;
++  const message = JSON.stringify({ domain: 'janus.worker.readiness.v1', network, treasury: treasury.toLowerCase(), taskId,
++   epoch: String(epoch), entityKey: record.entityKey, worker: record.address.toLowerCase(), ready: true,
++   nonce: randomBytes(32).toString('hex'), deadline: deadline.toString() });
++  let ready = false;
++  try {
++   const response = await readiness(probe, { worker: record, message });
++   ready = response?.busy === false && now() < deadline && BigInt(record.validUntil) > now()
++    && await verifyMessage({ address: record.address, message, signature: response.signature });
++  } catch { /* An unreachable or unauthenticated worker is ineligible. */ }
++  if (!ready) { rejected.push({ entityKey: record.entityKey, reason: 'readiness rejected' }); continue; }
++  candidates.push({ ...record, authorized: true, busy: false, expiresAt: record.validUntil, readinessDeadline: deadline.toString() });
++ }
++ const selected = selectReplacement(candidates.filter(record => BigInt(record.readinessDeadline) > now()), { requiredCapabilities: [spec.capability], failedWorker, now: now() });
++ return { status: selected ? 'selected' : 'waiting', selected, evidence: {
++  source: snapshot.source ?? 'arkiv', chainId: String(snapshot.chainId), block: snapshot.block, queriedAt: snapshot.queriedAt ?? queriedAt.toString(),
++  latencyMs: snapshot.latencyMs === undefined ? null : String(snapshot.latencyMs), recordsRead: String(snapshot.records.length), rejected,
++  selected: selected ? { address: selected.address, entityKey: selected.entityKey, owner: selected.owner,
++   validUntil: selected.validUntil, expiresAtBlock: selected.expiresAtBlock } : null,
++ } };
++}
++
++export async function handoffFromArkiv({ runner, directory, publicClient, manifest, taskId, schedulerWallet, authorize, probe, afterAssignment, failedWorker }) {
++ const state = await runner.inspect();
++ if (state.handoff?.discovery && (state.handoff.status === 'intent' || (state.handoff.status === 'confirmed' && !failedWorker))) {
++  // Reconcile an already-broadcast assignment even after its directory lease expires.
++  return { status: 'reconciled', state: await runner.handoff({ schedulerWallet, replacement: state.handoff.replacement,
++   eligible: async () => { throw new Error('Pending handoff must only reconcile'); }, afterAssignment }) };
++ }
++ const { taskTreasuryAbi } = await import('../hedera/lib/treasury.mjs');
++ const task = await publicClient.readContract({ address: manifest.treasury, abi: taskTreasuryAbi, functionName: 'tasks', args: [taskId] });
++ if (failedWorker && !same(task[6], failedWorker)) throw new Error('Failed worker no longer assigned');
++ const decision = await discoverReplacement({ directory, network: `eip155:${manifest.chainId}`, taskId, treasury: manifest.treasury,
++  epoch: task[8], failedWorker: task[6], authorize, probe });
++ if (!decision.selected) return decision;
++ const replacement = decision.selected;
++ const result = await runner.handoff({ schedulerWallet, replacement: replacement.address, discovery: decision.evidence,
++  eligible: async () => {
++   const current = await publicClient.readContract({ address: manifest.treasury, abi: taskTreasuryAbi, functionName: 'tasks', args: [taskId] });
++   if (!same(current[6], task[6]) || current[8] !== task[8]) return false;
++   const checked = await discoverReplacement({ directory, network: `eip155:${manifest.chainId}`, taskId, treasury: manifest.treasury,
++    epoch: current[8], failedWorker: current[6], authorize: async (address, record) => same(address, replacement.address)
++     && record.entityKey === replacement.entityKey && await authorize(address, record) === true, probe });
++   return checked.selected?.entityKey === replacement.entityKey;
++  }, afterAssignment });
++ return { ...decision, state: result };
++}
+diff --git a/backend/arkiv/discovery.test.mjs b/backend/arkiv/discovery.test.mjs
+new file mode 100644
+index 0000000..382c627
+--- /dev/null
++++ b/backend/arkiv/discovery.test.mjs
+@@ -0,0 +1,109 @@
++import assert from 'node:assert/strict';
++import { test } from 'node:test';
++import { custom } from 'viem';
++import { privateKeyToAccount } from 'viem/accounts';
++import { createArkivDirectory } from './directory.mjs';
++import { discoverReplacement } from './discovery.mjs';
++
++const worker = privateKeyToAccount(`0x${'12'.repeat(32)}`), impostor = privateKeyToAccount(`0x${'13'.repeat(32)}`);
++const entityKey = `0x${'ab'.repeat(32)}`;
++const profile = { entityKey, address: worker.address, owner: worker.address, updatedAtBlock: '90', expiresAtBlock: '110',
++ validUntil: '2000', network: 'eip155:296', scheme: 'janus-task-v1', role: 'researcher', status: 'ready', capabilities: ['research'] };
++const options = records => ({ directory: { query: async () => ({ chainId: 7794095, source: 'fixture-not-testnet', block: '100', queriedAt: '1000', records }) },
++ network: 'eip155:296', taskId: `0x${'cd'.repeat(32)}`, treasury: `0x${'11'.repeat(20)}`, epoch: 1n,
++ authorize: async () => true, probe: async ({ message }) => ({ busy: false, signature: await worker.signMessage({ message }) }), now: () => 1000n });
++
++test('signed readiness is bound to the task, treasury, epoch, entity and fresh nonce', async () => {
++ const messages = [];
++ const run = () => discoverReplacement({ ...options([profile]), probe: async ({ message }) => {
++  messages.push(message); return { busy: false, signature: await worker.signMessage({ message }) };
++ } });
++ assert.equal((await run()).selected.address, worker.address);
++ await run();
++ assert.notEqual(JSON.parse(messages[0]).nonce, JSON.parse(messages[1]).nonce);
++ const data = JSON.parse(messages[0]);
++ assert.equal(data.entityKey, entityKey); assert.equal(data.epoch, '1'); assert.equal(data.ready, true);
++ assert.equal(data.taskId, options([]).taskId); assert.equal(data.treasury, options([]).treasury);
++});
++
++test('ownership, lease seconds, expiry blocks, compatibility and policy reject unsafe workers', async () => {
++ const cases = [
++  { owner: impostor.address }, { validUntil: '1000' }, { expiresAtBlock: '100' },
++  { capabilities: ['other'] }, { network: 'eip155:1' }, { scheme: 'other' }, { status: 'busy' },
++  { updatedAtBlock: '101' }, { validUntil: 'NaN' }, { entityKey: 'bad' },
++ ];
++ for (const change of cases) assert.equal((await discoverReplacement(options([{ ...profile, ...change }]))).status, 'waiting', JSON.stringify(change));
++ assert.equal((await discoverReplacement({ ...options([profile]), failedWorker: worker.address })).status, 'waiting');
++ assert.equal((await discoverReplacement({ ...options([profile]), authorize: async () => false })).status, 'waiting');
++});
++
++test('copied signatures, busy and unreachable workers cannot be selected; RPC failure has no fallback', async () => {
++ const signature = await worker.signMessage({ message: 'unrelated readiness' });
++ for (const probe of [async () => ({ signature, busy: false }), async ({ message }) => ({ signature: await impostor.signMessage({ message }), busy: false }),
++  async ({ message }) => ({ signature: await worker.signMessage({ message }), busy: true }), async () => { throw new Error('offline'); }]) {
++  assert.equal((await discoverReplacement({ ...options([profile]), probe })).status, 'waiting');
++ }
++ assert.equal((await discoverReplacement(options([]))).status, 'waiting');
++ await assert.rejects(() => discoverReplacement({ ...options([profile]), directory: { query: async () => { throw new Error('RPC offline'); } } }), /RPC offline/);
++});
++
++test('duplicate publications resolve deterministically to the newest valid wallet record', async () => {
++ const newer = { ...profile, entityKey: `0x${'ef'.repeat(32)}`, updatedAtBlock: '95' };
++ for (const records of [[profile, newer], [newer, profile]]) assert.equal((await discoverReplacement(options(records))).selected.entityKey, newer.entityKey);
++});
++
++test('expired readiness response and lease expiry during the probe are rejected', async () => {
++ let time = 1000n;
++ assert.equal((await discoverReplacement({ ...options([profile]), now: () => time, probe: async ({ message }) => {
++  time += 31n; return { busy: false, signature: await worker.signMessage({ message }) };
++ } })).status, 'waiting');
++ time = 1000n;
++ assert.equal((await discoverReplacement({ ...options([{ ...profile, validUntil: '1010' }]), now: () => time, probe: async ({ message }) => {
++  time += 11n; return { busy: false, signature: await worker.signMessage({ message }) };
++ } })).status, 'waiting');
++});
++
++test('real SDK sends typed v2 filters and decodes expiry as blocks', async () => {
++ const calls = [];
++ const attributes = Object.entries({ 'arkiv.schema': 'janus.worker.v2', worker: worker.address, role: 'researcher', status: 'ready',
++  capabilities: 'research', network: 'eip155:296', scheme: 'janus-task-v1', validUntil: '0x7d0', name: 'Research worker' })
++  .map(([name, value]) => ({ name, value, type: name === 'worker' ? 'addr' : name === 'validUntil' ? 'u64' : 'str' }));
++ const directory = createArkivDirectory({ accessKey: '', transport: custom({ request: async request => {
++  calls.push(request);
++  if (request.method === 'eth_chainId') return '0x76edaf';
++  if (request.method === 'eth_blockNumber') return '0x64';
++  if (request.method === 'arkiv_query') return { blockNumber: '0x64', data: [{ key: entityKey, owner: worker.address, updatedAt: '0x5a', expiresAt: '0x6e', attributes }] };
++  throw new Error('Unexpected RPC method');
++ } }, { retryCount: 0 }) });
++ const snapshot = await directory.query({ network: 'eip155:296', now: 1000n });
++ assert.equal(snapshot.records[0].expiresAtBlock, '110');
++ assert.equal(snapshot.records[0].validUntil, '2000');
++ const query = calls.find(call => call.method === 'arkiv_query').params[0];
++ assert.match(query, /janus.worker.v2/); assert.match(query, /validUntil > u64\(1000\)/); assert.match(query, /network = str\('eip155:296'\)/);
++});
++
++test('SDK pagination counts schema-skipped rows and refuses a truncated directory', async () => {
++ const offsets = [];
++ let saturated = false;
++ const directory = createArkivDirectory({ accessKey: '', transport: custom({ request: async request => {
++  if (request.method === 'eth_chainId') return '0x76edaf';
++  if (request.method === 'eth_blockNumber') return '0x64';
++  if (request.method === 'arkiv_query') {
++   const offset = Number(BigInt(request.params[1].offset)); offsets.push(offset);
++   return { blockNumber: '0x64', data: saturated || offset === 0 ? Array.from({ length: 100 }, () => ({ key: entityKey, attributes: [] })) : [] };
++  }
++  throw new Error('Unexpected RPC method');
++ } }, { retryCount: 0 }) });
++ assert.deepEqual((await directory.query({ network: 'eip155:296', now: 1000n })).records, []);
++ assert.deepEqual(offsets, [0, 100]);
++ saturated = true; offsets.length = 0;
++ await assert.rejects(() => directory.query({ network: 'eip155:296', now: 1000n }), /exceeds 1000/);
++ assert.equal(offsets.length, 10);
++});
++
++test('wrong-chain RPC is rejected before querying a directory', async () => {
++ const methods = [];
++ const directory = createArkivDirectory({ accessKey: '', transport: custom({ request: async ({ method }) => { methods.push(method); return '0x1'; } }, { retryCount: 0 }) });
++ await assert.rejects(() => directory.query({ network: 'eip155:296' }), /chain mismatch/);
++ assert.deepEqual(methods, ['eth_chainId']);
++});
+diff --git a/backend/arkiv/live-demo.mjs b/backend/arkiv/live-demo.mjs
+new file mode 100644
+index 0000000..805b639
+--- /dev/null
++++ b/backend/arkiv/live-demo.mjs
+@@ -0,0 +1,42 @@
++import fs from 'node:fs/promises';
++import { spawnSync } from 'node:child_process';
++import { fileURLToPath } from 'node:url';
++import { privateKeyToAccount } from 'viem/accounts';
++import { createPublicClient, http } from 'viem';
++import { rabdi } from '@arkiv-network/sdk/chains';
++import { createArkivDirectory } from './directory.mjs';
++
++// Explicit opt-in command: only discovery publication is live; all payments are local.
++const evidence = fileURLToPath(new URL('../.runner-state/arkiv-live/', import.meta.url));
++await fs.mkdir(evidence, { recursive: true, mode: 0o700 });
++try {
++ const key = process.env.ARKIV_WRITER_PRIVATE_KEY;
++ if (!/^0x[0-9a-fA-F]{64}$/.test(key ?? '')) throw new Error('Configure ARKIV_WRITER_PRIVATE_KEY in backend/.env.arkiv first');
++ const account = privateKeyToAccount(key);
++ const client = createPublicClient({ chain: rabdi({ accessKey: process.env.ARKIV_ACCESS_KEY ?? '' }), transport: http(undefined, { timeout: 12000, retryCount: 0 }) });
++ if (await client.getBalance({ address: account.address }) === 0n) throw new Error(`Fund dedicated Rabdi writer ${account.address} with test tGLM first`);
++ const registry = createArkivDirectory();
++ // Query before spending gas, then publish a profile explicitly advertising the LOCAL demo network.
++ await registry.query({ network: 'eip155:1337' });
++ const publication = await registry.publish({ account, name: 'Janus local-handoff test worker', network: 'eip155:1337' });
++ await fs.writeFile(`${evidence}/publication.json`, JSON.stringify({ generatedAt: new Date().toISOString(), writer: account.address,
++  network: 'Rabdi discovery only; local EVM treasury/payments', ...publication }, (_, value) => typeof value === 'bigint' ? value.toString() : value, 2) + '\n');
++ let found = false;
++ for (let attempt = 0; attempt < 6; attempt++) {
++  const snapshot = await registry.query({ network: 'eip155:1337' });
++  if (snapshot.records.some(record => record.entityKey === publication.entityKey)) {
++   await fs.writeFile(`${evidence}/query.json`, JSON.stringify(snapshot, null, 2) + '\n'); found = true; break;
++  }
++  await new Promise(resolve => setTimeout(resolve, 1500));
++ }
++ if (!found) throw new Error('Publication not discoverable yet; retain publication.json and retry the independent query before another publication');
++ const result = spawnSync(process.execPath, ['--test', fileURLToPath(new URL('../hedera/test/checkpoint-runner.test.mjs', import.meta.url))], {
++  stdio: 'inherit', env: { ...process.env, JANUS_ARKIV_LIVE_DEMO: '1', JANUS_ARKIV_ENTITY_KEY: publication.entityKey, JANUS_DEMO_EVIDENCE_DIR: evidence },
++ });
++ process.exitCode = result.status ?? 1;
++ console.log(`Evidence: ${evidence}. Discovery used Rabdi; treasury and paid results used a local EVM. No live Hedera payment occurred.`);
++} catch (error) {
++ const message = error.message ?? '';
++ console.error(/^(Configure|Fund dedicated|Publication not)/.test(message) ? message : 'Live Arkiv demo failed. Retain any publication evidence and check RPC connectivity/configuration before retrying.');
++ process.exitCode = 1;
++}
+diff --git a/backend/hedera/test/checkpoint-runner.test.mjs b/backend/hedera/test/checkpoint-runner.test.mjs
+index 48e0dbc..85b3c4d 100644
+--- a/backend/hedera/test/checkpoint-runner.test.mjs
++++ b/backend/hedera/test/checkpoint-runner.test.mjs
+@@ -11,6 +11,8 @@ import ganache from '../../../contracts/node_modules/ganache/dist/node/core.js';
+ import { createTaskMerchant, taskMerchantHandler, accessMessage, requestHash } from '../lib/task-merchant.mjs';
+ import { buyTaskDataset } from '../lib/task-client.mjs';
+ import { createCheckpointRunner, selectReplacement } from '../../runner/checkpoint-runner.mjs';
++import { handoffFromArkiv } from '../../arkiv/discovery.mjs';
++import { createArkivDirectory } from '../../arkiv/directory.mjs';
+ 
+ test('four-task checkpointed handoff reuses a paid result and reconciles assignment acknowledgement loss', async t => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'janus-runner-'));
+@@ -20,6 +22,13 @@ test('four-task checkpointed handoff reuses a paid result and reconciles assignm
+  const chain = defineChain({ id: 1337, name: 'Local', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: ['http://localhost'] } } });
+  const transport = custom(provider), publicClient = createPublicClient({ chain, transport, cacheTime: 0, pollingInterval: 10 });
+  const wallets = Object.values(provider.getInitialAccounts()).map(entry => createWalletClient({ account: privateKeyToAccount(entry.secretKey), chain, transport }));
++ const liveDiscovery = process.env.JANUS_ARKIV_LIVE_DEMO === '1';
++ if (liveDiscovery) {
++  // Dedicated TESTNET identity controls the replacement; balances/payments remain local.
++  const account = privateKeyToAccount(process.env.ARKIV_WRITER_PRIVATE_KEY);
++  wallets[2] = createWalletClient({ account, chain, transport });
++  await provider.request({ method: 'evm_setAccountBalance', params: [account.address, '0x56bc75e2d63100000'] });
++ }
+  const artifact = name => fs.readFile(new URL(`../../../contracts/phase1/artifacts/${name}.json`, import.meta.url), 'utf8').then(JSON.parse);
+  const tokenArtifact = await artifact('TestToken'), treasuryArtifact = await artifact('TaskTreasury');
+  const receipt = async hash => { const result = await publicClient.waitForTransactionReceipt({ hash }); assert.equal(result.status, 'success'); return result; };
+@@ -67,10 +76,32 @@ test('four-task checkpointed handoff reuses a paid result and reconciles assignm
+  assert.equal(selectReplacement(workers.map(worker => ({ ...worker, busy: true })), { requiredCapabilities: ['research'] }), undefined);
+  const handoff = { schedulerWallet: wallets[0], replacement: selected.address, eligible: async address => address === selected.address };
+  await assert.rejects(() => makeRunner('A').handoff({ ...handoff, schedulerWallet: wallets[1] }), /Unauthorized scheduler/);
+- await assert.rejects(() => makeRunner('A').handoff({ ...handoff, afterAssignment: async () => { throw new Error('Scheduler lost acknowledgement'); } }), /acknowledgement/);
++ let queries = 0;
++ const records = workers.map((worker, index) => ({ ...worker, owner: worker.address, entityKey: id(`entity:${index}`),
++  role: 'researcher', status: 'ready', network: 'eip155:1337', scheme: 'janus-task-v1', updatedAtBlock: '90', expiresAtBlock: '200', validUntil: '9999999999' }));
++ const liveRegistry = liveDiscovery ? createArkivDirectory() : null;
++ const registry = { query: async query => { queries++; return liveRegistry ? liveRegistry.query(query) : { source: 'fixture-not-testnet', chainId: 7794095, block: '100', queriedAt: String(Math.floor(Date.now() / 1000)), records }; } };
++ const discovery = { runner: makeRunner('A'), directory: registry, publicClient, manifest, taskId: ids.A, schedulerWallet: wallets[0],
++  authorize: async address => workers.find(worker => worker.address === address)?.authorized === true,
++  probe: async ({ worker, message }) => {
++   const wallet = wallets.find(wallet => wallet.account.address === worker.address);
++   return { busy: workers.find(item => item.address === worker.address)?.busy, signature: await wallet.signMessage({ message }) };
++  } };
++ const beforeDiscovery = await read('tasks', [ids.A]);
++ assert.equal((await handoffFromArkiv({ ...discovery, directory: { query: async () => ({ chainId: 7794095, block: '100', records: [] }) } })).status, 'waiting');
++ await assert.rejects(() => handoffFromArkiv({ ...discovery, directory: { query: async () => { throw new Error('Arkiv unavailable'); } } }), /Arkiv unavailable/);
++ let staleQueries = 0;
++ await assert.rejects(() => handoffFromArkiv({ ...discovery, directory: { query: async () => ({ chainId: 7794095, block: '100', records: ++staleQueries === 1 ? records : [] }) } }), /No eligible replacement/);
++ assert.equal(staleQueries, 2);
++ assert.deepEqual(await read('tasks', [ids.A]), beforeDiscovery);
++ await assert.rejects(() => handoffFromArkiv({ ...discovery, afterAssignment: async () => { throw new Error('Scheduler lost acknowledgement'); } }), /acknowledgement/);
++ assert.equal(queries, 2); // discovery plus fresh pre-assignment validation
++ const savedDiscovery = (await makeRunner('A').inspect()).handoff.discovery;
++ assert.equal(savedDiscovery.selected.entityKey, liveDiscovery ? process.env.JANUS_ARKIV_ENTITY_KEY : records[0].entityKey);
+  assert.equal((await read('tasks', [ids.A]))[8], 2n);
+  // Restart recognizes the confirmed chain assignment instead of incrementing twice.
+- await makeRunner('A').handoff(handoff);
++ assert.equal((await handoffFromArkiv({ ...discovery, directory: { query: async () => { throw new Error('Directory offline during reconciliation'); } } })).status, 'reconciled');
++ await handoffFromArkiv({ ...discovery, directory: { query: async () => { throw new Error('Directory offline after confirmation'); } } });
+  await makeRunner('A').handoff(handoff);
+  assert.equal((await read('tasks', [ids.A]))[8], 2n);
+  await assert.rejects(() => makeRunner('A').run({ walletClient: wallets[1] }), /not currently assigned/);
+@@ -104,6 +135,8 @@ test('four-task checkpointed handoff reuses a paid result and reconciles assignm
+    faultSchedule: ['A stops after confirmed payment before checkpoint', 'B/C/D complete independently', 'assignment acknowledgement is lost', 'scheduler reconciles assignment', 'B reuses A artifact and completes followup'],
+    taskA: await read('tasks', [ids.A]), otherTasks: others, totalSpent: await read('totalSpent'), logicalPurchases: paidLogs.length,
+    firstPayment: originalTransaction, reusedPayment: resumed.completed[0].result.receipt.transaction, completedSteps: resumed.completed.map(step => step.id), assignmentEpoch: (await read('tasks', [ids.A]))[8] };
++  report.discovery = { ...savedDiscovery, queries, removalChecks: ['empty directory waits without assignment', 'RPC unavailable propagates without assignment', 'pending assignment reconciles with directory offline'] };
++  report.liveArkivDiscovery = liveDiscovery;
+   await fs.writeFile(path.join(process.env.JANUS_DEMO_EVIDENCE_DIR, 'report.json'), JSON.stringify(report, (_, value) => typeof value === 'bigint' ? value.toString() : value, 2) + '\n');
+  }
+ });
+diff --git a/backend/package-lock.json b/backend/package-lock.json
+index 6be98fd..df6ae71 100644
+--- a/backend/package-lock.json
++++ b/backend/package-lock.json
+@@ -8,6 +8,7 @@
+       "name": "@janus/backend",
+       "version": "0.0.1",
+       "dependencies": {
++        "@arkiv-network/sdk": "1.0.1",
+         "@hiero-ledger/sdk": "2.90.1",
+         "viem": "2.57.16"
+       },
+@@ -21,6 +22,26 @@
+       "integrity": "sha512-96Z2IP3mYmF1Xg2cDm8f1gWGf/HUVedQ3FMifV4kG/PQ4yEP51xDtRAEfhVNt5f/uzpNkZHwWQuUcu6D6K+Ekw==",
+       "license": "MIT"
+     },
++    "node_modules/@arkiv-network/sdk": {
++      "version": "1.0.1",
++      "resolved": "https://registry.npmjs.org/@arkiv-network/sdk/-/sdk-1.0.1.tgz",
++      "integrity": "sha512-DCOFdGunn4I5nYrvIV/YIkMCkLZM7EQNSyNPtqpmQkP2JzTEfRLBJleBSB2rokWMa833/9P8DMiwsEXACr3CUQ==",
++      "engines": {
++        "node": ">=18.0.0"
++      },
++      "peerDependencies": {
++        "typescript": ">=5.0.0",
++        "viem": "^2.0.0"
++      },
++      "peerDependenciesMeta": {
++        "typescript": {
++          "optional": true
++        },
++        "viem": {
++          "optional": false
++        }
++      }
++    },
+     "node_modules/@grpc/grpc-js": {
+       "version": "1.13.6",
+       "resolved": "https://registry.npmjs.org/@grpc/grpc-js/-/grpc-js-1.13.6.tgz",
+diff --git a/backend/package.json b/backend/package.json
+index 68aff8a..e06748a 100644
+--- a/backend/package.json
++++ b/backend/package.json
+@@ -7,7 +7,7 @@
+     "node": ">=22"
+   },
+   "scripts": {
+-    "test": "node --test hedera/test/*.test.mjs workbench/*.test.mjs",
++    "test": "node --test hedera/test/*.test.mjs workbench/*.test.mjs arkiv/*.test.mjs",
+     "test:workbench": "node --test workbench/*.test.mjs",
+     "hedera:init": "node hedera/scripts/init.mjs",
+     "hedera:preflight": "node hedera/scripts/preflight.mjs",
+@@ -24,9 +24,14 @@
+     "task:serve": "node hedera/scripts/task-server.mjs",
+     "demo:handoff": "node runner/demo.mjs",
+     "task:preflight": "node hedera/scripts/task-preflight.mjs",
+-    "task:live": "node hedera/scripts/task-live.mjs"
++    "task:live": "node hedera/scripts/task-live.mjs",
++    "arkiv:query": "node --env-file-if-exists=.env.arkiv arkiv/cli.mjs query",
++    "arkiv:preflight": "node --env-file-if-exists=.env.arkiv arkiv/cli.mjs preflight",
++    "arkiv:publish": "node --env-file-if-exists=.env.arkiv arkiv/cli.mjs publish",
++    "demo:arkiv": "node --env-file-if-exists=.env.arkiv arkiv/live-demo.mjs"
+   },
+   "dependencies": {
++    "@arkiv-network/sdk": "1.0.1",
+     "@hiero-ledger/sdk": "2.90.1",
+     "viem": "2.57.16"
+   }
+diff --git a/backend/runner/checkpoint-runner.mjs b/backend/runner/checkpoint-runner.mjs
+index fbc2506..a9c1030 100644
+--- a/backend/runner/checkpoint-runner.mjs
++++ b/backend/runner/checkpoint-runner.mjs
+@@ -64,8 +64,8 @@ export function createCheckpointRunner({ directory, publicClient, manifest, endp
+     return state;
+    });
+   },
+-  async handoff({ schedulerWallet, replacement, eligible, afterAssignment = async () => {} }) {
+-   if (typeof eligible !== 'function' || !await eligible(replacement)) throw new Error('No eligible replacement');
++  async handoff({ schedulerWallet, replacement, eligible, discovery, afterAssignment = async () => {} }) {
++   if (typeof eligible !== 'function') throw new Error('No eligible replacement');
+    if (!/^0x[0-9a-fA-F]{40}$/.test(replacement) || /^0x0{40}$/.test(replacement)) throw new Error('Invalid replacement');
+    return locked(async () => {
+     await validateTreasury(publicClient, manifest);
+@@ -77,8 +77,10 @@ export function createCheckpointRunner({ directory, publicClient, manifest, endp
+     let fresh = false;
+     if (task[9]) throw new Error('Task cancelled');
+     if (!state.handoff || state.handoff.status === 'confirmed') {
++     if (!await eligible(replacement)) throw new Error('No eligible replacement');
+      fresh = true;
+      state.handoff = { status: 'intent', fromWorker: task[6].toLowerCase(), fromEpoch: task[8].toString(), replacement: replacement.toLowerCase() };
++     if (discovery) state.handoff.discovery = discovery;
+      await save(state); // assignment outbox persisted before touching the chain
+     }
+     const intent = state.handoff;
+diff --git a/frontend/scripts/query-arkiv.mjs b/frontend/scripts/query-arkiv.mjs
+index c5ce76e..aa23f22 100644
+--- a/frontend/scripts/query-arkiv.mjs
++++ b/frontend/scripts/query-arkiv.mjs
+@@ -1,2 +1,3 @@
+-import { listArkivWorkers } from '../src/lib/arkiv-directory.ts';
+-console.log(JSON.stringify(await listArkivWorkers(), null, 2));
++// Compatibility entry point; the independent query belongs to the backend SDK client.
++process.env.ARKIV_ACCESS_KEY ??= process.env.NEXT_PUBLIC_ARKIV_ACCESS_KEY ?? '';
++await import('../../backend/arkiv/cli.mjs');
+diff --git a/frontend/src/components/agent-workbench.tsx b/frontend/src/components/agent-workbench.tsx
+index 5c8e367..4bc88fd 100644
+--- a/frontend/src/components/agent-workbench.tsx
++++ b/frontend/src/components/agent-workbench.tsx
+@@ -75,7 +75,7 @@ export default function AgentWorkbench({ initialView = 'workflow' }: { initialVi
+ 
+         {view === 'workflow' && <>
+           <section className={styles.panel}><h2>Research task continuity</h2><p>Money, purchased sources and progress belong to the task. A replacement worker reuses paid artifacts, respects pending obligations and continues only unfinished work.</p><ol><li>Allocate a task budget through the treasury.</li><li>Purchase a source and checkpoint the result.</li><li>Interrupt a worker and reconcile its assignment.</li><li>Resume with a replacement without another charge.</li><li>Recover unused funds independently of application services.</li></ol></section>
+-          <section className={styles.panel}><h2>Run the verified local handoff</h2><code>npm run demo:handoff</code><p>The CLI demonstrates four logical tasks, five distinct purchases and 100 local base units spent. It does not call a model or spend live funds.</p><p>Follow the repository demo.md for recorded Hedera evidence and independent owner recovery. Browser research execution and automatic Arkiv replacement remain integration work.</p><Link href="/dashboard">Open illustrative treasury dashboard <ArrowRight size={14} /></Link></section>
++          <section className={styles.panel}><h2>Run the verified local handoff</h2><code>npm run demo:handoff</code><p>The CLI demonstrates four logical tasks, five distinct purchases and 100 local base units spent. It does not call a model or spend live funds.</p><p>Replacement selection checks directory records, owner authorization and signed worker readiness. With a funded Rabdi test wallet, use <code>npm run demo:arkiv</code> for live discovery with local payments. Browser research execution remains integration work.</p><Link href="/dashboard">Open illustrative treasury dashboard <ArrowRight size={14} /></Link></section>
+         </>}
+ 
+         {view === 'credentials' && <div className={styles.twoColumns}><section className={styles.panel}><h2>Add provider credential</h2><p>Keys are encrypted on the server and scoped to your verified account. They are never returned to the browser or stored in browser storage.</p><form onSubmit={event => { event.preventDefault(); void action(async () => { await request({ action: 'saveCredential', credential: { provider, label, key } }); setKey(''); setLabel(''); const data = await request(); setCredentials(data.credentials); setMessage('Credential saved. Assign it on the Agents screen.'); }); }}>
+diff --git a/frontend/src/lib/arkiv-directory.ts b/frontend/src/lib/arkiv-directory.ts
+index 2f335cd..dcef9ff 100644
+--- a/frontend/src/lib/arkiv-directory.ts
++++ b/frontend/src/lib/arkiv-directory.ts
+@@ -1,18 +1,23 @@
+ import { createPublicClient, createWalletClient, ExpirationTime } from '@arkiv-network/sdk';
+ import { rabdi } from '@arkiv-network/sdk/chains';
+-import { addr, defineSchema, str } from '@arkiv-network/sdk/schema';
+-import { and, eq } from '@arkiv-network/sdk/query';
++import { addr, defineSchema, str, u64 } from '@arkiv-network/sdk/schema';
++import { and, eq, gt } from '@arkiv-network/sdk/query';
+ import { custom, http, type Address, type EIP1193Provider } from 'viem';
++import spec from '../../../shared/arkiv-worker.json';
++import network from '../../../shared/network.json';
+ 
+-export const WorkerProfiles = defineSchema('janus.worker.v1', {
++export const WorkerProfiles = defineSchema(spec.schema, {
+   worker: addr().indexed(), role: str().indexed(), status: str().indexed(),
+-  capabilities: str().indexed(), name: str(),
++  capabilities: str().indexed(), network: str().indexed(), scheme: str().indexed(), validUntil: u64().indexed(), name: str(),
+ });
+ export async function listArkivWorkers() {
+   const client = createPublicClient({ chain: rabdi({ accessKey: process.env.NEXT_PUBLIC_ARKIV_ACCESS_KEY ?? '' }), transport: http(undefined, { timeout: 12000, retryCount: 0 }) });
+-  const result = await client.select({ $key: true, $owner: true, $expiresAt: true, worker: true, role: true, status: true, capabilities: true, name: true })
+-    .from(WorkerProfiles).where(and(eq('role', 'researcher'), eq('status', 'ready'))).limit(20).fetch();
+-  return result.entities.map(row => ({ entityKey: row.$key, owner: row.$owner, expiresAt: String(row.$expiresAt),
++  const block = await client.getBlockNumber({ cacheTime: 0 });
++  const result = await client.select({ $key: true, $owner: true, $expiresAt: true, worker: true, role: true, status: true, capabilities: true, validUntil: true, name: true })
++    .from(WorkerProfiles).where(and(eq('role', spec.role), eq('status', 'ready'), eq('capabilities', spec.capability),
++      eq('network', `eip155:${network.chainId}`), eq('scheme', spec.scheme), gt('validUntil', u64(BigInt(Math.floor(Date.now() / 1000)))))).limit(20).fetch();
++  return result.entities.filter(row => row.$owner?.toLowerCase() === row.worker.value.toLowerCase() && row.$expiresAt !== undefined && row.$expiresAt > block)
++    .map(row => ({ entityKey: row.$key, owner: row.$owner, expiresAt: String(row.$expiresAt), validUntil: String(row.validUntil.value),
+     worker: row.worker.value, role: row.role.value, status: row.status.value, capabilities: row.capabilities.value, name: row.name.value }));
+ }
+ export async function registerArkivWorker(provider: Pick<EIP1193Provider, 'request'>, address: Address, name: string) {
+@@ -21,6 +26,7 @@ export async function registerArkivWorker(provider: Pick<EIP1193Provider, 'reque
+   const wallet = createWalletClient({ chain, transport: custom(provider), account: address });
+   await wallet.addChain({ chain });
+   await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: `0x${chain.id.toString(16)}` }] });
+-  return wallet.createEntity(WorkerProfiles, { worker: addr(address), role: 'researcher', status: 'ready', capabilities: 'research', name: name.trim() },
++  return wallet.createEntity(WorkerProfiles, { worker: addr(address), role: spec.role, status: 'ready', capabilities: spec.capability,
++    network: `eip155:${network.chainId}`, scheme: spec.scheme, validUntil: u64(BigInt(Math.floor(Date.now() / 1000) + spec.leaseSeconds)), name: name.trim() },
+     { expiration: ExpirationTime.fromHours(1) });
+ }
+diff --git a/package.json b/package.json
+index cabda38..68a7e13 100644
+--- a/package.json
++++ b/package.json
+@@ -23,6 +23,10 @@
+     "demo:handoff": "npm run demo:handoff --prefix backend",
+     "test:workbench": "npm run test:workbench --prefix backend",
+     "sponsors:check": "node scripts/check-sponsors.mjs",
+-    "sponsors:ready": "node scripts/check-sponsors.mjs --require-ready"
++    "sponsors:ready": "node scripts/check-sponsors.mjs --require-ready",
++    "arkiv:query": "npm run arkiv:query --prefix backend",
++    "arkiv:preflight": "npm run arkiv:preflight --prefix backend",
++    "arkiv:publish": "npm run arkiv:publish --prefix backend",
++    "demo:arkiv": "npm run demo:arkiv --prefix backend"
+   }
+ }
+diff --git a/shared/arkiv-worker.json b/shared/arkiv-worker.json
+new file mode 100644
+index 0000000..392b9df
+--- /dev/null
++++ b/shared/arkiv-worker.json
+@@ -0,0 +1,8 @@
++{
++  "schema": "janus.worker.v2",
++  "role": "researcher",
++  "capability": "research",
++  "scheme": "janus-task-v1",
++  "leaseSeconds": 3600,
++  "chainId": 7794095
++}

@@ -1,0 +1,105 @@
+{
+  "status": "passed",
+  "network": "LOCAL EPHEMERAL EVM ONLY",
+  "liveTransactions": false,
+  "generatedAt": "2026-11-06T20:38:06.353Z",
+  "runtime": "v23.3.0",
+  "faultSchedule": [
+    "A stops after confirmed payment before checkpoint",
+    "B/C/D complete independently",
+    "assignment acknowledgement is lost",
+    "scheduler reconciles assignment",
+    "B reuses A artifact and completes followup"
+  ],
+  "taskA": [
+    "100",
+    "60",
+    "0",
+    "40",
+    "0",
+    "30",
+    "0x22d491Bde2303f2f43325b2108D26f1eAbA1e32b",
+    "0xE11BA2b4D45Eaed5996Cd0823791E0C93114882d",
+    "2",
+    false
+  ],
+  "otherTasks": [
+    [
+      "100",
+      "80",
+      "0",
+      "20",
+      "0",
+      "30",
+      "0x22d491Bde2303f2f43325b2108D26f1eAbA1e32b",
+      "0xE11BA2b4D45Eaed5996Cd0823791E0C93114882d",
+      "1",
+      false
+    ],
+    [
+      "100",
+      "80",
+      "0",
+      "20",
+      "0",
+      "30",
+      "0xd03ea8624C8C5987235048901fB614fDcA89b117",
+      "0xE11BA2b4D45Eaed5996Cd0823791E0C93114882d",
+      "1",
+      false
+    ],
+    [
+      "100",
+      "80",
+      "0",
+      "20",
+      "0",
+      "30",
+      "0x95cED938F7991cd0dFcb48F0a06a40FA1aF46EBC",
+      "0xE11BA2b4D45Eaed5996Cd0823791E0C93114882d",
+      "1",
+      false
+    ]
+  ],
+  "totalSpent": "100",
+  "logicalPurchases": 5,
+  "firstPayment": "0x3bf2c3b181a35756506389d84f5ab789433110a6e083fd696112d0c8b485c4b4",
+  "reusedPayment": "0x3bf2c3b181a35756506389d84f5ab789433110a6e083fd696112d0c8b485c4b4",
+  "completedSteps": [
+    "A:dataset",
+    "A:followup"
+  ],
+  "assignmentEpoch": "2",
+  "discovery": {
+    "source": "fixture-not-testnet",
+    "chainId": "7794095",
+    "block": "100",
+    "queriedAt": "1793997481",
+    "latencyMs": null,
+    "recordsRead": "3",
+    "rejected": [
+      {
+        "entityKey": "0x1f90392c71a45cb811301e1ee756b13b00e628b263d3ead8d817d1818749c9ca",
+        "reason": "incompatible"
+      },
+      {
+        "entityKey": "0x283071296cd1ab11876215a2968efe8a56b7e3e1317e424299f7dea11818c796",
+        "reason": "readiness rejected"
+      }
+    ],
+    "selected": {
+      "address": "0x22d491Bde2303f2f43325b2108D26f1eAbA1e32b",
+      "entityKey": "0xabadcc46f0a5bc2b385efbb32825f4214aba4b72d5db2b722c6ef1a24cc90072",
+      "owner": "0x22d491Bde2303f2f43325b2108D26f1eAbA1e32b",
+      "validUntil": "9999999999",
+      "expiresAtBlock": "200"
+    },
+    "queries": 2,
+    "removalChecks": [
+      "empty directory waits without assignment",
+      "RPC unavailable propagates without assignment",
+      "pending assignment reconciles with directory offline"
+    ]
+  },
+  "liveArkivDiscovery": false
+}

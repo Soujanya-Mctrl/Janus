@@ -20,6 +20,6 @@ Existing encrypted credentials are preserved. Older incompatible execution confi
 
 Hedera checks read chain ID and deployment-code presence only; they do not submit payments or establish runtime identity/x402 compliance. The separately recorded paid proof remains in `backend/hedera/evidence/task-aware-live-proof.json`.
 
-Arkiv uses `janus.worker.v1` with `role=researcher`, `status=ready` and `capabilities=research`. Publishing a public one-hour profile requires a connected wallet and testnet gas. Reading/applying a profile configures a role; it does not assign treasury authority or implement automatic replacement. Live write/read and scheduler integration evidence remain pending. See [schema](../arkiv/schema.md).
+Arkiv uses `janus.worker.v2` with researcher/ready/research, execution-network and protocol filters, and a Unix-second lease separate from native block expiry. Publishing a public one-hour profile requires a connected wallet and testnet gas. Reading/applying a profile configures a role; it does not assign treasury authority or implement automatic replacement. Independent live reads and local discovery-driven runner handoff pass; funded publication and browser orchestration remain pending. See [ARKIV.md](ARKIV.md). See [schema](../arkiv/schema.md).
 
 Offline vault/provider/configuration and authenticated-route tests remain supported. This removal changes no sponsor acceptance claim. See [sponsor verification](../docs/SPONSOR_VERIFICATION.md).

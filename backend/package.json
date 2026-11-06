@@ -7,7 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test hedera/test/*.test.mjs workbench/*.test.mjs",
+    "test": "node --test hedera/test/*.test.mjs workbench/*.test.mjs arkiv/*.test.mjs",
     "test:workbench": "node --test workbench/*.test.mjs",
     "hedera:init": "node hedera/scripts/init.mjs",
     "hedera:preflight": "node hedera/scripts/preflight.mjs",
@@ -24,9 +24,14 @@
     "task:serve": "node hedera/scripts/task-server.mjs",
     "demo:handoff": "node runner/demo.mjs",
     "task:preflight": "node hedera/scripts/task-preflight.mjs",
-    "task:live": "node hedera/scripts/task-live.mjs"
+    "task:live": "node hedera/scripts/task-live.mjs",
+    "arkiv:query": "node --env-file-if-exists=.env.arkiv arkiv/cli.mjs query",
+    "arkiv:preflight": "node --env-file-if-exists=.env.arkiv arkiv/cli.mjs preflight",
+    "arkiv:publish": "node --env-file-if-exists=.env.arkiv arkiv/cli.mjs publish",
+    "demo:arkiv": "node --env-file-if-exists=.env.arkiv arkiv/live-demo.mjs"
   },
   "dependencies": {
+    "@arkiv-network/sdk": "1.0.1",
     "@hiero-ledger/sdk": "2.90.1",
     "viem": "2.57.16"
   }

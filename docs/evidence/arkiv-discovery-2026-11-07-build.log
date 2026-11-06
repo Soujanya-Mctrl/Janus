@@ -1,0 +1,80 @@
+
+> @janus/frontend@0.1.0 build
+> next build --webpack
+
+(node:59527) ExperimentalWarning: CommonJS module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/next/dist/shared/lib/constants.js is loading ES Module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/@swc/helpers/esm/_interop_require_default.js using require().
+Support for loading ES Module in require() is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+▲ Next.js 16.4.5 (webpack)
+✓ Running next.config.ts took 176ms
+- Cache Components enabled
+- Partial Prefetching enabled
+
+  Creating an optimized production build ...
+(node:59550) ExperimentalWarning: CommonJS module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/next/dist/shared/lib/format-webpack-messages.js is loading ES Module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/@swc/helpers/esm/_interop_require_default.js using require().
+Support for loading ES Module in require() is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:59558) ExperimentalWarning: CommonJS module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/next/dist/shared/lib/format-webpack-messages.js is loading ES Module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/@swc/helpers/esm/_interop_require_default.js using require().
+Support for loading ES Module in require() is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:59560) ExperimentalWarning: CommonJS module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/next/dist/shared/lib/format-webpack-messages.js is loading ES Module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/@swc/helpers/esm/_interop_require_default.js using require().
+Support for loading ES Module in require() is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+⚠ Compiled with warnings in 24.3s
+
+../../../../Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/@privy-io/react-auth/dist/esm/index-BosOOpwV.mjs
+Module not found: Can't resolve '@farcaster/mini-app-solana' in '/Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/@privy-io/react-auth/dist/esm'
+
+Import trace for requested module:
+../../../../Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/@privy-io/react-auth/dist/esm/index-BosOOpwV.mjs
+../../../../Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/@privy-io/react-auth/dist/esm/index.mjs
+./src/context/privy-auth-context.tsx
+
+✓ Compiled successfully in 46s
+  Running TypeScript ...
+  Finished TypeScript in 16.5s ...
+  Collecting page data using 7 workers ...
+(node:59877) ExperimentalWarning: CommonJS module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/next/dist/client/lib/console.js is loading ES Module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/@swc/helpers/esm/_interop_require_default.js using require().
+Support for loading ES Module in require() is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:59882) ExperimentalWarning: CommonJS module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/next/dist/client/lib/console.js is loading ES Module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/@swc/helpers/esm/_interop_require_default.js using require().
+Support for loading ES Module in require() is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:59881) ExperimentalWarning: CommonJS module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/next/dist/client/lib/console.js is loading ES Module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/@swc/helpers/esm/_interop_require_default.js using require().
+Support for loading ES Module in require() is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:59879) ExperimentalWarning: CommonJS module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/next/dist/client/lib/console.js is loading ES Module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/@swc/helpers/esm/_interop_require_default.js using require().
+Support for loading ES Module in require() is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:59880) ExperimentalWarning: CommonJS module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/next/dist/client/lib/console.js is loading ES Module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/@swc/helpers/esm/_interop_require_default.js using require().
+Support for loading ES Module in require() is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:59878) ExperimentalWarning: CommonJS module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/next/dist/client/lib/console.js is loading ES Module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/@swc/helpers/esm/_interop_require_default.js using require().
+Support for loading ES Module in require() is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:59883) ExperimentalWarning: CommonJS module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/next/dist/client/lib/console.js is loading ES Module /Volumes/T7 Shield/Vansh_Workspace/dev/Janus/frontend/node_modules/@swc/helpers/esm/_interop_require_default.js using require().
+Support for loading ES Module in require() is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  Generating static pages using 7 workers (0/11) ...
+  Generating static pages using 7 workers (2/11) 
+  Generating static pages using 7 workers (5/11) 
+  Generating static pages using 7 workers (8/11) 
+✓ Generating static pages using 7 workers (11/11) in 4.7s
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/integrations
+├ ƒ /api/session
+├ ƒ /api/workbench
+├ ○ /dashboard
+├ ○ /dashboard/agents
+├ ○ /dashboard/credentials
+└ ○ /login
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

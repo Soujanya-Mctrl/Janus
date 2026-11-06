@@ -8,6 +8,8 @@
 
 `backend/trading/` simulates parallel bot workers under an orchestrator, with task-owned budgets and replay-safe replacement. Net realized pool and task profits can fund capped simulated operating bills; pinned rules can move free cash between tasks after worker failure without moving open positions. Transfer intents recover after either debit or credit interruption. Root `demo:trading` and `test:trading` use synthetic strategies/prices without credentials, network, model providers or real trading. This changes no sponsor claim. See [PAPER_TRADING.md](PAPER_TRADING.md).
 
+Local container orchestration is available through root Docker Compose: persistent local EVM, automatic token/treasury/task bootstrap, task-aware merchant and frontend. See [DOCKER.md](DOCKER.md). This changes no live-network or sponsor verification claim and does not connect the illustrative dashboard to local treasury state.
+
 Janus is the current project name. RelayBudget is the original research/prototype name retained in source provenance and historical evidence.
 
 ## Product

@@ -39,3 +39,7 @@ Before starting each phase and before publishing it: fetch origin/upstream, insp
 ## Checkpointed handoff reference milestone
 
 Implemented and locally verified: durable checkpoint/assignment intent, stable paid-step replay, deterministic replacement selection, four independently progressing logical tasks and reconciliation after assignment acknowledgement loss. Reproduce with `npm run demo:handoff`; see [RUNNER.md](RUNNER.md). This is the core of the next phase, not completion of the broader process scheduler: authenticated task API, process-isolated workers, production storage/locking, encrypted checkpoints and a real model report remain required. Connected dashboard and browser-wallet validation remain separate gates.
+
+## Live task-aware payment verified
+
+The bounded 0.02-test-USDC Hedera payment and original-result replay are verified. Allocation uncertainty was resolved through nonce reconciliation and a journaled signed transaction before one broadcast. Public evidence: `backend/hedera/evidence/task-aware-live-proof.json`. The completed-run guard submits nothing further. RPC availability, native child-record verification and broader production release gates remain distinct from this successful testnet check.

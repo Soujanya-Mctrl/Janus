@@ -29,6 +29,8 @@ This is read-only. It prints public identities and missing setup, never keys, an
 
 Public hosting, an authenticated/rate-limited TLS gateway, storage backups/restore rehearsal, operational key custody and independent financial-code review remain release work. This custom signed HTTP adapter does not claim general x402 interoperability or mainnet readiness. Do not relabel a local passing suite as production certification.
 
-## Current live attempt
+## Verified live result
 
-The bounded `task:live -- --execute` helper persists its baseline and allocation intent before any transaction attempt. RPC requests timed out before an allocation transaction hash was returned; its journal is retained at ignored `backend/.merchant-state/task-live-proof.json`. Read-only mirror reconciliation observed task cap/available/spent all zero. No paid-purchase stage was reached. This is not proof that no allocation transaction remains pending: the helper refuses to repeat an ambiguous allocation while the task is absent. Reconcile the owner account and journal before any retry; never delete the journal to bypass the guard. A reliable Hedera testnet RPC remains necessary. The command without `--execute` performs no financial action.
+The bounded live check passed on 6 November 2026. The allocation was reconciled against latest/pending owner nonces, signed with a fixed nonce, and its raw transaction/hash journaled before one broadcast. Its immutable task ID prevents another allocation. Subsequent uncertain broadcasts reconcile the saved hash rather than generating another transaction.
+
+The treasury debit and merchant credit were exactly 20,000 USDC base units. Paid-result replay returned the original receipt and artifact hash with no additional debit. Public evidence is in `backend/hedera/evidence/task-aware-live-proof.json`; signed transaction bytes remain only in ignored private state. The completed-run guard reports the saved proof without network calls or new spending. The public RPC can still be intermittent; this is bounded testnet verification, not a production availability guarantee or native consensus child-record certification.

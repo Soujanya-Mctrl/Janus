@@ -3,7 +3,7 @@ import http from 'node:http';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { fileURLToPath } from 'node:url';
-import { createPublicClient, createWalletClient, defineChain, http as rpc, erc20Abi, keccak256, stringToHex } from 'viem';
+import { createPublicClient, createWalletClient, defineChain, http as rpc, erc20Abi, keccak256, stringToHex, encodeFunctionData } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { createTaskMerchant, taskMerchantHandler } from '../lib/task-merchant.mjs';
 import { buyTaskDataset } from '../lib/task-client.mjs';
@@ -15,6 +15,8 @@ import { acquireSignerLock } from '../lib/signer-lock.mjs';
 if (!process.argv.includes('--execute')) { console.log('Explicit --execute required: maximum one 20,000-base-unit test-USDC purchase, plus bounded test HBAR gas.'); process.exit(0); }
 let server, release;
 async function main() {
+ const completedFile = new URL('../../.merchant-state/task-live-proof.json', import.meta.url);
+ if (fs.existsSync(completedFile)) { const completed = JSON.parse(fs.readFileSync(completedFile,'utf8')); if (completed.status === 'passed') { console.log('Existing bounded proof complete; no new transactions.'); console.log(completed.paymentTransaction); return; } }
  const env = new URL('../../.env.hedera', import.meta.url); if (fs.existsSync(env)) process.loadEnvFile(env);
  const network = JSON.parse(fs.readFileSync(new URL('../../../shared/network.json', import.meta.url), 'utf8'));
  const manifest = JSON.parse(fs.readFileSync(new URL('../../../shared/deployments/hedera-testnet.json', import.meta.url), 'utf8'));
@@ -45,10 +47,27 @@ async function main() {
   proof.taskId = taskId; proof.baseline = { treasury: (await balance(manifest.treasury)).toString(), merchant: (await balance(request.merchant)).toString(), spent: (await read('totalSpent')).toString() }; save(proof);
  }
  if ((await read('tasks',[taskId]))[0] === 0n) {
-  if (proof.createPending) throw Error('Unknown previous task allocation; reconcile before retry');
-  proof.createPending = true; save(proof);
-  proof.createTransaction = await wallets.OWNER.writeContract({ ...await transactionPolicy(publicClient,296), address: manifest.treasury, abi, functionName: 'createTask', args: [taskId,wallets.WORKER.account.address,request.merchant,20000n,20000n] }); save(proof);
-  const receipt = await publicClient.waitForTransactionReceipt({ hash: proof.createTransaction, confirmations: 2 }); assert.equal(receipt.status,'success');
+  if (!proof.allocation) {
+   const latest = await publicClient.getTransactionCount({ address: manifest.owner, blockTag: 'latest' });
+   const pending = await publicClient.getTransactionCount({ address: manifest.owner, blockTag: 'pending' });
+   if (latest !== pending) throw Error('Unknown pending owner nonce; reconcile before allocation');
+   // Reconcile the legacy hash-less intent using the fixed task ID and a pinned
+   // nonce. Contract task-ID uniqueness prevents a second allocation.
+   const prepared = await wallets.OWNER.prepareTransactionRequest({ ...await transactionPolicy(publicClient,296), account: wallets.OWNER.account,
+    to: manifest.treasury, data: encodeFunctionData({ abi, functionName: 'createTask', args: [taskId,wallets.WORKER.account.address,request.merchant,20000n,20000n] }), nonce: latest, value: 0n });
+   const raw = await wallets.OWNER.account.signTransaction(prepared);
+   proof.allocation = { nonce: String(latest), transaction: keccak256(raw), raw, broadcastAttempted: false, reconciledLegacyIntent: Boolean(proof.createPending), reconciledAt: new Date().toISOString() };
+   proof.createTransaction = proof.allocation.transaction; save(proof);
+  }
+  if (!proof.allocation.broadcastAttempted) {
+   proof.allocation.broadcastAttempted = true; save(proof); // hash and bytes durable before broadcast
+   const sender = createPublicClient({ chain, transport }); // no submission retries
+   try { await sender.sendRawTransaction({ serializedTransaction: proof.allocation.raw }); }
+   catch { console.log('Allocation broadcast uncertain; reconciling the saved hash.'); }
+  }
+  const receipt = await publicClient.waitForTransactionReceipt({ hash: proof.allocation.transaction, confirmations: 2, timeout: 60000 });
+  assert.equal(receipt.status,'success');
+
  }
  const task = await read('tasks',[taskId]); assert.equal(task[0],20000n); assert.equal(task[5],20000n); assert.equal(task[6].toLowerCase(),wallets.WORKER.account.address.toLowerCase()); assert.equal(task[7].toLowerCase(),request.merchant.toLowerCase());
  const oldProof = JSON.parse(fs.readFileSync(new URL('../../../contracts/phase1/evidence/live-proof.json', import.meta.url),'utf8'));

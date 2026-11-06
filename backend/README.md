@@ -9,3 +9,7 @@ Hedera merchant/facilitator and settlement verification. Run `npm ci` here or ro
 HTTP routing lives in `hedera/lib/merchant.mjs`; the server script wires it to the live facilitator. Tests exercise real localhost HTTP requests with a fixture facilitator, including retrying a consumed authorization through the original settlement journal path. These routing tests submit no chain transactions and do not establish durable purchased-result retrieval.
 
 Task-aware service: `npm run task:serve`; see [paid workflow](../shared/PAID_WORKFLOW.md). Install all modules and compile from the root before integration tests, which use the contracts module's local EVM. This service is distinct from `hedera:serve`. State under `.merchant-state/` is durable financial evidence, not cache.
+
+Checkpointed handoff reference: root `npm run demo:handoff`; see [RUNNER.md](../shared/RUNNER.md). This local proof preserves paid results across worker replacement; process-isolated production orchestration remains unfinished.
+
+Read-only merchant readiness: `npm run task:preflight` from backend. Both preflight and the task server load ignored `backend/.env.hedera`. See [live setup](../shared/MERCHANT_LIVE_SETUP.md). No bootstrap command makes a paid purchase automatically.

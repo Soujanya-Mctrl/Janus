@@ -37,7 +37,7 @@ export function createOperationStore({ directory, authenticate, reconcile, submi
         try { record = JSON.parse(await fs.readFile(target, 'utf8')); }
         catch (error) { if (error.code !== 'ENOENT') throw error; }
         if (record && record.fingerprint !== fingerprint) throw new Error('Operation fingerprint conflict');
-        const observed = await reconcile({ identity, request });
+        const observed = await reconcile({ identity, request, knownReceipt: record?.receipt });
         if (record?.status === 'ready') {
           if (observed.status !== 'paid') throw new Error('Cached settlement requires reconciliation');
           if (hash(record.result) !== record.resultHash) throw new Error('Stored result integrity failure');

@@ -114,7 +114,6 @@ export function PrivyAuthWrapper({ children }: { children: ReactNode }) {
 
   return (
     <PrivyProvider
-      key="privy-provider"
       appId={appId}
       clientId={process.env.NEXT_PUBLIC_PRIVY_CLIENT_ID?.trim() || undefined}
       config={{
@@ -137,7 +136,7 @@ export function PrivyAuthWrapper({ children }: { children: ReactNode }) {
         embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" } },
       }}
     >
-      <PrivyBridge key="privy-bridge">{children}</PrivyBridge>
+      <PrivyBridge>{children}</PrivyBridge>
     </PrivyProvider>
   );
 }

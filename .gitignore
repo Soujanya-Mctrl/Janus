@@ -50,3 +50,15 @@ next-env.d.ts
 **/out/
 **/build/
 **/.env*
+
+# Commit only secret-free configuration templates
+!**/.env.example
+!**/.env.*.example
+
+# Local compiler output
+**/artifacts/
+**/.lockbuild/
+
+# Durable merchant/runner state (never delete while outcomes are unknown)
+**/.merchant-state/
+**/.runner-state/

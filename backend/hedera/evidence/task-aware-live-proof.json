@@ -1,0 +1,27 @@
+{
+  "network": "hedera:testnet",
+  "status": "passed",
+  "budgetBaseUnits": "20000",
+  "startedAt": "2026-11-06T16:08:10.188Z",
+  "finishedAt": "2026-11-06T16:29:32.796Z",
+  "taskId": "0xcc22851258c92c8f65784dda01d8057d2a3da323293fd87b9725aa6cf069e26e",
+  "baseline": {
+    "treasury": "89500",
+    "merchant": "23500",
+    "spent": "3500"
+  },
+  "after": {
+    "treasury": "69500",
+    "merchant": "43500",
+    "spent": "23500"
+  },
+  "createTransaction": "0x107b0c080f965e215b14e46f4ae24872b1aa543107f91a1df3f73873da0c86d5",
+  "paymentTransaction": "0x1d4321df85c55662c29ccb1acbd660afcbcc1790ae276feb671e20e892605814",
+  "replayTransaction": "0x1d4321df85c55662c29ccb1acbd660afcbcc1790ae276feb671e20e892605814",
+  "resultHash": "3d521f19912fab839502da58d75c84101a077676dcc54259abed1e7de63e7838",
+  "evidenceScope": "Fresh Hedera JSON-RPC receipt, matching Paid event and exact HTS/ERC20 balances; native consensus child-record verification remains separate",
+  "sourceCommit": "b0f0492d40926a3fa605cb5b4494e5b8ef03dfc6",
+  "sourceDirty": true,
+  "executedScriptSha256": "076b66212da0bdc7411c0fa905b0fde86345b25f5af69e7100179e1d789a73d3",
+  "allocationNonce": "2"
+}

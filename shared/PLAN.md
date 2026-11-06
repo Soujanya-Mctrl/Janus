@@ -4,25 +4,42 @@
 
 Use top-level `backend/`, `frontend/`, `contracts/` and `shared/`. Keep separate dependency lockfiles, root orchestration commands, preserved proof evidence, and one current context set. Keep archived research distinct from implementation status.
 
-## Phase 1: integration readiness completed locally
+Consistency gate verified on 6 November 2026 with Node.js 22.23.4: `npm run setup` installs module-local dependencies; `npm run check` validates source/lockfiles, lint, types, compilation, tests and frontend build. CI uses the same path. Generated contract reports stay in ignored artifacts rather than rewriting historical proof. Runtime configuration templates live with their owning frontend/backend modules.
 
-1. Review the treasury acceptance scenarios and accounting invariants against the intended MVP. Preserve existing pending-payment, epoch and owner-recovery behavior.
-2. Confirm the target settlement network; reconcile Sepolia frontend configuration with the existing Hedera route before wiring transactions.
-3. Establish the treasury interface and ABI/version export for backend/frontend consumption, with integer base units and distinct available/reserved/spent/returned/withdrawn fields.
-4. Verify deployment configuration and direct owner recovery without application services. Keep local proof and historical/live proof clearly labelled.
+## Treasury integration readiness completed
 
-Evidence: shared Hedera testnet configuration (chain 296), generated ABI and source/ABI hash manifest, export freshness check, direct owner recovery integration test without services, and frontend build/lint. Solidity financial behavior was preserved. Historical live proof was not rerun. See `RECOVERY.md`; browser recovery remains in the next workflow phase.
+- Selected Hedera testnet and aligned frontend/backend through shared network configuration.
+- Exported the versioned treasury ABI/hash and decimal-string operation/authorization interface, with drift checks in the normal compile path.
+- Documented accepted narrower contract semantics in [TREASURY_INTERFACE.md](TREASURY_INTERFACE.md), preserving the existing contract and historical deployment.
+- Added an independent event-history accounting model, fixed-seed model histories and onchain differential traces.
+- Added a backend-independent owner recovery client with manifest/chain/code/owner/token checks and local recovery/restart tests. Browser recovery and fresh live proof remain later work; see [RECOVERY.md](RECOVERY.md).
 
-## Then: complete the paid workflow prototype
+Exit gate: reproducible contract/model tests, explicit network configuration, stable exported integration interface and independently usable owner recovery. No live spending or contract redeployment is part of this phase.
 
-1. Build task-aware SDK and payment adapter with the 96-byte authorization envelope and task-specific quote validation.
-2. Persist merchant operation identity, settlement intent and immutable results; authenticate result retrieval and reconcile ambiguous payments across restart.
+## Paid merchant completed locally
+
+The task-aware quote/payment SDK, durable merchant store and authenticated result-retrieval adapter are implemented and tested with real local contracts over HTTP. See [PAID_WORKFLOW.md](PAID_WORKFLOW.md). Live network interoperability and production finality remain unqualified.
+
+## Next: checkpointed workflow prototype
+
 3. Implement deterministic checkpointed A-to-B handoff. Lose a response after payment; retrieve the original result without another charge; reject new old-worker commitments; keep an unrelated task progressing.
 4. Connect the dashboard to authoritative contract state and receipt-confirmed actions. Add a separately usable owner recovery client.
 5. Run the demonstration from reset, save evidence and document limitations before adding optional discovery, privacy or sponsor integrations.
 
 No production deployment or live spending is part of repository cleanup. The historical midnight timetable is archived reference, not the current schedule.
 
+## Production dependency follow-up
+
+Existing frontend wallet/authentication advisories and peer-dependency compatibility settings require a reviewed migration with wallet/browser regressions before production. The readiness phase reviews and records this debt; it does not apply a forced downgrade or claim to clear the advisories.
+
 ## Phase publication workflow
 
 Before starting each phase and before publishing it: fetch origin/upstream, inspect incoming changes, and integrate both remote main branches while preserving local work. After the phase exit gate and relevant checks pass, commit and push to `origin/main`. Resolve non-fast-forward rejection by fetching and integrating, never force-pushing. Keep shared context current in the phase commit. Upstream checks happen during active work, not through an unattended scheduled task.
+
+## Checkpointed handoff reference milestone
+
+Implemented and locally verified: durable checkpoint/assignment intent, stable paid-step replay, deterministic replacement selection, four independently progressing logical tasks and reconciliation after assignment acknowledgement loss. Reproduce with `npm run demo:handoff`; see [RUNNER.md](RUNNER.md). This is the core of the next phase, not completion of the broader process scheduler: authenticated task API, process-isolated workers, production storage/locking, encrypted checkpoints and a real model report remain required. Connected dashboard and browser-wallet validation remain separate gates.
+
+## Live task-aware payment verified
+
+The bounded 0.02-test-USDC Hedera payment and original-result replay are verified. Allocation uncertainty was resolved through nonce reconciliation and a journaled signed transaction before one broadcast. Public evidence: `backend/hedera/evidence/task-aware-live-proof.json`. The completed-run guard submits nothing further. RPC availability, native child-record verification and broader production release gates remain distinct from this successful testnet check.

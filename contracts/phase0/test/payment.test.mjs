@@ -11,7 +11,7 @@ const chain = defineChain({ id: 1337, name: 'RelayBudget LOCAL ONLY', nativeCurr
 const artifacts = compile();
 const id = name => keccak256(stringToHex(name));
 const auth = operation => encodeAbiParameters([{ type: 'bytes32' }], [operation]);
-const evidencePath = new URL('../evidence/local-payment-proof.json', import.meta.url);
+const evidencePath = new URL('../artifacts/local-payment-proof.json', import.meta.url);
 
 async function fixture(run) {
   // Ephemeral, in-process EVM. It does not listen on a port or use user keys.
@@ -63,7 +63,7 @@ async function fixture(run) {
 test('Phase 0: contract-controlled local payments and independent recovery', async t => {
   const report = { status: 'running', network: 'LOCAL IN-PROCESS EVM ONLY', chainId: chain.id, liveHederaSettlement: false, x402EndToEnd: false, compiler: artifacts.PaymentProbe.compiler, generatedAt: new Date().toISOString(), checks: [] };
   const save = () => fs.writeFile(evidencePath, JSON.stringify(report, (_, value) => typeof value === 'bigint' ? value.toString() : value, 2) + '\n');
-  await fs.mkdir(new URL('../evidence/', import.meta.url), { recursive: true });
+  await fs.mkdir(new URL('../artifacts/', import.meta.url), { recursive: true });
   await save();
   const check = async (name, body) => {
     await t.test(name, async () => {

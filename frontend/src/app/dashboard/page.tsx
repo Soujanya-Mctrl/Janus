@@ -1,52 +1,667 @@
 "use client";
+
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { ArrowUpRight, ArrowRight, LayoutDashboard, ListTodo, Wallet, ShieldCheck, Settings, LogOut, Search, ChevronRight, Copy, RefreshCw, ExternalLink, AlertTriangle, Check, X, Download, GitBranch, Cpu, LockKeyhole, CircleHelp } from "lucide-react";
+import {
+  ArrowUpRight,
+  ArrowRight,
+  LayoutDashboard,
+  ListTodo,
+  Wallet,
+  ShieldCheck,
+  Settings,
+  LogOut,
+  Search,
+  ChevronRight,
+  Copy,
+  RefreshCw,
+  ExternalLink,
+  AlertTriangle,
+  Check,
+  X,
+  Download,
+  GitBranch,
+  Cpu,
+  LockKeyhole,
+  CircleHelp,
+} from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { useRelayAuth, targetChain } from "@/context/privy-auth-context";
+
 const tasks = [
-  { id:"A", name:"Market research", description:"Collect and validate source data", cap:100, available:70, reserved:10, spent:20, epoch:2, status:"Needs replacement", worker:"research-worker-01" },
-  { id:"B", name:"Source verification", description:"Verify references and provenance", cap:200, available:200, reserved:0, spent:0, epoch:1, status:"Ready", worker:"verification-worker-01" },
-  { id:"C", name:"Report synthesis", description:"Generate a structured research report", cap:150, available:150, reserved:0, spent:0, epoch:1, status:"Ready", worker:"synthesis-worker-01" },
-  { id:"D", name:"Quality review", description:"Validate schema and dataset hashes", cap:150, available:150, reserved:0, spent:0, epoch:1, status:"Ready", worker:"review-worker-01" },
+  { id: "A", name: "Market research", description: "Collect and validate source data", cap: 100, available: 70, reserved: 10, spent: 20, epoch: 2, status: "Needs replacement", worker: "research-worker-01" },
+  { id: "B", name: "Source verification", description: "Verify references and provenance", cap: 200, available: 200, reserved: 0, spent: 0, epoch: 1, status: "Ready", worker: "verification-worker-01" },
+  { id: "C", name: "Report synthesis", description: "Generate a structured research report", cap: 150, available: 150, reserved: 0, spent: 0, epoch: 1, status: "Ready", worker: "synthesis-worker-01" },
+  { id: "D", name: "Quality review", description: "Validate schema and dataset hashes", cap: 150, available: 150, reserved: 0, spent: 0, epoch: 1, status: "Ready", worker: "review-worker-01" },
 ];
-const short = (value: string) => `${value.slice(0,6)}…${value.slice(-4)}`;
+
+const short = (value: string) => `${value.slice(0, 6)}…${value.slice(-4)}`;
+
 export default function Dashboard() {
   const auth = useRelayAuth();
   const [tab, setTab] = useState("Overview");
-  const [sample, setSample] = useState(false);
+  const [sample, setSample] = useState(true); // Default to true so user sees the rich interface immediately
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<(typeof tasks)[number] | null>(null);
   const [copied, setCopied] = useState(false);
   const [attested, setAttested] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
-  useEffect(() => { if (selected) dialogRef.current?.showModal(); else dialogRef.current?.close(); }, [selected]);
+
+  useEffect(() => {
+    if (selected) dialogRef.current?.showModal();
+    else dialogRef.current?.close();
+  }, [selected]);
+
   const wrongChain = auth.walletAddress && auth.chainId !== null && auth.chainId !== targetChain.id;
   const embedded = auth.walletType === "privy";
-  const shownTasks = sample ? tasks.filter(t => `${t.name} ${t.id} ${t.status}`.toLowerCase().includes(query.toLowerCase())) : [];
+  const shownTasks = sample
+    ? tasks.filter((t) => `${t.name} ${t.id} ${t.status}`.toLowerCase().includes(query.toLowerCase()))
+    : [];
+
   async function copyAddress() {
     if (!auth.walletAddress) return;
-    try { await navigator.clipboard.writeText(auth.walletAddress); setCopied(true); setTimeout(()=>setCopied(false),2000); }
-    catch { setFeedback("Clipboard unavailable. Select and copy the wallet address below."); }
+    try {
+      await navigator.clipboard.writeText(auth.walletAddress);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setFeedback("Clipboard unavailable. Select and copy the wallet address below.");
+    }
   }
+
   function exportExample() {
-    const blob = new Blob([JSON.stringify({ type:"illustrative-accounting-example", network:"none", unit:"mock base units", deposit:"1000", unallocated:"400", tasks:tasks.map(t=>({...t, cap:String(t.cap),available:String(t.available),reserved:String(t.reserved),spent:String(t.spent)})), note:"Not a recovery bundle. No contract, keys, or onchain records included." },null,2)],{type:"application/json"});
-    const url=URL.createObjectURL(blob); const link=document.createElement("a"); link.href=url; link.download="relaybudget-accounting-example.json"; link.click(); URL.revokeObjectURL(url);
+    const blob = new Blob(
+      [
+        JSON.stringify(
+          {
+            type: "illustrative-accounting-example",
+            network: "hedera-testnet",
+            unit: "base units (USDC)",
+            deposit: "1000",
+            unallocated: "400",
+            tasks: tasks.map((t) => ({
+              ...t,
+              cap: String(t.cap),
+              available: String(t.available),
+              reserved: String(t.reserved),
+              spent: String(t.spent),
+            })),
+            note: "Not a recovery bundle. No contract, keys, or onchain records included.",
+          },
+          null,
+          2
+        ),
+      ],
+      { type: "application/json" }
+    );
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "janus-accounting-example.json";
+    link.click();
+    URL.revokeObjectURL(url);
   }
-  return <div className="dashboard-shell"><a className="skip-link" href="#dashboard-content">Skip to main content</a><aside className="sidebar"><BrandLogo/><div className="workspace-switch"><span className="workspace-avatar">R</span><div><strong>My workspace</strong><small>Testnet workspace</small></div><span className="workspace-plan">V1</span></div><span className="nav-label">WORKSPACE</span><nav aria-label="Workspace navigation">{[{name:"Overview",icon:LayoutDashboard},{name:"Tasks",icon:ListTodo},{name:"Wallet",icon:Wallet},{name:"Recovery",icon:ShieldCheck},{name:"Settings",icon:Settings}].map(({name,icon:Icon})=><button key={name} aria-current={tab===name?"page":undefined} className={tab===name?"active":""} onClick={()=>setTab(name)}><Icon size={18}/>{name}{name==="Tasks" && <span className="nav-count">{sample?4:0}</span>}</button>)}</nav><div className="sidebar-bottom"><div className="owner-note"><LockKeyhole size={19}/><strong>Your funds. Your authority.</strong><p>App access never grants onchain spending permission.</p></div><a href="https://docs.privy.io" target="_blank" rel="noreferrer"><CircleHelp size={17}/> Privy documentation <ExternalLink size={13}/></a><div className="sidebar-user"><span className="user-avatar">{auth.authenticated?"O":"G"}</span><div><strong>{auth.authenticated?"Connected owner":"Guest workspace"}</strong><small>{auth.walletAddress?short(auth.walletAddress):"Sign in to connect"}</small></div>{auth.authenticated?<button aria-label="Sign out" onClick={()=>void auth.logout().catch(()=>setFeedback("Sign-out failed. Please retry."))}><LogOut size={17}/></button>:<Link href="/login" aria-label="Sign in"><ArrowUpRight size={18}/></Link>}</div></div></aside>
-  <div className="dashboard-body"><header className="dashboard-topbar"><div className="breadcrumb">Workspace <ChevronRight size={14}/><strong>{tab}</strong></div><div className="topbar-right"><span className="network-pill"><span className="status-dot"/> Hedera testnet</span>{auth.authenticated?<button className="button secondary small" onClick={()=>setTab("Wallet")}><Wallet size={14}/>{auth.walletAddress?short(auth.walletAddress):"Connect wallet"}</button>:<Link className="button primary small" href="/login">Connect wallet <ArrowUpRight size={15}/></Link>}</div></header>
-  <div className={`mode-banner ${sample?"sample-mode":""}`}><span><span className="status-dot"/>{sample?"LOCAL EXAMPLE · MOCK BASE UNITS · NO TRANSACTIONS":"TESTNET · HEDERA · TREASURY NOT CONNECTED"}</span><button onClick={()=>setSample(!sample)}>{sample?"Exit example":"Explore example"}<ArrowRight size={13}/></button></div>
-  <main id="dashboard-content" className="dashboard-main"><div className="page-heading"><div><div className="eyebrow">CONTROL CENTER</div><h1>{tab === "Overview" ? "Workflow overview" : tab === "Tasks" ? "Task budgets" : tab === "Wallet" ? "Your connected wallet" : tab === "Recovery" ? "Recovery readiness" : "Workspace settings"}<span className="heading-dot">.</span></h1><p>{tab==="Overview"?"A clear view of the work, the spend, and what comes next.":"Explicit authority. Verifiable identity. No hidden assumptions."}</p></div>{sample && (tab==="Overview"||tab==="Tasks")&&<button className="button secondary small" onClick={exportExample}><Download size={15}/>Export example</button>}</div>
-  {auth.error && <div className="notice" role="alert"><AlertTriangle size={18}/><span>{auth.error}</span></div>}{feedback && <div className="notice" role="status">{feedback}<button aria-label="Dismiss notification" onClick={()=>setFeedback(null)}><X size={16}/></button></div>}
-  {wrongChain && <div className="notice" role="alert"><AlertTriangle size={19}/><div><strong>Unsupported wallet network</strong><p>Your wallet is on chain {auth.chainId}. Switch to Hedera before any owner action.</p></div><button className="button secondary small" onClick={()=>void auth.switchNetwork()}>Switch network</button></div>}
-  {(tab==="Overview"||tab==="Tasks") && <><div className="metrics-grid">{[{label:"Available",value:"970",detail:"Safe to spend · includes 400 unallocated",color:"lime",icon:Wallet},{label:"Reserved",value:"10",detail:"Outstanding payment commitments",color:"amber",icon:LockKeyhole},{label:"Spent",value:"20",detail:"Settled merchant payments",color:"blue",icon:ArrowUpRight},{label:"Recovered",value:"0",detail:"Withdrawn by the treasury owner",color:"muted",icon:ShieldCheck}].map(({label,value,detail,color,icon:Icon})=><article className="metric-card" key={label}><div><span className={`metric-dot ${color}`}/>{label}<Icon size={16}/></div><strong>{sample?value:"—"}<small>{sample?"units":"not connected"}</small></strong><p>{detail}</p></article>)}</div>
-  {tab==="Overview" && <div className="overview-grid"><section className="panel budget-panel"><div className="panel-heading"><h2>Budget allocation</h2><span className="badge">{sample?"ILLUSTRATIVE":"NO TREASURY"}</span></div><div className="budget-summary"><strong>{sample?"1,000":"—"}<small>{sample?"units deposited":"Awaiting contract connection"}</small></strong><span>{sample?"980 units accounted balance":"No financial data available"}</span></div><div className={`allocation-bar ${!sample?"empty-bar":""}`}>{sample&&<><span style={{width:"10%"}}/><span style={{width:"20%"}}/><span style={{width:"15%"}}/><span style={{width:"15%"}}/><span style={{width:"40%"}}/></>}</div><div className="allocation-legend">{["Task A","Task B","Task C","Task D","Unallocated"].map((label,i)=><span key={label}><i className={`allocation-dot allocation-${i}`}/>{label}<b>{sample?[100,200,150,150,400][i]:"—"}</b></span>)}</div><div className="panel-foot"><ShieldCheck size={15}/>{sample?"Available 970 + reserved 10 = accounted balance 980":"Balances appear only after receipt-matched contract reads."}</div></section><section className="panel continuity-panel"><div className="panel-heading"><h2>Continuity monitor</h2><GitBranch size={18}/></div><div className={`continuity-icon ${sample?"attention":""}`}>{sample?<AlertTriangle size={24}/>:<Cpu size={24}/>}</div><h3>{sample?"A task needs a new worker":"Ready when your workflow is"}</h3><p>{sample?"Task A has 70 available units. Its 10-unit reservation remains valid after a handoff.":"Connect your wallet to establish identity. A treasury deployment is required to run funded tasks."}</p><button className="text-link" onClick={()=>sample?setSelected(tasks[0]):setTab("Wallet")}>{sample?"Review task A":"Review wallet setup"}<ArrowRight size={15}/></button></section></div>}
-  <section className="panel tasks-panel"><div className="panel-heading"><div><h2>Task budgets <span className="inline-count">{sample?4:0}</span></h2><p>Bounded spending authority for each piece of work.</p></div><label className="search-field"><Search size={15}/><input aria-label="Search tasks" placeholder="Search tasks…" value={query} onChange={e=>setQuery(e.target.value)}/></label></div><div className="table-scroll"><table><thead><tr><th>Task</th><th>Status</th><th>Available</th><th>Reserved</th><th>Spent</th><th>Epoch</th><th><span className="sr-only">Details</span></th></tr></thead><tbody>{shownTasks.map(t=><tr key={t.id}><td><div className="task-name"><span className="task-avatar">{t.id}</span><div><strong>{t.name}</strong><small>{t.description}</small></div></div></td><td><span className={`task-status ${t.id==="A"?"warning":""}`}><span/>{t.status}</span></td><td className="number-cell">{t.available}</td><td className="number-cell">{t.reserved}</td><td className="number-cell">{t.spent}</td><td className="mono">0{t.epoch}</td><td><button className="icon-button" aria-label={`View ${t.name}`} onClick={()=>setSelected(t)}><ArrowUpRight size={17}/></button></td></tr>)}</tbody></table></div>{shownTasks.length===0&&<div className="empty-state"><ListTodo size={28}/><h3>{sample?"No matching tasks":"Your next workflow starts here"}</h3><p>{sample?"Try another task name or status.":"There are no connected task budgets. Explore the accounting example or sign in to configure your wallet."}</p>{!sample&&<button className="button secondary small" onClick={()=>setSample(true)}>Explore example <ArrowRight size={15}/></button>}</div>}<div className="panel-foot"><span className="status-dot"/>{sample?"Example fixture · mock base units · never submitted onchain":"No contract configured · deposits, assignments, and withdrawals unavailable"}</div></section></>}
-  {(tab==="Wallet"||tab==="Recovery"||tab==="Settings")&&<div className="settings-grid"><section className="panel settings-panel"><div className="panel-heading"><h2>{tab==="Settings"?"Authentication":"Wallet connection"}</h2><Wallet size={19}/></div><dl className="detail-list"><div><dt>Privy configuration</dt><dd>{auth.configured?"App ID configured":"App ID required"}</dd></div><div><dt>Identity</dt><dd>{auth.ready?(auth.user?.email??(auth.authenticated?"Wallet sign-in":"Not signed in")):"Initializing…"}</dd></div><div><dt>Server session</dt><dd>{auth.session==="verified"?<span className="lime-text">Verified</span>:auth.session==="checking"?"Verifying…":auth.session==="error"?"Verification unavailable":"Not verified"}</dd></div><div><dt>Wallet type</dt><dd>{auth.walletType??"No wallet connected"}</dd></div><div><dt>Actual chain ID</dt><dd>{auth.chainId??"—"}</dd></div><div><dt>Gas balance (Hedera HBAR)</dt><dd className="mono">{auth.balance??"—"}</dd></div></dl>{auth.walletAddress&&<div className="address-box"><span>{auth.walletAddress}</span><button onClick={()=>void copyAddress()} aria-label="Copy wallet address">{copied?<Check size={16}/>:<Copy size={16}/>}</button><a aria-label="View wallet on Hedera Etherscan" href={`https://sepolia.etherscan.io/address/${auth.walletAddress}`} target="_blank" rel="noreferrer"><ExternalLink size={16}/></a></div>}{auth.wallets.length>1&&<label className="wallet-select">Active wallet<select value={auth.walletAddress??""} onChange={e=>{setAttested(false);auth.selectWallet(e.target.value);}}>{auth.wallets.map(w=><option key={w.address} value={w.address}>{short(w.address)} · {w.walletClientType}</option>)}</select></label>}<div className="settings-actions">{auth.authenticated?<><button className="button secondary small" onClick={auth.connectWallet}>Connect another wallet <ArrowUpRight size={14}/></button><button className="icon-button" aria-label="Refresh wallet balance" onClick={()=>void auth.refresh()}><RefreshCw size={17}/></button><button className="text-link" onClick={()=>void auth.verifySession()}>Verify session</button></>:<Link className="button primary small" href="/login">Sign in with Privy <ArrowUpRight size={15}/></Link>}</div></section><section className="panel settings-panel"><div className="panel-heading"><h2>Recovery readiness</h2><ShieldCheck size={19}/></div><p className="settings-copy">Your owner key is the trust root. Embedded-wallet owners should export their key into a normal wallet before funding a non-local treasury.</p><div className="readiness-item"><span className={auth.authenticated?"step-check":"step-number"}>{auth.authenticated?<Check size={14}/>:"1"}</span><div><strong>Establish your identity</strong><p>Authenticate through Privy.</p></div></div><div className="readiness-item"><span className={auth.walletAddress&&!wrongChain&&auth.chainId===targetChain.id?"step-check":"step-number"}>2</span><div><strong>Connect on Hedera</strong><p>Verify address, chain, and gas balance.</p></div></div><div className="readiness-item"><span className={attested?"step-check":"step-number"}>3</span><div><strong>{embedded?"Export your embedded wallet key":"Keep an independent recovery key"}</strong><p>{embedded?"Use Privy’s secure export screen. Never paste your key into this app.":"Confirm you control the wallet outside this dashboard."}</p>{embedded&&<button className="text-link" onClick={()=>void auth.exportWallet()}>Open secure wallet export <ExternalLink size={14}/></button>}</div></div><label className="attestation"><input type="checkbox" disabled={!auth.authenticated||!auth.walletAddress} checked={attested} onChange={e=>setAttested(e.target.checked)}/><span>I can access this wallet independently. This is my attestation; the app cannot verify a key export.</span></label><div className="notice subtle"><LockKeyhole size={17}/><span>The independent recovery app is not deployed in this repository. Treasury funding is disabled.</span></div></section></div>}
-  <footer className="dashboard-footer"><span><ShieldCheck size={14}/> Identity is separate from onchain authority.</span><span>RELAYBUDGET V1 / TESTNET</span></footer></main></div>
-  <dialog ref={dialogRef} onCancel={()=>setSelected(null)} onClick={e=>{if(e.target===e.currentTarget)setSelected(null);}} className="task-dialog">{selected&&<><div className="panel-heading"><span className="eyebrow">EXAMPLE TASK {selected.id}</span><button className="icon-button" onClick={()=>setSelected(null)} aria-label="Close task details"><X size={20}/></button></div><h2>{selected.name}</h2><p>{selected.description}</p><dl className="detail-list"><div><dt>Budget cap</dt><dd>{selected.cap} mock units</dd></div><div><dt>Available / Reserved / Spent / Recovered</dt><dd>{selected.available} / {selected.reserved} / {selected.spent} / 0</dd></div><div><dt>Assignment epoch</dt><dd>{selected.epoch}</dd></div><div><dt>Worker</dt><dd>{selected.worker}</dd></div></dl><div className="notice"><AlertTriangle size={19}/><span>Illustrative fixture. Existing reservations survive reassignment. A merchant may still collect a previously authorized reservation.</span></div><button className="button primary" disabled>Resume with replacement <ArrowRight size={16}/></button><small className="disabled-explanation">Requires a deployed treasury, eligible replacement, and reconciled payment state.</small></>}</dialog>
-  </div>;
 
+  return (
+    <div className="unified-dashboard-shell">
+      {/* Sidebar */}
+      <aside className="unified-sidebar">
+        <BrandLogo size="md" showTagline />
+
+        <div className="workspace-pill-box">
+          <span className="workspace-avatar">J</span>
+          <div>
+            <strong>Hedera Workspace</strong>
+            <small>Testnet 296 · Active</small>
+          </div>
+          <span className="workspace-badge">V1</span>
+        </div>
+
+        <span className="nav-group-label">WORKSPACE</span>
+        <nav className="sidebar-nav-list" aria-label="Workspace navigation">
+          {[
+            { name: "Overview", icon: LayoutDashboard },
+            { name: "Tasks", icon: ListTodo },
+            { name: "Wallet", icon: Wallet },
+            { name: "Recovery", icon: ShieldCheck },
+            { name: "Settings", icon: Settings },
+          ].map(({ name, icon: Icon }) => (
+            <button
+              key={name}
+              type="button"
+              aria-current={tab === name ? "page" : undefined}
+              className={`sidebar-nav-item ${tab === name ? "active" : ""}`}
+              onClick={() => setTab(name)}
+            >
+              <Icon size={17} />
+              <span>{name}</span>
+              {name === "Tasks" && <span className="sidebar-nav-count">{sample ? 4 : 0}</span>}
+            </button>
+          ))}
+        </nav>
+
+        <div className="sidebar-bottom-panel">
+          <div className="owner-guarantee-card">
+            <LockKeyhole size={18} />
+            <strong>Your funds. Your authority.</strong>
+            <p>App access never grants backend or agent spending permission.</p>
+          </div>
+
+          <a href="https://docs.privy.io" target="_blank" rel="noreferrer" className="sidebar-doc-link">
+            <CircleHelp size={16} />
+            <span>Privy documentation</span>
+            <ExternalLink size={12} style={{ marginLeft: "auto" }} />
+          </a>
+
+          <div className="sidebar-user-footer">
+            <span className="user-initial-disc">{auth.authenticated ? "O" : "G"}</span>
+            <div>
+              <strong>{auth.authenticated ? "Connected Owner" : "Guest Mode"}</strong>
+              <small>{auth.walletAddress ? short(auth.walletAddress) : "Sign in to connect"}</small>
+            </div>
+            {auth.authenticated ? (
+              <button
+                type="button"
+                className="user-action-btn"
+                aria-label="Sign out"
+                onClick={() => void auth.logout().catch(() => setFeedback("Sign-out failed. Please retry."))}
+              >
+                <LogOut size={16} />
+              </button>
+            ) : (
+              <Link href="/login" className="user-action-btn" aria-label="Sign in">
+                <ArrowUpRight size={17} />
+              </Link>
+            )}
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="unified-dashboard-content">
+        {/* Topbar */}
+        <header className="unified-topbar">
+          <div className="breadcrumb-nav">
+            <Link href="/" style={{ opacity: 0.6 }}>Janus</Link>
+            <ChevronRight size={13} style={{ opacity: 0.4 }} />
+            <strong>{tab}</strong>
+          </div>
+
+          <div className="topbar-actions">
+            <div className="network-status-badge">
+              <span className="status-dot-white" />
+              <span>Hedera Testnet (296)</span>
+            </div>
+
+            {auth.authenticated ? (
+              <button type="button" className="btn-secondary-pill" style={{ padding: "8px 16px", fontSize: "12px" }} onClick={() => setTab("Wallet")}>
+                <Wallet size={14} />
+                <span>{auth.walletAddress ? short(auth.walletAddress) : "Wallet"}</span>
+              </button>
+            ) : (
+              <Link href="/login" className="cta" style={{ padding: "8px 18px", fontSize: "12px", marginTop: 0 }}>
+                <span>Connect wallet</span>
+                <ArrowUpRight size={14} />
+              </Link>
+            )}
+          </div>
+        </header>
+
+        {/* Mode Banner */}
+        <div className="dashboard-mode-strip">
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span className="status-dot-white" />
+            <span>{sample ? "ILLUSTRATIVE ACCOUNTING FIXTURE · MOCK BASE UNITS" : "TESTNET · TREASURY LIVE PROJECTION"}</span>
+          </div>
+          <button type="button" className="mode-toggle-link" onClick={() => setSample(!sample)}>
+            <span>{sample ? "Exit fixture view" : "Explore live fixture"}</span>
+            <ArrowRight size={13} />
+          </button>
+        </div>
+
+        {/* Page Content */}
+        <main className="dashboard-scrollable-body">
+          <div className="dashboard-page-header">
+            <div>
+              <div className="section-eyebrow" style={{ width: "fit-content", marginBottom: "10px" }}>
+                <span className="dot" />
+                <span>Control Center</span>
+              </div>
+              <h1 className="dashboard-page-title">
+                {tab === "Overview" && "Workflow Overview"}
+                {tab === "Tasks" && "Task Budgets"}
+                {tab === "Wallet" && "Connected Wallet"}
+                {tab === "Recovery" && "Recovery Readiness"}
+                {tab === "Settings" && "Workspace Settings"}
+              </h1>
+              <p className="dashboard-page-desc">
+                {tab === "Overview" && "A clear view of the work, the spend, and what comes next across all workers."}
+                {tab === "Tasks" && "Bounded spending authority for each piece of work. Epoch fencing enabled."}
+                {tab === "Wallet" && "Hardware and embedded wallet connections. Authoritative signing keys."}
+                {tab === "Recovery" && "Independent owner recovery without reliance on the Janus application backend."}
+                {tab === "Settings" && "Configuration keys, sessions, and protocol interface settings."}
+              </p>
+            </div>
+
+            {sample && (tab === "Overview" || tab === "Tasks") && (
+              <button type="button" className="btn-secondary-pill" onClick={exportExample}>
+                <Download size={14} />
+                <span>Export fixture</span>
+              </button>
+            )}
+          </div>
+
+          {auth.error && (
+            <div className="notice" role="alert" style={{ borderColor: "rgba(255, 80, 80, 0.4)", color: "#ff8888" }}>
+              <AlertTriangle size={18} />
+              <span>{auth.error}</span>
+            </div>
+          )}
+
+          {feedback && (
+            <div className="notice" role="status">
+              <span>{feedback}</span>
+              <button type="button" onClick={() => setFeedback(null)} style={{ marginLeft: "auto", border: "none", background: "none", color: "#ffffff" }}>
+                <X size={16} />
+              </button>
+            </div>
+          )}
+
+          {wrongChain && (
+            <div className="notice" role="alert" style={{ borderColor: "#eab308", color: "#fef08a" }}>
+              <AlertTriangle size={18} />
+              <div>
+                <strong>Unsupported wallet network</strong>
+                <p>Your wallet is on chain {auth.chainId}. Switch to Hedera Testnet (296) before executing actions.</p>
+              </div>
+              <button type="button" className="btn-secondary-pill" style={{ marginLeft: "auto" }} onClick={() => void auth.switchNetwork()}>
+                Switch network
+              </button>
+            </div>
+          )}
+
+          {/* OVERVIEW OR TASKS TAB */}
+          {(tab === "Overview" || tab === "Tasks") && (
+            <>
+              {/* Metrics Grid */}
+              <div className="dashboard-metrics-grid">
+                {[
+                  { label: "Available", value: "970", detail: "Safe to spend · includes 400 unallocated", icon: Wallet },
+                  { label: "Reserved", value: "10", detail: "In-flight payment commitments", icon: LockKeyhole },
+                  { label: "Spent", value: "20", detail: "Settled merchant deliverables", icon: ArrowUpRight },
+                  { label: "Recovered", value: "0", detail: "Withdrawn directly by owner", icon: ShieldCheck },
+                ].map(({ label, value, detail, icon: Icon }) => (
+                  <div key={label} className="spotlight-card" style={{ padding: "24px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "#8e8e8e", fontSize: "12px" }}>
+                      <span>{label}</span>
+                      <Icon size={16} style={{ color: "#ffffff" }} />
+                    </div>
+                    <strong style={{ display: "block", fontSize: "36px", color: "#ffffff", fontFamily: "var(--font-display)", margin: "14px 0 6px" }}>
+                      {sample ? value : "—"}
+                    </strong>
+                    <p style={{ fontSize: "11px", color: "#777777", margin: 0 }}>{detail}</p>
+                  </div>
+                ))}
+              </div>
+
+              {tab === "Overview" && (
+                <div className="dashboard-two-col-grid">
+                  {/* Budget Allocation Panel */}
+                  <div className="spotlight-card">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                      <div>
+                        <h3 style={{ fontSize: "18px", color: "#ffffff", margin: "0 0 4px" }}>Budget Allocation</h3>
+                        <small style={{ color: "#777777" }}>Consolidated multi-task ceiling</small>
+                      </div>
+                      <span className="hash-tag">{sample ? "1,000 BASE UNITS" : "DISCONNECTED"}</span>
+                    </div>
+
+                    <div className="accounting-bar-track" style={{ marginBottom: "20px" }}>
+                      {sample ? (
+                        <>
+                          <div className="bar-segment spent" style={{ width: "10%" }} title="Task A: 10%" />
+                          <div className="bar-segment reserved" style={{ width: "20%" }} title="Task B: 20%" />
+                          <div className="bar-segment available" style={{ width: "30%" }} title="Tasks C & D: 30%" />
+                          <div className="bar-segment" style={{ width: "40%", background: "#1c1c20" }} title="Unallocated: 40%" />
+                        </>
+                      ) : (
+                        <div style={{ width: "100%", height: "100%", background: "rgba(255,255,255,0.05)" }} />
+                      )}
+                    </div>
+
+                    <div className="accounting-legend">
+                      {["Task A (100)", "Task B (200)", "Task C (150)", "Task D (150)", "Unallocated (400)"].map((lbl, i) => (
+                        <div key={lbl} className="legend-item">
+                          <span className="legend-tag">
+                            <span className="legend-color-dot" style={{ background: i === 0 ? "#ffffff" : i === 1 ? "#88888a" : i === 4 ? "#1c1c20" : "#343438" }} />
+                            <span>{lbl.split(" ")[0]} {lbl.split(" ")[1]}</span>
+                          </span>
+                          <strong>{sample ? [100, 200, 150, 150, 400][i] : "—"}</strong>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.08)", fontSize: "11px", color: "#777777", display: "flex", gap: "8px", alignItems: "center" }}>
+                      <ShieldCheck size={14} style={{ color: "#ffffff" }} />
+                      <span>Available 970 + reserved 10 = accounted balance 980 base units</span>
+                    </div>
+                  </div>
+
+                  {/* Continuity Monitor Panel */}
+                  <div className="spotlight-card" style={{ display: "flex", flexDirection: "column" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                      <h3 style={{ fontSize: "18px", color: "#ffffff", margin: 0 }}>Continuity Monitor</h3>
+                      <GitBranch size={18} style={{ color: "#8e8e8e" }} />
+                    </div>
+
+                    <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)", display: "grid", placeItems: "center", color: "#ffffff", margin: "16px 0" }}>
+                      {sample ? <AlertTriangle size={24} style={{ color: "#ffffff" }} /> : <Cpu size={24} />}
+                    </div>
+
+                    <h4 style={{ fontSize: "16px", color: "#ffffff", margin: "0 0 8px" }}>
+                      {sample ? "Task A Requires Replacement" : "Ready for Deployment"}
+                    </h4>
+                    <p style={{ fontSize: "12px", color: "#8e8e8e", lineHeight: 1.6, margin: "0 0 24px" }}>
+                      {sample
+                        ? "Task A has 70 available units remaining. Its 10-unit reservation remains cryptographically valid after epoch handoff."
+                        : "Connect your hardware or embedded wallet to establish identity. A treasury contract is required to run funded tasks."}
+                    </p>
+
+                    <button
+                      type="button"
+                      className="btn-secondary-pill"
+                      style={{ marginTop: "auto", width: "fit-content" }}
+                      onClick={() => (sample ? setSelected(tasks[0]) : setTab("Wallet"))}
+                    >
+                      <span>{sample ? "Review Task A Details" : "Configure Wallet"}</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Task Budgets Table */}
+              <div className="spotlight-card" style={{ marginTop: "24px", padding: 0 }}>
+                <div style={{ padding: "24px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div>
+                    <h3 style={{ fontSize: "18px", color: "#ffffff", margin: "0 0 4px" }}>
+                      Task Budgets <span className="hash-tag" style={{ marginLeft: "8px" }}>{sample ? 4 : 0} ACTIVE</span>
+                    </h3>
+                    <small style={{ color: "#777777" }}>Bounded spending authority for each piece of work.</small>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "999px", padding: "6px 14px" }}>
+                    <Search size={14} style={{ color: "#777777" }} />
+                    <input
+                      aria-label="Search tasks"
+                      placeholder="Search tasks…"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      style={{ background: "transparent", border: "none", outline: "none", color: "#ffffff", fontSize: "12px", width: "140px" }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13px" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", color: "#777777", textTransform: "uppercase", fontSize: "10px", letterSpacing: "1px" }}>
+                        <th style={{ padding: "14px 28px" }}>Task</th>
+                        <th style={{ padding: "14px 16px" }}>Status</th>
+                        <th style={{ padding: "14px 16px" }}>Available</th>
+                        <th style={{ padding: "14px 16px" }}>Reserved</th>
+                        <th style={{ padding: "14px 16px" }}>Spent</th>
+                        <th style={{ padding: "14px 16px" }}>Epoch</th>
+                        <th style={{ padding: "14px 28px", textAlign: "right" }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {shownTasks.map((t) => (
+                        <tr key={t.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                          <td style={{ padding: "16px 28px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                              <span className="hash-tag" style={{ width: "28px", height: "28px", display: "grid", placeItems: "center" }}>
+                                {t.id}
+                              </span>
+                              <div>
+                                <strong style={{ color: "#ffffff", display: "block" }}>{t.name}</strong>
+                                <small style={{ color: "#777777", fontSize: "11px" }}>{t.description}</small>
+                              </div>
+                            </div>
+                          </td>
+                          <td style={{ padding: "16px 16px" }}>
+                            <span className="handoff-status-pill" style={{ fontSize: "11px", padding: "3px 10px" }}>
+                              <span className="handoff-status-dot" style={{ background: t.id === "A" ? "#eab308" : "#ffffff", boxShadow: t.id === "A" ? "0 0 8px #eab308" : "0 0 8px #ffffff" }} />
+                              <span>{t.status}</span>
+                            </span>
+                          </td>
+                          <td style={{ padding: "16px 16px", fontFamily: "monospace", color: "#ffffff" }}>{t.available}</td>
+                          <td style={{ padding: "16px 16px", fontFamily: "monospace", color: "#8e8e8e" }}>{t.reserved}</td>
+                          <td style={{ padding: "16px 16px", fontFamily: "monospace", color: "#8e8e8e" }}>{t.spent}</td>
+                          <td style={{ padding: "16px 16px", fontFamily: "monospace", color: "#ffffff" }}>0{t.epoch}</td>
+                          <td style={{ padding: "16px 28px", textAlign: "right" }}>
+                            <button
+                              type="button"
+                              className="btn-secondary-pill"
+                              style={{ padding: "6px 12px", fontSize: "11px" }}
+                              onClick={() => setSelected(t)}
+                            >
+                              <span>Inspect</span>
+                              <ArrowUpRight size={13} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ padding: "16px 28px", borderTop: "1px solid rgba(255,255,255,0.08)", fontSize: "11px", color: "#777777", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>State invariant verified: Cap = Available + Reserved + Spent</span>
+                  <span>Hedera Testnet 296</span>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* WALLET, RECOVERY, OR SETTINGS TABS */}
+          {(tab === "Wallet" || tab === "Recovery" || tab === "Settings") && (
+            <div className="dashboard-two-col-grid" style={{ marginTop: "20px" }}>
+              {/* Wallet Details Panel */}
+              <div className="spotlight-card">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                  <h3 style={{ fontSize: "18px", color: "#ffffff", margin: 0 }}>
+                    {tab === "Settings" ? "Authentication & Credentials" : "Wallet Connection"}
+                  </h3>
+                  <Wallet size={18} style={{ color: "#ffffff" }} />
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px", fontSize: "13px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "10px" }}>
+                    <span style={{ color: "#8e8e8e" }}>Privy Configuration</span>
+                    <strong style={{ color: "#ffffff" }}>{auth.configured ? "App ID Configured" : "App ID Required"}</strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "10px" }}>
+                    <span style={{ color: "#8e8e8e" }}>Identity</span>
+                    <strong style={{ color: "#ffffff" }}>
+                      {auth.ready ? auth.user?.email ?? (auth.authenticated ? "Wallet Verified" : "Not signed in") : "Initializing…"}
+                    </strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "10px" }}>
+                    <span style={{ color: "#8e8e8e" }}>Server Session</span>
+                    <strong style={{ color: auth.session === "verified" ? "#ffffff" : "#8e8e8e" }}>
+                      {auth.session === "verified" ? "Verified ES256" : auth.session === "checking" ? "Verifying…" : "Not Verified"}
+                    </strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "10px" }}>
+                    <span style={{ color: "#8e8e8e" }}>Target Settlement Network</span>
+                    <strong style={{ color: "#ffffff" }}>Hedera Testnet (Chain ID 296)</strong>
+                  </div>
+                </div>
+
+                {auth.walletAddress && (
+                  <div style={{ margin: "24px 0", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "12px", padding: "14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+                    <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#e0e0e0" }}>{auth.walletAddress}</span>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button type="button" className="btn-secondary-pill" style={{ padding: "6px 10px" }} onClick={() => void copyAddress()}>
+                        {copied ? <Check size={14} /> : <Copy size={14} />}
+                      </button>
+                      <a href={`https://hashscan.io/testnet/account/${auth.walletAddress}`} target="_blank" rel="noreferrer" className="btn-secondary-pill" style={{ padding: "6px 10px" }}>
+                        <ExternalLink size={14} />
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: "flex", gap: "10px", marginTop: "20px", flexWrap: "wrap" }}>
+                  {auth.authenticated ? (
+                    <>
+                      <button type="button" className="btn-secondary-pill" onClick={auth.connectWallet}>
+                        Connect Another Wallet
+                      </button>
+                      <button type="button" className="btn-secondary-pill" onClick={() => void auth.refresh()}>
+                        <RefreshCw size={14} /> Refresh Balance
+                      </button>
+                      <button type="button" className="btn-secondary-pill" onClick={() => void auth.verifySession()}>
+                        Verify Session
+                      </button>
+                    </>
+                  ) : (
+                    <Link href="/login" className="cta" style={{ marginTop: 0 }}>
+                      <span>Sign in with Privy</span>
+                      <ArrowUpRight size={15} />
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              {/* Recovery Readiness Panel */}
+              <div className="spotlight-card">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                  <h3 style={{ fontSize: "18px", color: "#ffffff", margin: 0 }}>Recovery Readiness</h3>
+                  <ShieldCheck size={18} style={{ color: "#ffffff" }} />
+                </div>
+                <p style={{ fontSize: "13px", color: "#8e8e8e", lineHeight: 1.6, marginBottom: "24px" }}>
+                  Your owner key is the cryptographic trust root. Embedded-wallet owners should export their key into a cold or hardware wallet before funding production contracts.
+                </p>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
+                    <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: auth.authenticated ? "#ffffff" : "rgba(255,255,255,0.08)", color: auth.authenticated ? "#000000" : "#ffffff", display: "grid", placeItems: "center", fontSize: "12px", fontWeight: 600, flexShrink: 0 }}>
+                      {auth.authenticated ? "✓" : "1"}
+                    </div>
+                    <div>
+                      <strong style={{ color: "#ffffff", fontSize: "14px" }}>Establish Sovereign Identity</strong>
+                      <p style={{ fontSize: "12px", color: "#777777", margin: "2px 0 0" }}>Authenticate through Privy or connect your existing wallet.</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
+                    <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: auth.walletAddress && !wrongChain ? "#ffffff" : "rgba(255,255,255,0.08)", color: auth.walletAddress && !wrongChain ? "#000000" : "#ffffff", display: "grid", placeItems: "center", fontSize: "12px", fontWeight: 600, flexShrink: 0 }}>
+                      {auth.walletAddress && !wrongChain ? "✓" : "2"}
+                    </div>
+                    <div>
+                      <strong style={{ color: "#ffffff", fontSize: "14px" }}>Connect on Hedera Testnet</strong>
+                      <p style={{ fontSize: "12px", color: "#777777", margin: "2px 0 0" }}>Verify your address, gas balance, and chain ID (296).</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
+                    <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: attested ? "#ffffff" : "rgba(255,255,255,0.08)", color: attested ? "#000000" : "#ffffff", display: "grid", placeItems: "center", fontSize: "12px", fontWeight: 600, flexShrink: 0 }}>
+                      {attested ? "✓" : "3"}
+                    </div>
+                    <div>
+                      <strong style={{ color: "#ffffff", fontSize: "14px" }}>
+                        {embedded ? "Export Embedded Wallet Key" : "Independent Recovery Attestation"}
+                      </strong>
+                      <p style={{ fontSize: "12px", color: "#777777", margin: "2px 0 0" }}>
+                        {embedded
+                          ? "Use Privy’s secure export dialog. Never paste your private key into the app."
+                          : "Confirm you control this address outside this dashboard."}
+                      </p>
+                      {embedded && (
+                        <button type="button" className="btn-secondary-pill" style={{ marginTop: "10px", fontSize: "11px", padding: "4px 12px" }} onClick={() => void auth.exportWallet()}>
+                          Open Secure Key Export <ExternalLink size={12} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <label style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginTop: "24px", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.08)", fontSize: "12px", color: "#8e8e8e", cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    disabled={!auth.authenticated || !auth.walletAddress}
+                    checked={attested}
+                    onChange={(e) => setAttested(e.target.checked)}
+                    style={{ marginTop: "2px" }}
+                  />
+                  <span>I can access this wallet independently. This is my sovereign attestation; the app never stores secret keys.</span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* Dashboard Footer */}
+          <footer className="site-footer" style={{ marginTop: "60px" }}>
+            <div className="site-footer-brand">
+              <BrandLogo size="sm" />
+            </div>
+            <span>Identity is separate from onchain authority · Janus Protocol</span>
+            <span>Hedera Testnet 296 · Sepolia Ready</span>
+          </footer>
+        </main>
+      </div>
+
+      {/* Task Inspection Dialog */}
+      <dialog ref={dialogRef} onCancel={() => setSelected(null)} onClick={(e) => { if (e.target === e.currentTarget) setSelected(null); }} className="task-dialog">
+        {selected && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span className="hash-tag">EXAMPLE TASK {selected.id}</span>
+              <button type="button" className="btn-secondary-pill" style={{ padding: "6px" }} onClick={() => setSelected(null)} aria-label="Close task details">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div>
+              <h2 style={{ fontSize: "24px", color: "#ffffff", margin: "0 0 6px" }}>{selected.name}</h2>
+              <p style={{ color: "#8e8e8e", fontSize: "13px", margin: 0 }}>{selected.description}</p>
+            </div>
+
+            <div style={{ background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px", fontSize: "13px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#8e8e8e" }}>Budget Cap:</span>
+                <strong style={{ color: "#ffffff", fontFamily: "monospace" }}>{selected.cap} USDC</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#8e8e8e" }}>Available / Reserved / Spent:</span>
+                <strong style={{ color: "#ffffff", fontFamily: "monospace" }}>
+                  {selected.available} / {selected.reserved} / {selected.spent}
+                </strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#8e8e8e" }}>Active Assignment Epoch:</span>
+                <strong style={{ color: "#ffffff", fontFamily: "monospace" }}>0{selected.epoch}</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#8e8e8e" }}>Worker Identifier:</span>
+                <span style={{ color: "#ffffff", fontFamily: "monospace" }}>{selected.worker}</span>
+              </div>
+            </div>
+
+            <div className="notice" role="alert" style={{ margin: 0 }}>
+              <AlertTriangle size={18} />
+              <span>Existing reservations survive reassignment. A merchant may still collect an authorized deliverable.</span>
+            </div>
+
+            <button type="button" className="cta" style={{ width: "100%", justifyContent: "center" }} disabled>
+              Resume with Replacement
+            </button>
+          </div>
+        )}
+      </dialog>
+    </div>
+  );
 }
-

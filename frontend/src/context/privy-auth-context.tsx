@@ -2,10 +2,10 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { PrivyProvider, usePrivy, useWallets, useLogin } from "@privy-io/react-auth";
-import network from "../../../shared/protocol/network.json";
+import network from "../../../shared/network.json";
 import { defineChain, formatEther } from "viem";
 
-export const targetChain = defineChain(network);
+export const targetChain = defineChain({ ...network, id: network.chainId });
 type AuthState = {
   configured: boolean; ready: boolean; authenticated: boolean;
   user: { id: string; email?: string } | null;
@@ -31,7 +31,7 @@ export const useRelayAuth = () => useContext(AuthContext);
 function PrivyBridge({ children }: { children: ReactNode }) {
   const privy = usePrivy();
   const { getAccessToken } = privy;
-  const { wallets, ready: walletsReady } = useWallets();
+  const { wallets } = useWallets();
   const [selected, selectWallet] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
   const [chainId, setChainId] = useState<number | null>(null);
@@ -89,7 +89,7 @@ function PrivyBridge({ children }: { children: ReactNode }) {
     catch { setError("Wallet export was not completed. Please try again."); }
   }
   return <AuthContext.Provider value={{
-    configured: true, ready: privy.ready && walletsReady, authenticated: privy.authenticated,
+    configured: true, ready: privy.ready, authenticated: privy.authenticated,
     user: privy.user ? { id: privy.user.id, email: privy.user.email?.address } : null,
     walletAddress: wallet?.address ?? null, walletType: wallet?.walletClientType ?? null,
     chainId: privy.authenticated ? chainId : null, balance: privy.authenticated ? balance : null,
@@ -105,7 +105,7 @@ export function PrivyAuthWrapper({ children }: { children: ReactNode }) {
   if (!appId || appId.includes("your-") || appId.includes("replace-")) {
     return <AuthContext.Provider value={empty}>{children}</AuthContext.Provider>;
   }
-  return <PrivyProvider appId={appId} config={{
+  return <PrivyProvider appId={appId} clientId={process.env.NEXT_PUBLIC_PRIVY_CLIENT_ID?.trim() || undefined} config={{
     appearance: { theme: "dark", accentColor: "#e4e4e7", walletChainType: "ethereum-only" },
     loginMethods: ["email", "wallet"], defaultChain: targetChain, supportedChains: [targetChain],
     embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" } },

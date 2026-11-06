@@ -1,20 +1,27 @@
-# Direct owner recovery
+# Independent owner recovery
 
-The backend treasury client in `backend/lib/treasury.mjs` depends only on an RPC client and an owner wallet client. It does not call the merchant, facilitator, Privy session endpoint or orchestrator. Use the shared ABI in `shared/protocol/task-treasury-abi.json` and the selected chain in `shared/protocol/network.json`.
+The client in `contracts/phase1/lib/recovery.mjs` and CLI in `contracts/phase1/scripts/recover.mjs` use only the owner's wallet, chain RPC, exported ABI and deployment manifest. They do not import the backend, Privy, database, merchant, facilitator or discovery service. This is a Node.js recovery client; the separately hosted static browser client remains future work.
 
-## Safe sequence
+Install contract dependencies with `npm ci` from `contracts/` (or root `npm run setup`). Keep the `contracts/` and `shared/` directories together. The committed ABI/manifest are sufficient to run recovery without compiling or starting application services.
 
-1. Verify chain ID, selected contract address, deployed bytecode, token and owner against the deployment you intend to recover. The client checks network, deployment existence and owner identity; it cannot establish that an arbitrary supplied address is a trusted deployment. Match code/provenance yourself before funding or recovery.
-2. Read the task and outstanding reservations using the ABI. All amounts are integer token base units; USDC has six decimals.
-3. Owner sends `cancelTask(taskId)` and waits for a successful receipt.
-4. Re-read available funds. Owner sends `releaseAvailable(taskId, amount)` and waits. This returns funds to the treasury reserve, not the wallet.
-5. Owner sends `withdrawUnallocated(amount)` and waits. This is the actual owner transfer. Never include reserved funds.
-6. Previously reserved obligations can still settle before their deadline. After the deadline, call `expire(taskId, operationId, attempt)` and repeat release/withdraw for newly available funds.
+From `contracts/`, inspect a read-only plan:
 
-`treasuryClient({ publicClient, walletClient, address })` selects Hedera testnet by default. Its `cancel`, `release`, `withdraw`, `task` and `read` methods expose the separate actions. `recoverAvailable(taskId)` runs steps 3–5 for current available funds; it does not sweep unrelated reserve balances. All successful actions have confirmed receipts. If a multi-action recovery is interrupted, inspect the chain and use the individual methods for the remaining actions; do not blindly restart a withdrawal.
+```sh
+npm run recovery:plan -- ../shared/deployments/hedera-testnet.json TASK_ID OPERATION_ID
+```
 
-## Local reproducible evidence
+Replace IDs with full nonzero bytes32 values from your records. Additional operation IDs may follow. Configure `JANUS_RECOVERY_RPC_URL` to use a different chain RPC. The manifest is labelled historical: every invocation verifies the current chain, deployed runtime hash, immutable token and owner before returning a plan. This phase did not run the CLI against live funds.
 
-Run `npm run interface:test --prefix contracts`. This deploys actual contracts in-process, reserves 10 of 100 units, rejects an unauthorized wallet and wrong network, cancels the task, recovers 90, settles the outstanding 10 and verifies the resulting ledger. No app or merchant process is started. No live network credentials or payments are used.
+Execution requires an explicit `--execute` flag and an owner key supplied through `JANUS_RECOVERY_PRIVATE_KEY` by your local secret manager/environment. Do not put the key in command-line arguments, source files or recovery exports. The CLI does not load backend credentials. Use only the dedicated testnet owner; the CLI rejects other networks.
 
-Historical Hedera evidence remains at `contracts/phase1/evidence/live-proof.json`. It is not a fresh verification or a default active deployment. A static browser recovery interface is a later delivery item.
+```sh
+npm run recovery:plan -- ../shared/deployments/hedera-testnet.json TASK_ID OPERATION_ID --execute
+```
+
+Execution cancels the selected task, expires only listed reservations whose chain deadlines have elapsed, releases that task's available balance, then withdraws the **entire unallocated treasury reserve** to the owner. The plan explicitly displays this reserve-wide effect. It does not cancel or take available balances from other tasks. Existing valid merchant obligations remain reserved/payable; settled purchases are not refunded.
+
+Provide pending operation IDs from your exported records or indexed `Reserved` logs. The contract does not enumerate operations. An omitted operation stays reserved, rather than being silently treated as available. After its deadline, supply its ID on a later run. Issuer freezes, unavailable chain/RPC, missing owner key/gas and unavailable operation records can delay recovery; there is no unconditional wall-clock guarantee.
+
+Each transaction waits for a successful receipt before the next step. A failed/unknown submission stops execution. Reconcile any returned transaction hash before restarting after an ambiguous RPC failure. Re-running reads current state: it skips confirmed cancellation/expiry/release and can withdraw funds already released before a process crash. Reserve withdrawal is owner-only and bounded by current unallocated funds; repeat execution cannot withdraw reserved obligations.
+
+The local treasury suite verifies identity mismatches, wrong-owner refusal, cancellation with a pending obligation, later expiry and exact withdrawal, preservation of unrelated tasks, restart after release-before-withdraw, and a completed repeat with no transactions. Those tests use an ephemeral EVM with no application services. Historical Hedera withdrawal evidence remains separate from this new local proof.

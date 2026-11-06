@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "1",
+  "network": "hedera:testnet",
+  "chainId": 296,
+  "name": "Hedera Testnet",
+  "nativeCurrency": { "name": "HBAR", "symbol": "HBAR", "decimals": 18 },
+  "rpcUrls": { "default": { "http": ["https://testnet.hashio.io/api"] } },
+  "blockExplorers": { "default": { "name": "HashScan", "url": "https://hashscan.io/testnet" } },
+  "testnet": true,
+  "mirrorUrl": "https://testnet.mirrornode.hedera.com",
+  "token": { "id": "0.0.429274", "address": "0x0000000000000000000000000000000000068cda", "decimals": 6, "symbol": "USDC" }
+}

@@ -27,7 +27,7 @@ The withdrawal used direct owner contract calls. The merchant was still reachabl
 - `evidence/recovery.json` and `evidence/final-state.json`: recovery reference and final accounting.
 - `evidence/payment-journal.json`: durable submission IDs and reconciliation results. Do not delete it while a submission is ambiguous.
 
-These contain public testnet evidence, not private keys. Generated keys are only in the git-ignored root `.env.hedera`. The current testnet keys and identities are deliberately separate from production wallets.
+These contain public testnet evidence, not private keys. Generated keys are only in the git-ignored `backend/.env.hedera`. The current testnet keys and identities are deliberately separate from production wallets.
 
 ## Implementation
 
@@ -39,18 +39,21 @@ Preflight simulation uses mirror-node transient read-write execution, including 
 
 Submission intent is persisted with a fixed transaction ID before broadcast. A repeated settled request returns the original transaction. An unknown outcome is reconciled rather than submitted under a new payment ID. This is not a general durable merchant/result-retrieval implementation; lost HTTP responses still require consulting evidence and reconciliation.
 
+The `/premium` handler calls the facilitator's validating/reconciling `settle` path directly. It must not first require a fresh `verify` simulation: that simulation rejects a consumed reservation and would prevent a retry from reaching the saved settlement. Explicit `/verify` remains available for fresh-payment preflight. Offline HTTP regression tests cover this distinction with a fixture facilitator; financial effects are covered separately by the settlement checks and historical live proof.
+
 ## Commands
 
 For a fresh instance, with no prior deployment evidence:
 
 ```sh
-npm ci --cache .npm-cache --no-audit --no-fund
+npm ci
+# Run these commands from backend/.
 npm run hedera:init
 # Request test HBAR for the printed public owner address.
 npm run hedera:preflight
 npm run hedera:prepare
 # Request test USDC from Circle after token association.
-npm run phase0:compile
+npm run contracts:compile --prefix ..
 npm run hedera:deploy
 npm run hedera:fund
 npm run hedera:serve
@@ -63,16 +66,16 @@ npm run hedera:final-check
 
 `hedera:status` reads public balances. `hedera:fund-gas` can share 3 test HBAR from a newly faucet-funded worker to a low-balance owner, preserving worker gas reserve. Setup, account creation, associations and deployment need more test HBAR than a single payment; do not budget only for the quoted USDC amount. The initial 10 test HBAR required an additional worker faucet request in this run.
 
-The completed probe is deliberately single-use: cancelled, lifetime deposit cap reached, and the stable purchase ID consumed. `buy` does not silently create a new paid operation, and `deploy` does not overwrite recorded deployment. Preserve/archive evidence and explicitly prepare a fresh run before another full live demonstration. Phase 1 will introduce reusable task accounts.
+The completed probe is deliberately single-use: cancelled, lifetime deposit cap reached, and the stable purchase ID consumed. `buy` does not silently create a new paid operation, and `deploy` does not overwrite recorded deployment. Preserve/archive evidence and explicitly prepare a fresh run before another full live demonstration. The Phase-1 contract now supports reusable treasury task allocations, but this HTTP client still targets the separate Phase-0 probe.
 
 ## Tests
 
 ```sh
-npm run phase0:test
-npm run hedera:test
+npm run phase0:test --prefix ../contracts
+npm test
 ```
 
-The nine local acceptance scenarios pass. Eight consensus-effect validator tests pass. Five pre-recovery live checks passed. Local tests do not emulate HTS; the public testnet execution is the HTS integration evidence.
+The original evidence records nine local contract scenarios, eight consensus-effect validator checks and five pre-recovery live checks. Current backend tests also cover the HTTP challenge, settlement retry and rejection routes. Local tests do not emulate HTS; the public testnet execution is the HTS integration evidence.
 
 ## Limits and submission status
 
@@ -81,7 +84,7 @@ The nine local acceptance scenarios pass. Eight consensus-effect validator tests
 - A native SDK bytecode-file deployment failed with `INSUFFICIENT_TX_FEE`; deployment succeeded through Hedera JSON-RPC instead. A token-facade approval attempt failed with `INSUFFICIENT_GAS`; native HTS allowance approval succeeded. No failed attempt is represented as a completed deployment/payment.
 - No marketplace, multi-task runner, encrypted checkpoints, anonymous transactions or multi-chain recovery exists yet.
 - Owner recovery still requires the owner key, chain access, gas, and an operable token. Existing reservations remain binding until settlement/expiry.
-- Public repo publication, explorer source verification, frontend, submission video and the other sponsor submission requirements remain separate work.
+- The frontend scaffold is separate from this payment proof. Explorer source verification, connected treasury UI, submission video and other sponsor requirements are not established by these records.
 
 ## Primary references
 

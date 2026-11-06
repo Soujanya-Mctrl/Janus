@@ -9,43 +9,49 @@ backend/     Hedera services, merchant/facilitator, settlement checks
 frontend/    Next.js application, assets and wallet authentication
 contracts/   Solidity treasury, compiler scripts, tests and proof evidence
 shared/      Common product context, architecture and implementation plan
+scripts/     Repository consistency checks (no live transactions)
+.github/     CI verification on pushes and pull requests
 docs/        One research dossier, archived references and historical evidence
 ```
 
-Start with [shared context](shared/CONTEXT.md), [our plan](shared/PLAN.md), and [architecture/configuration](shared/ARCHITECTURE.md). Each executable module owns its package manifest and lockfile. Root scripts orchestrate the modules. `shared/` currently contains maintained context; `shared/protocol/` now supplies network configuration and generated ABI/version exports.
+Start with [shared context](shared/CONTEXT.md), [our plan](shared/PLAN.md), and [architecture/configuration](shared/ARCHITECTURE.md). Each executable module owns its package manifest and lockfile. Root scripts orchestrate the modules. `shared/` currently contains maintained context; network configuration, wire rules, independent accounting model and versioned ABI export live under `shared/`.
 
 ## Setup
 
-Requires Node.js 22 and npm.
+Requires Node.js 22 and npm. `.nvmrc` selects the supported major version.
 
 ```sh
 npm run setup
 npm run dev
 ```
 
-Open http://localhost:3000. For authentication, configure `NEXT_PUBLIC_PRIVY_APP_ID`, optional `NEXT_PUBLIC_PRIVY_CLIENT_ID`, and server-only `PRIVY_VERIFICATION_KEY` in ignored `frontend/.env.local`. Local contract and settlement tests need no credentials.
+Open http://localhost:3000. Copy `frontend/.env.example` to `frontend/.env.local` for authentication, then configure `NEXT_PUBLIC_PRIVY_APP_ID`, optional `NEXT_PUBLIC_PRIVY_CLIENT_ID`, and server-only `PRIVY_VERIFICATION_KEY`. Local verification needs no credentials.
+
+The root package only orchestrates commands; it has no application dependencies. `npm install` at the root is not a substitute for `npm run setup`. Each module has its own lockfile and `node_modules/`. Install frontend dependencies locally. The Next.js resolution root includes the repository for shared configuration; this does not move dependencies or build output out of `frontend/`.
 
 ## Verify
 
 ```sh
-npm run lint
-npm run build
-npm run prototype
+npm run check
 ```
 
-`prototype` runs actual contracts on an ephemeral local EVM, followed by offline backend settlement checks. The last full run passed 9 Phase-0 scenarios, 9 Phase-1 scenarios and 8 backend checks. It does not submit live transactions or demonstrate a complete browser-to-agent workflow.
+`check` validates repository/lockfile consistency, lints and typechecks the frontend, compiles contracts, runs tests, and builds the frontend. CI runs the same command after `setup`. `check:repo`, `lint`, `typecheck`, `contracts:compile`, `test`, `test:protocol`, and `build` are also independently runnable.
+
+`prototype` is an alias for the test suites: actual contracts on an ephemeral local EVM, offline backend settlement checks, and frontend session-verification tests. It does not submit live transactions or demonstrate a complete browser-to-agent workflow. Fresh local contract reports go into ignored `contracts/phase0/artifacts/` and `contracts/phase1/artifacts/`; committed evidence remains a historical snapshot.
 
 `npm run contracts:compile` generates local ABI/bytecode artifacts. `npm run test:treasury` runs only the Phase-1 treasury suite.
 
 ## Current status and next work
 
-The financial core implements task-isolated caps, reservation/settlement/expiry, worker epochs, cancellation and owner recovery. The frontend has identity plumbing and illustrative accounting. Existing live proof records use Hedera testnet; frontend and backend now share Hedera testnet configuration. The dashboard remains illustrative.
+The financial core implements task-isolated caps, reservation/settlement/expiry, worker epochs, cancellation and owner recovery. The frontend has identity plumbing and illustrative accounting. Frontend and backend now share Hedera testnet configuration. The dashboard remains illustrative and the Phase-0 merchant is not yet adapted to the multi-task treasury.
 
-**Phase 1 integration readiness is verified locally**: shared network/ABI exports, direct owner recovery client and a service-independent recovery test. Next build the task-aware payment SDK, durable merchant results, checkpointed worker replacement, connected dashboard and independent recovery UI. Detailed gates are in [PLAN.md](shared/PLAN.md).
+Treasury integration readiness establishes the shared network/ABI/version, canonical operation encoding, independent accounting model and direct owner recovery client. The narrower supported contract scope is documented in [the treasury interface](shared/TREASURY_INTERFACE.md). The next milestone is the task-aware payment SDK and durable merchant results, followed by checkpointed replacement, a connected dashboard and independent recovery UI. Detailed gates are in [PLAN.md](shared/PLAN.md).
 
 ## Live backend and configuration
 
 Testnet credentials belong in ignored `backend/.env.hedera`. Compile contracts and install all modules before using live tooling. `npm run backend:serve` starts the restricted Phase-0 merchant/facilitator. Live commands may spend testnet funds; they are excluded from setup and local tests.
+
+`backend/.env.hedera.example` documents the accepted configuration. For a new dedicated testnet instance, `npm run hedera:init --prefix backend` generates keys without overwriting an existing environment file. Preserve existing deployment evidence and journals before preparing another instance.
 
 The Phase-0 authorization is 32 bytes; Phase-1 uses 96 bytes (task ID, operation ID, attempt). The old adapter cannot simply be pointed at the newer treasury. Reserved obligations survive handoff/cancellation; returned-to-reserve funds are distinct from owner withdrawals.
 
@@ -57,4 +63,8 @@ Next.js generates **only `frontend/.next/`** for this layout. It is ignored buil
 
 This is a development prototype, not audited or production-ready software. Historical live evidence is not a fresh network verification.
 
-Run `npm run interface:export` to regenerate the shared treasury interface and `npm run interface:check` to check freshness. The export records source/ABI hashes, compiler and authorization version. See [direct recovery](shared/RECOVERY.md).
+macOS AppleDouble files (`._*`) are ignored by Git, ESLint and TypeScript. Do not commit them. If Git reports `non-monotonic index` for a `._pack-*.idx` file on an external drive, remove only the verified AppleDouble sidecar, never the real `.idx` or `.pack` file.
+
+Independent owner recovery is documented in [shared/RECOVERY.md](shared/RECOVERY.md). The CLI defaults to a read-only plan, validates deployment identity and only submits transactions with an explicit execution flag and owner key. Its local proof is separate from the historical Hedera proof.
+
+Run `npm run demo:handoff` after setup/compilation for the local four-task checkpoint/replacement proof. Observed evidence is saved under ignored `backend/.runner-state/demo/report.json`; see [RUNNER.md](shared/RUNNER.md) for scope and limitations.

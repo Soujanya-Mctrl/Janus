@@ -1,0 +1,74 @@
+{
+  "network": "hedera:testnet",
+  "verifiedAt": "2026-11-06T12:33:10.892Z",
+  "result": {
+    "success": true,
+    "transaction": "0.0.11338859@1793968385.882027690",
+    "network": "hedera:testnet",
+    "payer": "0.0.11339236"
+  },
+  "effects": {
+    "verified": true,
+    "amount": "20000",
+    "feeTinybars": "10915348",
+    "tokenNet": {
+      "0.0.11339185": "20000",
+      "0.0.11339236": "-20000"
+    },
+    "hbarNet": {
+      "0.0.802": "10915348",
+      "0.0.11338859": "-10915348"
+    }
+  },
+  "record": {
+    "status": "SUCCESS",
+    "feeTinybars": "10915348",
+    "transactionId": "0.0.11338859@1793968385.882027690",
+    "consensusTimestamp": "1793968391.898853642",
+    "childRecordCount": 5,
+    "tokenTransfers": [
+      {
+        "tokenId": "0.0.429274",
+        "accountId": "0.0.11339185",
+        "amount": "20000"
+      },
+      {
+        "tokenId": "0.0.429274",
+        "accountId": "0.0.11339236",
+        "amount": "-20000"
+      }
+    ],
+    "hbarTransfers": [
+      {
+        "accountId": "0.0.802",
+        "amount": "10915348"
+      },
+      {
+        "accountId": "0.0.11338859",
+        "amount": "-10915348"
+      }
+    ],
+    "nftTransfers": [],
+    "logs": [
+      {
+        "contractId": "0.0.429274",
+        "topics": [
+          "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+          "0x000000000000000000000000a930b3f4876c7e028082219f5085f79596db3266",
+          "0x0000000000000000000000001d318175340b0116a4ca7a85b521a47d7221618b"
+        ],
+        "data": "0x0000000000000000000000000000000000000000000000000000000000004e20"
+      },
+      {
+        "contractId": "0.0.11339236",
+        "topics": [
+          "0x606160394df2742a67735645b7e783304d61d2dbc5b550e8c6acfaf27b6291d7",
+          "0x8cb0974fb77b37cd518cd72064d8427209d7e63f93f302b00dd846c68899ee2f",
+          "0x0000000000000000000000001d318175340b0116a4ca7a85b521a47d7221618b"
+        ],
+        "data": "0x0000000000000000000000000000000000000000000000000000000000004e20"
+      }
+    ]
+  },
+  "hashscan": "https://hashscan.io/testnet/transaction/0.0.11338859@1793968385.882027690"
+}

@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-11-06T12:05:36.785Z",
+  "network": "hedera:testnet",
+  "owner": "0x99a5aa34c43639266FB7E1bCe6a5f8130a20ad5c",
+  "accountId": "0.0.11338859",
+  "balanceWeibar": "10000000000000000000",
+  "funded": true,
+  "tokenId": "0.0.429274",
+  "tokenSymbol": "USDC",
+  "tokenDecimals": "6",
+  "liveSettlement": false
+}

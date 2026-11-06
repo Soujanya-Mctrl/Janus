@@ -1,0 +1,5 @@
+system,scenario_id,trials,valid_completions,duplicate_settlements,budget_violations,stale_new_reservations_accepted,recovery_p50_ms,recovery_p95_ms,cost_per_valid_completion,recovery_completeness,status
+B0,,,,,,,,,,,not_measured
+B1,,,,,,,,,,,not_measured
+B2,,,,,,,,,,,not_measured
+RelayBudget,,,,,,,,,,,not_measured

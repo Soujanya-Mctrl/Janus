@@ -1,32 +1,58 @@
-# RelayBudget frontend
+# Janus
 
-Next.js dashboard for payment-aware agent recovery. Testnet only.
+Payment-aware recovery for agent workflows. Task budgets stay with the work while worker spending authority can be safely reassigned.
+
+## Project structure
+
+```text
+backend/     Hedera services, merchant/facilitator, settlement checks
+frontend/    Next.js application, assets and wallet authentication
+contracts/   Solidity treasury, compiler scripts, tests and proof evidence
+shared/      Common product context, architecture and implementation plan
+docs/        One research dossier, archived references and historical evidence
+```
+
+Start with [shared context](shared/CONTEXT.md), [our plan](shared/PLAN.md), and [architecture/configuration](shared/ARCHITECTURE.md). Each executable module owns its package manifest and lockfile. Root scripts orchestrate the modules. `shared/` currently contains maintained context; runtime types, schemas and ABI exports will be added as integration consumers are built.
 
 ## Setup
 
-1. Run `npm install --legacy-peer-deps`.
-2. Copy `.env.example` to `.env.local`.
-3. Set `NEXT_PUBLIC_PRIVY_APP_ID` to your public Privy App ID.
-4. Set `PRIVY_VERIFICATION_KEY` to your app's ES256 PEM public verification key from the Privy dashboard. Use double quotes and literal `\n` between PEM lines. No App Secret is required.
-5. In Privy, enable email and Ethereum wallet login, allow your deployed origin and `http://localhost:3000`, and enable embedded Ethereum wallets. Configure Sepolia support. WalletConnect may need its project configuration in Privy.
-6. Run `npm run dev` and open http://localhost:3000.
+Requires Node.js 22 and npm.
 
-## Integration
+```sh
+npm run setup
+npm run dev
+```
 
-Email OTP and wallet authentication use Privy's modal. Email users without a wallet receive an embedded Ethereum wallet. Redirect happens after Privy confirms authentication. No demo authentication, pretend OTP, fabricated wallet address, ENS name, or portfolio balance is used.
+Open http://localhost:3000. For authentication, configure `NEXT_PUBLIC_PRIVY_APP_ID`, optional `NEXT_PUBLIC_PRIVY_CLIENT_ID`, and server-only `PRIVY_VERIFICATION_KEY` in ignored `frontend/.env.local`. Local contract and settlement tests need no credentials.
 
-The Wallet screen reads the selected connected wallet, chain ID, and Sepolia ETH gas balance through its EIP-1193 provider. Supports wallet selection, connection, refresh, explorer links, logout, and switching to Sepolia. Other networks do not display a Sepolia balance. Embedded owners can open Privy's secure wallet export. The recovery checkbox is a session-only attestation, not proof of export or a durable funding gate.
+## Verify
 
-`GET /api/session` takes a Bearer access token and verifies ES256 signature, issuer, app audience, required expiry/issued-at/subject claims, and Privy DID. Missing/invalid/expired tokens return 401; missing/invalid server configuration returns 503. Responses are not cached. Tokens and keys are never logged. Public dashboard layout exposes no private tenant data. Future protected APIs must verify identity and tenant permissions on every request.
+```sh
+npm run lint
+npm run build
+npm run prototype
+```
 
-## Financial scope
+`prototype` runs actual contracts on an ephemeral local EVM, followed by offline backend settlement checks. The last full run passed 9 Phase-0 scenarios, 9 Phase-1 scenarios and 8 backend checks. It does not submit live transactions or demonstrate a complete browser-to-agent workflow.
 
-No treasury contract or backend is present. Deposits, assignments, recovery, and withdrawals are unavailable. Wallet authentication does not imply custody integration. Default dashboard is empty. Explore example opens a labeled mock-unit fixture using the PRD's 1,000 deposit and Task A spent=20/reserved=10/available=70 example. Export produces illustrative accounting JSON, not a recovery bundle. No transactions or receipts are fabricated.
+`npm run contracts:compile` generates local ABI/bytecode artifacts. `npm run test:treasury` runs only the Phase-1 treasury suite.
 
-Sepolia is the only admitted network. Hedera is not claimed. An independent Privy-free recovery build remains to be implemented before funding can be enabled.
+## Current status and next work
 
-## Verification
+The financial core implements task-isolated caps, reservation/settlement/expiry, worker epochs, cancellation and owner recovery. The frontend has identity plumbing and illustrative accounting. Existing live proof records use Hedera testnet; the frontend currently targets Sepolia. These pieces are not yet connected.
 
-Run `npx tsc --noEmit`, `npm run lint`, and `npm run build`.
+Our next milestone is **Phase 1 integration readiness**: review treasury acceptance and accounting, confirm the settlement network, establish the shared treasury interface, and verify independently usable owner recovery. Then build the task-aware payment SDK, durable merchant results, checkpointed worker replacement, connected dashboard and independent recovery UI. Detailed gates are in [PLAN.md](shared/PLAN.md).
 
-Before enabling funding, complete email/wallet login on your configured origin, wrong-network/rejected-switch checks, expired-session checks, embedded export, and the PRD's contract/recovery release gates.
+## Live backend and configuration
+
+Testnet credentials belong in ignored `backend/.env.hedera`. Compile contracts and install all modules before using live tooling. `npm run backend:serve` starts the restricted Phase-0 merchant/facilitator. Live commands may spend testnet funds; they are excluded from setup and local tests.
+
+The Phase-0 authorization is 32 bytes; Phase-1 uses 96 bytes (task ID, operation ID, attempt). The old adapter cannot simply be pointed at the newer treasury. Reserved obligations survive handoff/cancellation; returned-to-reserve funds are distinct from owner withdrawals.
+
+## Documentation and generated files
+
+[shared/](shared/README.md) owns current project context. [docs/](docs/README.md) indexes research and archived material; superseded schedules and handoffs are not the current plan. Duplicate extracted dossier copies were consolidated with differing revisions preserved in archives.
+
+Next.js generates **only `frontend/.next/`** for this layout. It is ignored build/cache output, not source; it can be deleted while the frontend is stopped and is recreated by `dev` or `build`. The stale root `.next/` was removed. Never copy build output into other modules.
+
+This is a development prototype, not audited or production-ready software. Historical live evidence is not a fresh network verification.

@@ -1,0 +1,8 @@
+{
+  "network": "hedera:testnet",
+  "recoveredAt": "2026-11-06T12:35:33.991Z",
+  "amount": "80000",
+  "transactionId": "0.0.11338859@1793968527.391117762",
+  "requiresMerchantOrFacilitator": false,
+  "merchantReachableAtRecovery": true
+}

@@ -1,0 +1,402 @@
+{
+  "network": "hedera:testnet",
+  "status": "passed",
+  "startedAt": "2026-11-06T12:55:10.491Z",
+  "steps": {
+    "gas-refill-0": {
+      "status": "confirmed",
+      "transactionId": "0.0.11339183@1793969739.432761292"
+    },
+    "approve": {
+      "status": "confirmed",
+      "transactionId": "0.0.11338859@1793969741.069162396"
+    },
+    "gas-refill-1": {
+      "status": "confirmed",
+      "transactionId": "0.0.11339183@1793969745.842628104"
+    },
+    "deposit": {
+      "status": "confirmed",
+      "transactionId": "0.0.11338859@1793969747.233809080"
+    },
+    "create-A": {
+      "status": "confirmed",
+      "transactionId": "0.0.11338859@1793969745.778933258"
+    },
+    "create-B": {
+      "status": "confirmed",
+      "transactionId": "0.0.11338859@1793969749.304690268"
+    },
+    "create-C": {
+      "status": "confirmed",
+      "transactionId": "0.0.11338859@1793969750.376327645"
+    },
+    "create-D": {
+      "status": "confirmed",
+      "transactionId": "0.0.11338859@1793969750.987141919"
+    },
+    "reserve-A-paid": {
+      "status": "confirmed",
+      "transactionId": "0.0.11339183@1793969753.316089827"
+    },
+    "pay-A": {
+      "status": "confirmed",
+      "transactionId": "0.0.11338859@1793969752.929152565"
+    },
+    "reserve-B": {
+      "status": "confirmed",
+      "transactionId": "0.0.11338859@1793969755.747676118"
+    },
+    "pay-B": {
+      "status": "confirmed",
+      "transactionId": "0.0.11338859@1793969757.403085200"
+    },
+    "reserve-A-pending": {
+      "status": "confirmed",
+      "transactionId": "0.0.11339183@1793969760.395804298"
+    },
+    "handoff-A": {
+      "status": "confirmed",
+      "transactionId": "0.0.11338859@1793969769.295053064"
+    },
+    "cancel-A": {
+      "status": "confirmed",
+      "transactionId": "0.0.11338859@1793969852.879853003"
+    },
+    "release-A": {
+      "status": "confirmed",
+      "transactionId": "0.0.11338859@1793969852.766099127"
+    },
+    "withdraw-A": {
+      "status": "confirmed",
+      "transactionId": "0.0.11338859@1793969853.710169769"
+    },
+    "pay-A-pending-after-cancel": {
+      "status": "confirmed",
+      "transactionId": "0.0.11338859@1793969855.706069804"
+    }
+  },
+  "payments": {
+    "pay-A": {
+      "transactionId": "0.0.11338859@1793969752.929152565",
+      "effects": {
+        "verified": true,
+        "amount": "2000",
+        "feeTinybars": "14448604",
+        "tokenNet": {
+          "0.0.11339185": "2000",
+          "0.0.11339459": "-2000"
+        },
+        "hbarNet": {
+          "0.0.802": "14448604",
+          "0.0.11338859": "-14448604"
+        }
+      },
+      "record": {
+        "status": "SUCCESS",
+        "feeTinybars": "14448604",
+        "transactionId": "0.0.11338859@1793969752.929152565",
+        "consensusTimestamp": "1793969762.817469746",
+        "childRecordCount": 5,
+        "tokenTransfers": [
+          {
+            "tokenId": "0.0.429274",
+            "accountId": "0.0.11339185",
+            "amount": "2000"
+          },
+          {
+            "tokenId": "0.0.429274",
+            "accountId": "0.0.11339459",
+            "amount": "-2000"
+          }
+        ],
+        "hbarTransfers": [
+          {
+            "accountId": "0.0.802",
+            "amount": "14448604"
+          },
+          {
+            "accountId": "0.0.11338859",
+            "amount": "-14448604"
+          }
+        ],
+        "nftTransfers": [],
+        "logs": [
+          {
+            "contractId": "0.0.429274",
+            "topics": [
+              "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+              "0x000000000000000000000000acba74cfbc1fd132b758d4f313fffa0ea287a382",
+              "0x0000000000000000000000001d318175340b0116a4ca7a85b521a47d7221618b"
+            ],
+            "data": "0x00000000000000000000000000000000000000000000000000000000000007d0"
+          },
+          {
+            "contractId": "0.0.11339459",
+            "topics": [
+              "0x6b9cd4ba1928450277062744c8a738a9d44763307d09636173e947a5c77eae59",
+              "0xf1a65d32e5be150fdd313d3626ba91a7341ae025c87438ea3de7e2b5bafbe490",
+              "0xc24941c74e1be39e31f6d56661bbad6f8524a86c054f94c2d49832e23676960b"
+            ],
+            "data": "0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000001d318175340b0116a4ca7a85b521a47d7221618b00000000000000000000000000000000000000000000000000000000000007d0"
+          }
+        ]
+      }
+    },
+    "pay-B": {
+      "transactionId": "0.0.11338859@1793969757.403085200",
+      "effects": {
+        "verified": true,
+        "amount": "500",
+        "feeTinybars": "12328204",
+        "tokenNet": {
+          "0.0.11339185": "500",
+          "0.0.11339459": "-500"
+        },
+        "hbarNet": {
+          "0.0.802": "12328204",
+          "0.0.11338859": "-12328204"
+        }
+      },
+      "record": {
+        "status": "SUCCESS",
+        "feeTinybars": "12328204",
+        "transactionId": "0.0.11338859@1793969757.403085200",
+        "consensusTimestamp": "1793969766.721712962",
+        "childRecordCount": 5,
+        "tokenTransfers": [
+          {
+            "tokenId": "0.0.429274",
+            "accountId": "0.0.11339185",
+            "amount": "500"
+          },
+          {
+            "tokenId": "0.0.429274",
+            "accountId": "0.0.11339459",
+            "amount": "-500"
+          }
+        ],
+        "hbarTransfers": [
+          {
+            "accountId": "0.0.802",
+            "amount": "12328204"
+          },
+          {
+            "accountId": "0.0.11338859",
+            "amount": "-12328204"
+          }
+        ],
+        "nftTransfers": [],
+        "logs": [
+          {
+            "contractId": "0.0.429274",
+            "topics": [
+              "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+              "0x000000000000000000000000acba74cfbc1fd132b758d4f313fffa0ea287a382",
+              "0x0000000000000000000000001d318175340b0116a4ca7a85b521a47d7221618b"
+            ],
+            "data": "0x00000000000000000000000000000000000000000000000000000000000001f4"
+          },
+          {
+            "contractId": "0.0.11339459",
+            "topics": [
+              "0x6b9cd4ba1928450277062744c8a738a9d44763307d09636173e947a5c77eae59",
+              "0x3175f435301e84f37387dea47f4f8879656d210b99042dd05ed30bfe6b52c6b6",
+              "0x16a5c24084f62b58941fc6cae3e28e6951104f4ed5b67b760691b3cfbfaba311"
+            ],
+            "data": "0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000001d318175340b0116a4ca7a85b521a47d7221618b00000000000000000000000000000000000000000000000000000000000001f4"
+          }
+        ]
+      }
+    },
+    "pay-A-pending-after-cancel": {
+      "transactionId": "0.0.11338859@1793969855.706069804",
+      "effects": {
+        "verified": true,
+        "amount": "1000",
+        "feeTinybars": "10207804",
+        "tokenNet": {
+          "0.0.11339185": "1000",
+          "0.0.11339459": "-1000"
+        },
+        "hbarNet": {
+          "0.0.802": "10207804",
+          "0.0.11338859": "-10207804"
+        }
+      },
+      "record": {
+        "status": "SUCCESS",
+        "feeTinybars": "10207804",
+        "transactionId": "0.0.11338859@1793969855.706069804",
+        "consensusTimestamp": "1793969865.476826212",
+        "childRecordCount": 5,
+        "tokenTransfers": [
+          {
+            "tokenId": "0.0.429274",
+            "accountId": "0.0.11339185",
+            "amount": "1000"
+          },
+          {
+            "tokenId": "0.0.429274",
+            "accountId": "0.0.11339459",
+            "amount": "-1000"
+          }
+        ],
+        "hbarTransfers": [
+          {
+            "accountId": "0.0.802",
+            "amount": "10207804"
+          },
+          {
+            "accountId": "0.0.11338859",
+            "amount": "-10207804"
+          }
+        ],
+        "nftTransfers": [],
+        "logs": [
+          {
+            "contractId": "0.0.429274",
+            "topics": [
+              "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+              "0x000000000000000000000000acba74cfbc1fd132b758d4f313fffa0ea287a382",
+              "0x0000000000000000000000001d318175340b0116a4ca7a85b521a47d7221618b"
+            ],
+            "data": "0x00000000000000000000000000000000000000000000000000000000000003e8"
+          },
+          {
+            "contractId": "0.0.11339459",
+            "topics": [
+              "0x6b9cd4ba1928450277062744c8a738a9d44763307d09636173e947a5c77eae59",
+              "0xf1a65d32e5be150fdd313d3626ba91a7341ae025c87438ea3de7e2b5bafbe490",
+              "0x61390a112387bb642f74ad3971c6d7622b092fbe2acaffc263559e8bfa9fa74c"
+            ],
+            "data": "0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000001d318175340b0116a4ca7a85b521a47d7221618b00000000000000000000000000000000000000000000000000000000000003e8"
+          }
+        ]
+      }
+    }
+  },
+  "deploymentHash": "0xfd7a5672ce2447a43445a9a0a813bf5f12b7a35efe93a1832e2c19cb02906f92",
+  "deployment": {
+    "contractId": "0.0.11339459",
+    "vault": "0xacba74cfbc1fd132b758d4f313fffa0ea287a382",
+    "compiler": "0.8.30+commit.73712a01.Emscripten.clang",
+    "runtimeCodeHash": "0xc5e6307b8c7465fb44d86eda5797bf488fa3a651f4ccfc6cb14b4721cc201077",
+    "hashscan": "https://hashscan.io/testnet/contract/0.0.11339459"
+  },
+  "otherTasksBeforeHandoff": [
+    [
+      "20000",
+      "19500",
+      "0",
+      "500",
+      "0",
+      "10000",
+      "0x99a5aa34c43639266FB7E1bCe6a5f8130a20ad5c",
+      "0x1D318175340b0116a4Ca7a85B521a47D7221618b",
+      "1",
+      false
+    ],
+    [
+      "15000",
+      "15000",
+      "0",
+      "0",
+      "0",
+      "10000",
+      "0xD1DF3133FC913Deb077A2D22706C772244CbaD2d",
+      "0x1D318175340b0116a4Ca7a85B521a47D7221618b",
+      "1",
+      false
+    ],
+    [
+      "15000",
+      "15000",
+      "0",
+      "0",
+      "0",
+      "10000",
+      "0x99a5aa34c43639266FB7E1bCe6a5f8130a20ad5c",
+      "0x1D318175340b0116a4Ca7a85B521a47D7221618b",
+      "1",
+      false
+    ]
+  ],
+  "handoff": {
+    "available": "7000",
+    "reserved": "1000",
+    "spent": "2000",
+    "epoch": "2"
+  },
+  "merchantReachableAtWithdrawal": false,
+  "final": {
+    "state": {
+      "deposited": "100000",
+      "unallocated": "40000",
+      "totalAvailable": "49500",
+      "totalReserved": "0",
+      "totalSpent": "3500",
+      "totalWithdrawn": "7000",
+      "accountedBalance": "89500"
+    },
+    "taskA": [
+      "10000",
+      "0",
+      "0",
+      "3000",
+      "7000",
+      "10000",
+      "0x99a5aa34c43639266FB7E1bCe6a5f8130a20ad5c",
+      "0x1D318175340b0116a4Ca7a85B521a47D7221618b",
+      "3",
+      true
+    ],
+    "otherTasks": [
+      [
+        "20000",
+        "19500",
+        "0",
+        "500",
+        "0",
+        "10000",
+        "0x99a5aa34c43639266FB7E1bCe6a5f8130a20ad5c",
+        "0x1D318175340b0116a4Ca7a85B521a47D7221618b",
+        "1",
+        false
+      ],
+      [
+        "15000",
+        "15000",
+        "0",
+        "0",
+        "0",
+        "10000",
+        "0xD1DF3133FC913Deb077A2D22706C772244CbaD2d",
+        "0x1D318175340b0116a4Ca7a85B521a47D7221618b",
+        "1",
+        false
+      ],
+      [
+        "15000",
+        "15000",
+        "0",
+        "0",
+        "0",
+        "10000",
+        "0x99a5aa34c43639266FB7E1bCe6a5f8130a20ad5c",
+        "0x1D318175340b0116a4Ca7a85B521a47D7221618b",
+        "1",
+        false
+      ]
+    ],
+    "tokenBalance": "89500"
+  },
+  "finishedAt": "2026-11-06T12:58:18.945Z",
+  "resumeHistory": [
+    {
+      "priorError": "ERR_ASSERTION",
+      "resumedAt": "2026-11-06T12:59:41.629Z",
+      "previousRunStatus": "passed"
+    }
+  ]
+}

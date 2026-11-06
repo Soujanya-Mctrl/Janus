@@ -1,0 +1,174 @@
+{
+  "reviewDate": "2026-11-06",
+  "method": "Static source walkthrough; no repository code, dependencies, tests, or transactions executed",
+  "files": [
+    {
+      "repository": "Inteli-Club5/AEGIS",
+      "commit": "14b6c50e6ebf44d2eaa099e2e005025e83c86960",
+      "path": "README.md",
+      "lines": 224,
+      "sourceUrl": "https://github.com/Inteli-Club5/AEGIS/blob/14b6c50e6ebf44d2eaa099e2e005025e83c86960/README.md"
+    },
+    {
+      "repository": "Inteli-Club5/AEGIS",
+      "commit": "14b6c50e6ebf44d2eaa099e2e005025e83c86960",
+      "path": "docs/aegis-current-scope.md",
+      "lines": 478,
+      "sourceUrl": "https://github.com/Inteli-Club5/AEGIS/blob/14b6c50e6ebf44d2eaa099e2e005025e83c86960/docs/aegis-current-scope.md"
+    },
+    {
+      "repository": "Inteli-Club5/AEGIS",
+      "commit": "14b6c50e6ebf44d2eaa099e2e005025e83c86960",
+      "path": "services/cosigner/src/cosign.ts",
+      "lines": 193,
+      "sourceUrl": "https://github.com/Inteli-Club5/AEGIS/blob/14b6c50e6ebf44d2eaa099e2e005025e83c86960/services/cosigner/src/cosign.ts"
+    },
+    {
+      "repository": "Inteli-Club5/AEGIS",
+      "commit": "14b6c50e6ebf44d2eaa099e2e005025e83c86960",
+      "path": "services/cosigner/src/cosign.test.ts",
+      "lines": 253,
+      "sourceUrl": "https://github.com/Inteli-Club5/AEGIS/blob/14b6c50e6ebf44d2eaa099e2e005025e83c86960/services/cosigner/src/cosign.test.ts"
+    },
+    {
+      "repository": "Inteli-Club5/AEGIS",
+      "commit": "14b6c50e6ebf44d2eaa099e2e005025e83c86960",
+      "path": "services/agent-service/src/payment/execute.ts",
+      "lines": 214,
+      "sourceUrl": "https://github.com/Inteli-Club5/AEGIS/blob/14b6c50e6ebf44d2eaa099e2e005025e83c86960/services/agent-service/src/payment/execute.ts"
+    },
+    {
+      "repository": "Inteli-Club5/AEGIS",
+      "commit": "14b6c50e6ebf44d2eaa099e2e005025e83c86960",
+      "path": "services/agent-service/src/policy-engine/evaluator.ts",
+      "lines": 382,
+      "sourceUrl": "https://github.com/Inteli-Club5/AEGIS/blob/14b6c50e6ebf44d2eaa099e2e005025e83c86960/services/agent-service/src/policy-engine/evaluator.ts"
+    },
+    {
+      "repository": "Inteli-Club5/AEGIS",
+      "commit": "14b6c50e6ebf44d2eaa099e2e005025e83c86960",
+      "path": "services/agent-service/src/policy-engine/precheck.ts",
+      "lines": 827,
+      "sourceUrl": "https://github.com/Inteli-Club5/AEGIS/blob/14b6c50e6ebf44d2eaa099e2e005025e83c86960/services/agent-service/src/policy-engine/precheck.ts"
+    },
+    {
+      "repository": "Inteli-Club5/AEGIS",
+      "commit": "14b6c50e6ebf44d2eaa099e2e005025e83c86960",
+      "path": "services/agent-service/src/policy-engine/service.ts",
+      "lines": 310,
+      "sourceUrl": "https://github.com/Inteli-Club5/AEGIS/blob/14b6c50e6ebf44d2eaa099e2e005025e83c86960/services/agent-service/src/policy-engine/service.ts"
+    },
+    {
+      "repository": "alienworld1/d4-SYN",
+      "commit": "b4a2f4606dbab09b6f6f6fc3c7c5d0a485958fad",
+      "path": "README.md",
+      "lines": 122,
+      "sourceUrl": "https://github.com/alienworld1/d4-SYN/blob/b4a2f4606dbab09b6f6f6fc3c7c5d0a485958fad/README.md"
+    },
+    {
+      "repository": "alienworld1/d4-SYN",
+      "commit": "b4a2f4606dbab09b6f6f6fc3c7c5d0a485958fad",
+      "path": "lib/agent-brain.ts",
+      "lines": 565,
+      "sourceUrl": "https://github.com/alienworld1/d4-SYN/blob/b4a2f4606dbab09b6f6f6fc3c7c5d0a485958fad/lib/agent-brain.ts"
+    },
+    {
+      "repository": "alienworld1/d4-SYN",
+      "commit": "b4a2f4606dbab09b6f6f6fc3c7c5d0a485958fad",
+      "path": "lib/yellow-client.ts",
+      "lines": 895,
+      "sourceUrl": "https://github.com/alienworld1/d4-SYN/blob/b4a2f4606dbab09b6f6f6fc3c7c5d0a485958fad/lib/yellow-client.ts"
+    },
+    {
+      "repository": "alienworld1/d4-SYN",
+      "commit": "b4a2f4606dbab09b6f6f6fc3c7c5d0a485958fad",
+      "path": "lib/agent-state.ts",
+      "lines": 59,
+      "sourceUrl": "https://github.com/alienworld1/d4-SYN/blob/b4a2f4606dbab09b6f6f6fc3c7c5d0a485958fad/lib/agent-state.ts"
+    },
+    {
+      "repository": "alienworld1/d4-SYN",
+      "commit": "b4a2f4606dbab09b6f6f6fc3c7c5d0a485958fad",
+      "path": "contracts/src/ServiceBond.sol",
+      "lines": 139,
+      "sourceUrl": "https://github.com/alienworld1/d4-SYN/blob/b4a2f4606dbab09b6f6f6fc3c7c5d0a485958fad/contracts/src/ServiceBond.sol"
+    },
+    {
+      "repository": "alienworld1/d4-SYN",
+      "commit": "b4a2f4606dbab09b6f6f6fc3c7c5d0a485958fad",
+      "path": "contracts/test/ServiceBond.t.sol",
+      "lines": 160,
+      "sourceUrl": "https://github.com/alienworld1/d4-SYN/blob/b4a2f4606dbab09b6f6f6fc3c7c5d0a485958fad/contracts/test/ServiceBond.t.sol"
+    },
+    {
+      "repository": "alienworld1/d4-SYN",
+      "commit": "b4a2f4606dbab09b6f6f6fc3c7c5d0a485958fad",
+      "path": "app/api/agent/[agentId]/route.ts",
+      "lines": 118,
+      "sourceUrl": "https://github.com/alienworld1/d4-SYN/blob/b4a2f4606dbab09b6f6f6fc3c7c5d0a485958fad/app/api/agent/[agentId]/route.ts"
+    },
+    {
+      "repository": "alienworld1/d4-SYN",
+      "commit": "b4a2f4606dbab09b6f6f6fc3c7c5d0a485958fad",
+      "path": "package.json",
+      "lines": 39,
+      "sourceUrl": "https://github.com/alienworld1/d4-SYN/blob/b4a2f4606dbab09b6f6f6fc3c7c5d0a485958fad/package.json"
+    },
+    {
+      "repository": "cqlyj/ACL",
+      "commit": "2cb82511c562bfa02d6f088f3222dfdeb11e9504",
+      "path": "src/core/AgenticCommerce.sol",
+      "lines": 425,
+      "sourceUrl": "https://github.com/cqlyj/ACL/blob/2cb82511c562bfa02d6f088f3222dfdeb11e9504/src/core/AgenticCommerce.sol"
+    },
+    {
+      "repository": "cqlyj/ACL",
+      "commit": "2cb82511c562bfa02d6f088f3222dfdeb11e9504",
+      "path": "src/core/ACLEvaluator.sol",
+      "lines": 146,
+      "sourceUrl": "https://github.com/cqlyj/ACL/blob/2cb82511c562bfa02d6f088f3222dfdeb11e9504/src/core/ACLEvaluator.sol"
+    },
+    {
+      "repository": "cqlyj/ACL",
+      "commit": "2cb82511c562bfa02d6f088f3222dfdeb11e9504",
+      "path": "test/AgenticCommerce.t.sol",
+      "lines": 364,
+      "sourceUrl": "https://github.com/cqlyj/ACL/blob/2cb82511c562bfa02d6f088f3222dfdeb11e9504/test/AgenticCommerce.t.sol"
+    },
+    {
+      "repository": "cqlyj/ACL",
+      "commit": "2cb82511c562bfa02d6f088f3222dfdeb11e9504",
+      "path": "sdk/packages/agent/src/agents/client.ts",
+      "lines": 1420,
+      "sourceUrl": "https://github.com/cqlyj/ACL/blob/2cb82511c562bfa02d6f088f3222dfdeb11e9504/sdk/packages/agent/src/agents/client.ts"
+    },
+    {
+      "repository": "cqlyj/ACL",
+      "commit": "2cb82511c562bfa02d6f088f3222dfdeb11e9504",
+      "path": "sdk/packages/agent/src/agents/client.test.ts",
+      "lines": 95,
+      "sourceUrl": "https://github.com/cqlyj/ACL/blob/2cb82511c562bfa02d6f088f3222dfdeb11e9504/sdk/packages/agent/src/agents/client.test.ts"
+    },
+    {
+      "repository": "cqlyj/ACL",
+      "commit": "2cb82511c562bfa02d6f088f3222dfdeb11e9504",
+      "path": "sdk/packages/settlement/src/orchestrator.ts",
+      "lines": 421,
+      "sourceUrl": "https://github.com/cqlyj/ACL/blob/2cb82511c562bfa02d6f088f3222dfdeb11e9504/sdk/packages/settlement/src/orchestrator.ts"
+    },
+    {
+      "repository": "cqlyj/ACL",
+      "commit": "2cb82511c562bfa02d6f088f3222dfdeb11e9504",
+      "path": "sdk/packages/storage/src/index.ts",
+      "lines": 10,
+      "sourceUrl": "https://github.com/cqlyj/ACL/blob/2cb82511c562bfa02d6f088f3222dfdeb11e9504/sdk/packages/storage/src/index.ts"
+    },
+    {
+      "repository": "cqlyj/ACL",
+      "commit": "2cb82511c562bfa02d6f088f3222dfdeb11e9504",
+      "path": "sdk/package.json",
+      "lines": 43,
+      "sourceUrl": "https://github.com/cqlyj/ACL/blob/2cb82511c562bfa02d6f088f3222dfdeb11e9504/sdk/package.json"
+    }
+  ]
+}

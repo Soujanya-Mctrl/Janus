@@ -1,0 +1,8 @@
+node_modules/
+.npm-cache/
+.lockbuild/
+.env
+.env.*
+!.env.example
+phase0/artifacts/
+phase1/artifacts/

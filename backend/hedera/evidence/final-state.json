@@ -1,0 +1,17 @@
+{
+  "network": "hedera:testnet",
+  "checkedAt": "2026-11-06T12:41:58.837Z",
+  "status": "passed",
+  "state": {
+    "deposited": "100000",
+    "available": "0",
+    "reserved": "0",
+    "spent": "20000",
+    "returned": "80000",
+    "cancelled": true
+  },
+  "vaultTokenBalance": "0",
+  "merchantReachableNow": false,
+  "merchantReachableAtWithdrawal": true,
+  "limitation": "Withdrawal used direct owner calls; the merchant was still reachable at withdrawal. A backend-offline withdrawal was not demonstrated in this run."
+}

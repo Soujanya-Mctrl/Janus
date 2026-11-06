@@ -1,0 +1,25 @@
+{
+  "network": "hedera:testnet",
+  "deployedAt": "2026-11-06T12:27:49.672Z",
+  "contractId": "0.0.11339236",
+  "vault": "0xa930b3f4876c7e028082219f5085f79596db3266",
+  "token": "0x0000000000000000000000000000000000068cDa",
+  "tokenId": "0.0.429274",
+  "owner": {
+    "id": "0.0.11338859",
+    "address": "0x99a5aa34c43639266FB7E1bCe6a5f8130a20ad5c"
+  },
+  "merchant": {
+    "id": "0.0.11339185",
+    "address": "0x1D318175340b0116a4Ca7a85B521a47D7221618b"
+  },
+  "worker": {
+    "id": "0.0.11339183",
+    "address": "0xD1DF3133FC913Deb077A2D22706C772244CbaD2d"
+  },
+  "maximumBudget": "100000",
+  "transactionHash": "0x3a37de77dcafaba801d46df3980372837f88ea448eb7012aedaf03033d7aef94",
+  "hashscan": "https://hashscan.io/testnet/contract/0.0.11339236",
+  "compiler": "0.8.30+commit.73712a01.Emscripten.clang",
+  "runtimeCodeHash": "0xea2daccc3515357d534c4853129343616b08595c034e48d11ff0bc5d8eec1a22"
+}

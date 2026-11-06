@@ -1,0 +1,7 @@
+{
+  "network": "hedera:testnet",
+  "fundedAt": "2026-11-06T12:29:09.473Z",
+  "amount": "100000",
+  "approvalTransaction": "0.0.11338859@1793968142.279591166",
+  "depositTransaction": "0.0.11338859@1793968143.476156691"
+}

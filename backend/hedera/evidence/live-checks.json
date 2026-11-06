@@ -1,0 +1,20 @@
+{
+  "network": "hedera:testnet",
+  "checkedAt": "2026-11-06T12:34:38.137Z",
+  "status": "passed",
+  "checks": [
+    "Unpaid request returns HTTP 402",
+    "Changed merchant quote rejected",
+    "Consumed authorization rejected by live simulation",
+    "Repeated settlement returns original transaction, without resubmission",
+    "Live vault accounts for exactly 0.02 spent and 0.08 available USDC"
+  ],
+  "state": {
+    "deposited": "100000",
+    "available": "80000",
+    "reserved": "0",
+    "spent": "20000",
+    "returned": "0"
+  },
+  "settlementTransaction": "0.0.11338859@1793968385.882027690"
+}

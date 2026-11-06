@@ -1,0 +1,64 @@
+{
+  "status": "passed",
+  "network": "LOCAL IN-PROCESS EVM ONLY",
+  "chainId": 1337,
+  "liveHederaSettlement": false,
+  "x402EndToEnd": false,
+  "compiler": "0.8.30+commit.73712a01.Emscripten.clang",
+  "generatedAt": "2026-11-06T13:32:50.992Z",
+  "checks": [
+    {
+      "name": "100 funded, 20 paid through executor, 80 withdrawn directly by owner",
+      "status": "passed"
+    },
+    {
+      "name": "outsider cannot reserve, replace worker, cancel, or withdraw",
+      "status": "passed"
+    },
+    {
+      "name": "worker cannot reserve beyond available budget",
+      "status": "passed"
+    },
+    {
+      "name": "authorization binds exact payer, asset, recipient and amount",
+      "status": "passed"
+    },
+    {
+      "name": "duplicate settlement and operation rebinding are rejected",
+      "status": "passed"
+    },
+    {
+      "name": "handoff fences old worker while preserving already reserved payments",
+      "status": "passed"
+    },
+    {
+      "name": "cancel and withdrawal cannot confiscate pending merchant commitments",
+      "status": "passed"
+    },
+    {
+      "name": "expired reservation releases once and cannot settle",
+      "status": "passed"
+    },
+    {
+      "name": "no reservation can be created with an unbounded deadline",
+      "status": "passed"
+    }
+  ],
+  "scenario": {
+    "vault": "0x5b1869d9a4c187f2eaa108f3062412ecf0526b24",
+    "token": "0xe78a0f7e598cc8b0bb87894b0f60dd2a88d6a8ab",
+    "merchant": "0x22d491bde2303f2f43325b2108d26f1eaba1e32b",
+    "paidTx": "0x75ff63d794ca6b6ff335bdcbddb59a3c7411203a7268788b584c0261456eb7e6",
+    "paidGas": "97376",
+    "withdrawalTx": "0xf2ca13d4e7d99644e6cf5a78b2fd19e0c4114d4c178e0f254ff80581f1fd6f6c",
+    "withdrawalGas": "59175",
+    "final": {
+      "deposited": "100000000",
+      "available": "0",
+      "reserved": "0",
+      "spent": "20000000",
+      "returned": "80000000"
+    }
+  },
+  "finishedAt": "2026-11-06T13:34:04.135Z"
+}

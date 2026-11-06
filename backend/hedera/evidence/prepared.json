@@ -1,0 +1,32 @@
+{
+  "network": "hedera:testnet",
+  "preparedAt": "2026-11-06T12:25:01.519Z",
+  "tokenId": "0.0.429274",
+  "accounts": {
+    "OWNER": {
+      "id": "0.0.11338859",
+      "address": "0x99a5aa34c43639266FB7E1bCe6a5f8130a20ad5c"
+    },
+    "WORKER": {
+      "id": "0.0.11339183",
+      "address": "0xD1DF3133FC913Deb077A2D22706C772244CbaD2d"
+    },
+    "MERCHANT": {
+      "id": "0.0.11339185",
+      "address": "0x1D318175340b0116a4Ca7a85B521a47D7221618b"
+    }
+  },
+  "funding": [
+    {
+      "role": "MERCHANT",
+      "transactionId": "0.0.11338859@1793967886.485696722",
+      "tinybars": "100145946"
+    }
+  ],
+  "associations": [
+    {
+      "role": "MERCHANT",
+      "transactionId": "0.0.11339185@1793967894.176920500"
+    }
+  ]
+}

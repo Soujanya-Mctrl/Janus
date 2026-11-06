@@ -1,0 +1,8 @@
+{
+  "network": "hedera:testnet",
+  "addresses": {
+    "OWNER": "0x99a5aa34c43639266FB7E1bCe6a5f8130a20ad5c",
+    "WORKER": "0xD1DF3133FC913Deb077A2D22706C772244CbaD2d",
+    "MERCHANT": "0x1D318175340b0116a4Ca7a85B521a47D7221618b"
+  }
+}

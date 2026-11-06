@@ -1,0 +1,18 @@
+{
+  "receivedAt": "2026-11-06T12:33:10.898Z",
+  "status": 200,
+  "body": {
+    "data": {
+      "token": "USDC",
+      "tokenId": "0.0.429274",
+      "network": "hedera:testnet",
+      "decimals": 6
+    },
+    "settlement": {
+      "success": true,
+      "transaction": "0.0.11338859@1793968385.882027690",
+      "network": "hedera:testnet",
+      "payer": "0.0.11339236"
+    }
+  }
+}

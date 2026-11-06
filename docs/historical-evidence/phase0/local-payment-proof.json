@@ -1,0 +1,10 @@
+{
+  "status": "running",
+  "network": "LOCAL IN-PROCESS EVM ONLY",
+  "chainId": 1337,
+  "liveHederaSettlement": false,
+  "x402EndToEnd": false,
+  "compiler": "0.8.30+commit.73712a01.Emscripten.clang",
+  "generatedAt": "2026-11-06T13:21:47.818Z",
+  "checks": []
+}

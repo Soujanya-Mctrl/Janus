@@ -1,34 +1,20 @@
 {
-  "name": "wealthcore",
+  "name": "janus",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "@privy-io/react-auth": "^3.51.3",
-    "@solana/kit": "^8.6.0",
-    "@stripe/stripe-js": "^10.2.1",
-    "clsx": "^2.1.1",
-    "jose": "^4.15.9",
-    "lucide-react": "^1.70.0",
-    "next": "16.4.5",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "tailwind-merge": "^3.7.0",
-    "viem": "^2.57.8"
-  },
-  "devDependencies": {
-    "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.4.5",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "setup": "npm ci --prefix frontend && npm ci --prefix contracts && npm ci --prefix backend",
+    "dev": "npm run dev --prefix frontend",
+    "start": "npm run start --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "lint": "npm run lint --prefix frontend",
+    "test": "npm test --prefix contracts && npm test --prefix backend",
+    "test:treasury": "npm run phase1:test --prefix contracts",
+    "prototype": "npm test",
+    "contracts:compile": "npm run phase0:compile --prefix contracts && npm run phase1:compile --prefix contracts",
+    "backend:serve": "npm run hedera:serve --prefix backend"
   }
 }

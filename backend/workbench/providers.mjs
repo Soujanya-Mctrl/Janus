@@ -1,4 +1,4 @@
-const instructions = 'You coordinate PAPER trading on explicitly synthetic data. No wallet or execution tools are available. Never invent market observations or guaranteed returns. Follow the requested JSON shape exactly. Independent risk limits remain authoritative.';
+const instructions = 'Assist with research tasks. Distinguish source evidence from assumptions. No wallet or payment tools are available. Never claim a purchase or task execution that has not occurred.';
 export async function callProvider({ credential, model, prompt, fetchImpl = fetch }) {
   if (typeof model !== 'string' || !/^[a-zA-Z0-9._:/-]{1,100}$/.test(model)) throw new Error('Enter an explicit provider model ID');
   const openai = credential.provider === 'openai';

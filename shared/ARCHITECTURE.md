@@ -1,12 +1,8 @@
 # Janus module boundaries
 
-## Agent workspace boundary
+## Research workspace boundary
 
-`frontend/src/components/agent-workbench.tsx` owns the visual workflow, credentials, configuration and integration screens. `api/workbench` verifies Privy identity for secrets/configuration, encrypts the private vault through `backend/workbench/store.mjs`, and spawns only the fixed workbench runner with credentials on stdin. `backend/workbench/` mediates fixed-endpoint provider calls and cached inference before the existing paper risk engine. `backend/cre/` is an independently locked SDK/TypeScript workflow module; root setup/check includes it. Arkiv profile reads/wallet writes stay separate from financial authorization. The public risk endpoint is an explicit synthetic CRE fixture, not a user ledger. See [WORKBENCH.md](WORKBENCH.md) for persistence, deployment and sponsor limits.
-
-## Paper-trading boundary
-
-`backend/trading/orchestrator.mjs` controls concurrent workers and pins allocations, failure-transfer rules and operating invoices. Task-owned version-2 portfolio journals record fills and cash adjustments; `finance.mjs` coordinates recoverable idempotent debit/credit legs. Workers cannot access adjustment methods or wallets. Operating fees require both pooled net realized profit and unspent task profit under a cap. Worker availability failures receive one replacement; financial failures stop for reconciliation. No model provider, exchange or Hedera treasury is called. See [PAPER_TRADING.md](PAPER_TRADING.md).
+`frontend/src/components/agent-workbench.tsx` owns the research workflow overview, credentials, role configuration and Hedera/Arkiv preparation. `api/workbench` verifies Privy identity and stores encrypted credentials/configuration through `backend/workbench/store.mjs`; it cannot launch processes or execute runs. Fixed-endpoint model adapters remain available for future research integration but are not called by this endpoint. `backend/runner/` and `backend/hedera/` retain the paid task/checkpoint path described in [demo.md](../demo.md). Arkiv profiles advertise research capability without granting spending authority. See [WORKBENCH.md](WORKBENCH.md).
 
 ## Container orchestration
 

@@ -1,8 +1,7 @@
 # Shared Janus context
 
-Agent workspace: [WORKBENCH.md](WORKBENCH.md) covers the connected workflow/credentials frontend, encrypted provider keys, saved-run recovery and account-pending Hedera/Arkiv/CRE setup.
+Research workspace: [WORKBENCH.md](WORKBENCH.md) covers research-role configuration, encrypted provider keys and Hedera/Arkiv preparation. The current product story and runnable handoff are defined in [demo.md](../demo.md).
 
-Parallel trading simulation: [PAPER_TRADING.md](PAPER_TRADING.md) documents concurrent workers, task budgets, recovery, profit-funded simulated operating costs and owner-configured free-cash transfers after failure. Strategies/prices are synthetic; no model provider, live trading or new sponsor claim is involved.
 
 See [DOCKER.md](DOCKER.md) for the one-command local Compose stack and its integration boundaries.
 

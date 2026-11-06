@@ -26,9 +26,6 @@ The [official requirements](https://ethglobal.com/events/mumbai/prizes/ethereum-
 
 The [official tracks](https://ethglobal.com/events/mumbai/prizes/arkiv) distinguish from-scratch and Continuity projects. Required evidence includes current-testnet writes and a user-visible feature reading them, writer wallets and a runnable query in README, an open-source license and AI disclosure, plus `/arkiv/schema.md`, `/arkiv/friction.md`, `/arkiv/reach.md`, `/arkiv/why-arkiv.md`, and `/arkiv/how-you-use-arkiv.md`. SDK installation or unread logs do not qualify. The four judging criteria have equal weight; we do not equate our completion measures with their scores. Continuity must identify pre-existing work and new integration.
 
-### Chainlink CRE: workflow preparation
-
-The [official CRE track](https://ethglobal.com/events/mumbai/prizes/chainlink) accepts a meaningful CRE CLI simulation connecting a blockchain to an external API/system/agent; deployment is optional. `backend/cre/` now contains a typed workflow reading a Sepolia token balance and Janus's public synthetic risk fixture. The SDK and configuration are installed/prepared, but no CLI account/simulation evidence exists. The account-pending UI is not proof of sponsor qualification. See [WORKBENCH.md](../shared/WORKBENCH.md). Sponsor selection and Classic/Continuity eligibility still require user/organizer verification.
 
 ### Event-wide provenance
 

@@ -1,12 +1,8 @@
 # Janus implementation plan
 
-## Agent workspace implementation
+## Current direction: research-task demo
 
-The connected agent/credential UI, encrypted per-identity server vault, five provider adapters, assignment/budget forms, streamed worker events and saved-run resume are implemented. Arkiv schema/wallet directory code and sponsor documents, Hedera read-only checks, and an isolated CRE workflow/setup are prepared. Frontend/CRE types, lint, offline security/provider/runtime tests and the browser fixture smoke pass. Next: user account setup, actual provider/model calls, Arkiv testnet write/read evidence, official CRE CLI simulation and completed Hedera payment acceptance. No live trading or new sponsor qualification is claimed. Repository-wide Windows fsync/build-memory blockers still hold publication. See [WORKBENCH.md](WORKBENCH.md).
-
-## Paper-trading agent phase
-
-Parallel trading simulation now includes profit-only capped operating expenses, owner-configured free-cash reallocation, recovery after transfer debit/credit interruption and one bounded replacement for worker availability failures. Strategies, prices and expenses remain simulated; there are no real swaps, model integrations or provider payments. The connected agent UI is documented above; integration with task-aware treasury/handoff contracts remains a separate gate. Existing Windows fsync/build-memory failures continue to block publication acceptance. See [PAPER_TRADING.md](PAPER_TRADING.md).
+Follow [demo.md](../demo.md). Preserve the local payment-aware handoff, recorded Hedera payment/replay and independent recovery. Next connect authoritative treasury state and receipt-confirmed actions to the browser, integrate research-model execution with paid artifacts/checkpoints, and make Arkiv query results drive eligible replacement selection. Credential storage and research-role configuration remain preparation rather than an executable browser workflow. No new sponsor acceptance is claimed.
 
 ## Local orchestration
 

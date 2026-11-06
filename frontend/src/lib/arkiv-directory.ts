@@ -11,7 +11,7 @@ export const WorkerProfiles = defineSchema('janus.worker.v1', {
 export async function listArkivWorkers() {
   const client = createPublicClient({ chain: rabdi({ accessKey: process.env.NEXT_PUBLIC_ARKIV_ACCESS_KEY ?? '' }), transport: http(undefined, { timeout: 12000, retryCount: 0 }) });
   const result = await client.select({ $key: true, $owner: true, $expiresAt: true, worker: true, role: true, status: true, capabilities: true, name: true })
-    .from(WorkerProfiles).where(and(eq('role', 'trader'), eq('status', 'ready'))).limit(20).fetch();
+    .from(WorkerProfiles).where(and(eq('role', 'researcher'), eq('status', 'ready'))).limit(20).fetch();
   return result.entities.map(row => ({ entityKey: row.$key, owner: row.$owner, expiresAt: String(row.$expiresAt),
     worker: row.worker.value, role: row.role.value, status: row.status.value, capabilities: row.capabilities.value, name: row.name.value }));
 }
@@ -21,6 +21,6 @@ export async function registerArkivWorker(provider: Pick<EIP1193Provider, 'reque
   const wallet = createWalletClient({ chain, transport: custom(provider), account: address });
   await wallet.addChain({ chain });
   await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: `0x${chain.id.toString(16)}` }] });
-  return wallet.createEntity(WorkerProfiles, { worker: addr(address), role: 'trader', status: 'ready', capabilities: 'paper-trading', name: name.trim() },
+  return wallet.createEntity(WorkerProfiles, { worker: addr(address), role: 'researcher', status: 'ready', capabilities: 'research', name: name.trim() },
     { expiration: ExpirationTime.fromHours(1) });
 }

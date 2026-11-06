@@ -1,12 +1,8 @@
 # Janus product and current context
 
-## Connected agent workspace
+## Research-task workspace
 
-`/dashboard/agents` and `/dashboard/credentials` now connect to the paper worker runtime through authenticated server routes. Users can save encrypted keys for OpenAI, Anthropic, Gemini, OpenRouter and Groq; assign model IDs and responsibilities; run the credential-free fixture or explicitly billable model proposals; and resume a saved run without repeating known inference. Arkiv wallet profile/read code, read-only Hedera checks and a typed CRE risk workflow are implemented. Sponsor accounts and live verification are deliberately deferred at the user's request. The existing treasury dashboard remains illustrative. See [WORKBENCH.md](WORKBENCH.md).
-
-## Paper-trading prototype
-
-`backend/trading/` simulates parallel bot workers under an orchestrator, with task-owned budgets and replay-safe replacement. Net realized pool and task profits can fund capped simulated operating bills; pinned rules can move free cash between tasks after worker failure without moving open positions. Transfer intents recover after either debit or credit interruption. Root `demo:trading` and `test:trading` use synthetic strategies/prices without credentials, network, model providers or real trading. This changes no sponsor claim. See [PAPER_TRADING.md](PAPER_TRADING.md).
+The current implementation follows [demo.md](../demo.md): task-owned budgets, paid-source reuse, checkpointed worker handoff and independent owner recovery. `/dashboard/agents` explains this flow and provides research-role configuration; `/dashboard/credentials` retains encrypted provider-key storage. Model execution is not connected to the research runner. Arkiv profile publication/query code now targets research workers; automatic discovery-driven replacement and live evidence remain pending. Read-only Hedera checks remain available. See [WORKBENCH.md](WORKBENCH.md).
 
 Local container orchestration is available through root Docker Compose: persistent local EVM, automatic token/treasury/task bootstrap, task-aware merchant and frontend. See [DOCKER.md](DOCKER.md). This changes no live-network or sponsor verification claim and does not connect the illustrative dashboard to local treasury state.
 

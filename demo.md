@@ -19,7 +19,7 @@ Use a research task as the audience-facing example. The current runner uses dete
 | Intended track | User problem it addresses | How it fits Janus | What to show | Current boundary |
 | --- | --- | --- | --- | --- |
 | **Hedera — AI Agents That Pay / x402** | Workers need paid tools without unlimited wallet access or repeated human approval. | The treasury enforces task budgets, reservations, settlement and current worker authority. The merchant preserves paid results for replay. | A settled tool purchase, matching treasury debit/merchant credit, original-result retrieval and rejection of stale spending authority. | Local integrated proof and recorded Hedera testnet payment exist. The custom signed HTTP adapter still needs separate x402 compliance evidence. |
-| **Ethereum Foundation — CROPS** | An owner should retain control when the application operator disappears. | Direct contract access permits cancellation, release of available funds and owner withdrawal independently of Janus services. | Stop application services; validate deployment identity; recover available funds while preserving pending obligations. | Independent Node.js client and local tests exist. Browser recovery, full openness/privacy disclosures and submission gates remain open. |
+| **Ethereum Foundation — CROPS** | An owner should retain control when the application operator disappears. | Direct contract access permits cancellation, release of available funds and owner withdrawal independently of Janus services. | Stop application services; validate deployment identity; recover available funds while preserving pending obligations. | Independent Node.js client and local tests exist. Browser recovery has automated local wallet acceptance; manual extension-wallet/live recovery, full openness/privacy disclosures and submission gates remain open. |
 | **Arkiv — Build on Arkiv** | Finding a replacement should be portable across operators rather than tied to one private directory. | Public, expiring worker records would supply candidates; Janus would separately check eligibility, readiness and spending authority. | Publish workers, query them, select a replacement from the query, and wait when no eligible record exists. | Planned. The current runner uses an owner-provided directory; it must not be presented as Arkiv discovery. |
 
 **The combined flow:** Hedera protects the money → Arkiv would help find a replacement → the checkpoint runner resumes the work → CROPS is demonstrated through independent owner control if services fail.
@@ -150,7 +150,7 @@ Use this during rehearsal so the demo covers behavior rather than just screens.
 | Accounting conservation | `npm run test:protocol` and treasury tests | Available/reserved/spent/returned accounting is checked against accepted histories. |
 | Cancellation, release and withdrawal | Independent recovery suite/client | Stopping work, returning allocation and receiving funds are separate steps. |
 | Live settlement and replay | Committed Hedera evidence | Recorded testnet debit/credit is separate from local execution proof. |
-| Connected dashboard, browser recovery, real model output | Planned segments | These still need implementation and their own proof. |
+| Connected dashboard and real model output | Planned segments | These still need integration and their own proof. Browser recovery already passes automated local wallet acceptance. |
 | Arkiv-backed discovery | Planned segment below | Public discovery must change replacement selection to be meaningful. |
 
 ## Arkiv segment to add when implemented

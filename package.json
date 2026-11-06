@@ -6,7 +6,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "setup": "npm ci --prefix frontend && npm ci --prefix contracts && npm ci --prefix backend && npm ci --prefix backend/cre",
+    "setup": "npm ci --prefix frontend && npm ci --prefix contracts && npm ci --prefix backend",
     "dev": "npm run dev --prefix frontend",
     "start": "npm run start --prefix frontend",
     "build": "npm run build --prefix frontend",
@@ -18,14 +18,10 @@
     "backend:serve": "npm run hedera:serve --prefix backend",
     "check:repo": "node scripts/check-repository.mjs",
     "typecheck": "npm run typecheck --prefix frontend",
-    "check": "npm run check:repo && npm run lint && npm run typecheck && npm run check:cre && npm run contracts:compile && npm test && npm run build",
+    "check": "npm run check:repo && npm run lint && npm run typecheck && npm run contracts:compile && npm test && npm run build",
     "test:protocol": "node --test shared/test/*.test.mjs",
     "demo:handoff": "npm run demo:handoff --prefix backend",
-    "demo:trading": "npm run demo:trading --prefix backend",
-    "test:trading": "npm run test:trading --prefix backend",
     "test:workbench": "npm run test:workbench --prefix backend",
-    "check:cre": "npm run typecheck --prefix backend/cre",
-    "cre:simulate": "npm run cre:simulate --prefix backend/cre",
     "sponsors:check": "node scripts/check-sponsors.mjs",
     "sponsors:ready": "node scripts/check-sponsors.mjs --require-ready"
   }

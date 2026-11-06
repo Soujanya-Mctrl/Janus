@@ -10,7 +10,6 @@ export async function POST(request: Request) {
     const chainId = await client.getChainId();
     const code = await client.getCode({ address: deployment.treasury as `0x${string}` });
     return Response.json({ hedera: { chainId, expectedChainId: network.chainId, deploymentPresent: Boolean(code && code !== '0x'),
-      treasury: deployment.treasury, mode: 'Read-only testnet check; no payment submitted', x402Verified: false },
-      cre: { status: 'Account setup required', command: 'npm run cre:simulate --prefix backend/cre', verified: false } }, { headers: { 'Cache-Control': 'no-store' } });
+      treasury: deployment.treasury, mode: 'Read-only testnet check; no payment submitted', x402Verified: false } }, { headers: { 'Cache-Control': 'no-store' } });
   } catch { return Response.json({ error: 'Testnet RPC check failed; no transaction was submitted' }, { status: 502 }); }
 }

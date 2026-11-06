@@ -39,4 +39,10 @@ test('verified accounts can save keys but cannot read or revoke another account 
   assert.equal((await (await GET(req(other))).json()).credentials.length, 0);
   await POST(req(other, { action: 'removeCredential', id: payload.credential.id }));
   assert.equal((await (await GET(req(owner))).json()).credentials.length, 1);
+  for (const action of ['run', 'runDemo', 'resume']) {
+    const rejected = await POST(req(owner, { action }));
+    assert.equal(rejected.status, 400);
+  }
+  assert.equal((await GET(new Request('http://localhost/api/workbench?run=historical', { headers: { Authorization: `Bearer ${owner}` } }))).status, 410);
+
 });

@@ -293,12 +293,12 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
                 ? "RESEARCH WORKSPACE · PROVIDER BILLING SEPARATE FROM TOOL PAYMENTS"
                 : sample
                 ? "ILLUSTRATIVE ACCOUNTING FIXTURE · MOCK BASE UNITS"
-                : "TESTNET · TREASURY PROJECTION NOT CONNECTED"}
+                : "TESTNET · VALIDATED CHAIN READS · WALLET-APPROVED ACTIONS"}
             </span>
           </div>
           {!["Agents", "Runs", "Credentials", "Integrations"].includes(tab) && (
             <button type="button" className="mode-toggle-link" onClick={() => setSample(!sample)}>
-              <span>{sample ? "Exit fixture view" : "Explore live fixture"}</span>
+              <span>{sample ? "Exit fixture view" : "Explore accounting fixture"}</span>
               <ArrowRight size={13} />
             </button>
           )}

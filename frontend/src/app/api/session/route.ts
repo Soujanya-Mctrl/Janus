@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   if (!authorization?.startsWith("Bearer ") || authorization.length > 8192) {
     return Response.json({ error: "A valid Privy access token is required." }, { status: 401, headers });
   }
-  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
+  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID?.trim();
   const pem = process.env.PRIVY_VERIFICATION_KEY?.replace(/\\n/g, "\n");
   if (!appId || !pem) {
     return Response.json({ error: "Server verification is not configured. Set PRIVY_VERIFICATION_KEY from your Privy dashboard." }, { status: 503, headers });

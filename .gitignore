@@ -39,7 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-<<<<<<< HEAD
 ._*
 
 # Nested package dependencies and generated output
@@ -51,4 +50,11 @@ next-env.d.ts
 **/out/
 **/build/
 **/.env*
->>>>>>> 3898153590c6e878bd55c4a3c95eaa8bb6ae4d53
+
+# Commit only secret-free configuration templates
+!**/.env.example
+!**/.env.*.example
+
+# Local compiler output
+**/artifacts/
+**/.lockbuild/

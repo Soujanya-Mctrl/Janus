@@ -2,16 +2,16 @@
 
 This spike tests a single-task ERC20 vault on an **ephemeral local EVM**. It does not settle on Hedera, use actual USDC, or constitute an end-to-end x402 integration. No user keys, accounts or real funds are needed. The local EVM is in-process and shuts down after each scenario; the recorded transaction hashes cannot be looked up on a public explorer.
 
-Update: the separate [Hedera integration](../hedera/README.md) has now completed a real public-testnet USDC payment and direct recovery through an HTS adapter. The local-only descriptions below apply to this original test harness, not to that separate integration.
+Update: the separate [Hedera integration](../../backend/hedera/README.md) has now completed a real public-testnet USDC payment and direct recovery through an HTS adapter. The local-only descriptions below apply to this original test harness, not to that separate integration.
 
 ## Run
 
 From the repository root, using Node 22:
 
 ```sh
-npm ci --cache .npm-cache --no-audit --no-fund
-npm run phase0:compile
-npm run phase0:test
+npm run setup
+npm run phase0:compile --prefix contracts
+npm run phase0:test --prefix contracts
 ```
 
 The compiler uses bounded WebAssembly compilation settings for this machine. Ganache may warn that its native uWS binary is unavailable on Node 22; it uses its JavaScript fallback. This test runner uses the in-process provider, not an HTTP server. On this constrained workstation the compiler/test processes may require sufficient memory outside the restricted execution environment. Dependencies include development-only tooling; this is not a production deployment.
@@ -21,7 +21,7 @@ The lockfile marks Ganache's bundled macOS-only `fsevents` dependency optional, 
 Optional read-only discovery of public testnet facilitator capabilities:
 
 ```sh
-npm run phase0:probe
+npm run phase0:probe --prefix contracts
 ```
 
 An unreachable result is a network observation, not proof that a facilitator lacks support. The script records only matching testnet payment capabilities and never sends a transaction.
@@ -59,23 +59,23 @@ Unsolicited token transfers can make actual vault balance exceed accounted funds
 8. Prevent settlement after expiry; release exactly once; allow recovery.
 9. Reject zero or unbounded reservation lifetimes.
 
-The runner writes `evidence/local-payment-proof.json` with its actual status, executed scenario outcomes, payment/withdrawal gas and local transaction references. That report is overwritten by the next run; an interrupted run can remain `running`. It is a reproducible execution record, not an audit or a production performance benchmark.
+The runner writes `artifacts/local-payment-proof.json` with its actual status, executed scenario outcomes, payment/withdrawal gas and local transaction references. That report is overwritten by the next run; an interrupted run can remain `running`. It is a reproducible execution record, not an audit or a production performance benchmark.
 
 Independent financial exit here means a direct owner contract call, without an orchestrator, merchant API, database, or facilitator. A standalone recovery UI and a backend-shutdown browser demonstration are later-phase work.
 
-## Live route decision
+## Historical live route decision
 
 The Hedera exact specification defines `transferExecutor` for contract-held funds. It requires executor admission, preflight simulation and verification of real consensus transfer outcomes, including child records. Merely exposing this function selector on a local ERC20 contract is insufficient.
 
 The successful public capability probe found matching `exact` / `hedera:testnet` entries at all three documented endpoints, but none **explicitly advertised** `transferExecutor` or an admitted executor list. This does not establish that no private integration is possible; it means no compatible hosted route was verified.
 
-The user has no funded Hedera account configured and requested local continuation. Therefore:
+At the time of this original spike, no funded Hedera account was configured. The historical decision was:
 
 - **Local mechanism:** evaluate using the generated local test report.
 - **Hosted contract-controlled Hedera x402:** not verified; not a release dependency for the next local phase.
 - **Live sponsor eligibility:** not established.
 
-Continue into Phase 1 using the tested local interface. A later Hedera spike needs a funded testnet account, actual HTS association/alias resolution, deployment and explicit executor admission, plus facilitator simulation and consensus-record checks. Alternatively, run a conforming facilitator. Do not silently substitute a wallet transfer that bypasses the vault.
+The separate Hedera integration subsequently recorded a protected payment through the restricted self-run facilitator. See its README above for observed results and limits. The original probe remains a local financial test harness; current work follows `shared/PLAN.md`.
 
 ## Deliberate limits
 

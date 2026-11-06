@@ -65,8 +65,8 @@ async function fixture(run, tokenName = 'TestToken') {
 
 test('Phase 1: isolated task budgets and owner-controlled financial recovery', async t => {
   const report = { status: 'running', network: 'LOCAL EVM ONLY', compiler: artifacts.TaskTreasury.compiler, generatedAt: new Date().toISOString(), checks: [], liveDeployment: false };
-  const path = new URL('../evidence/treasury-tests.json', import.meta.url);
-  await fs.mkdir(new URL('../evidence/', import.meta.url), { recursive: true });
+  const path = new URL('../artifacts/treasury-tests.json', import.meta.url);
+  await fs.mkdir(new URL('../artifacts/', import.meta.url), { recursive: true });
   const save = () => fs.writeFile(path, JSON.stringify(report, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2) + '\n');
   await save();
   const check = async (name, run, tokenName) => t.test(name, async () => {

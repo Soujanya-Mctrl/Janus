@@ -28,12 +28,14 @@ actual token balance >= accountedBalance
 
 ## Run locally
 
+From `contracts/`:
+
 ```sh
 npm run phase1:compile
 npm run phase1:test
 ```
 
-The test runner compiles Solidity 0.8.30 with the Shanghai target and optimizer/viaIR, then executes actual contracts on an ephemeral local EVM. It needs no testnet credentials or funds. It writes its observed status and canonical scenario to `evidence/treasury-tests.json`.
+The test runner compiles Solidity 0.8.30 with the Shanghai target and optimizer/viaIR, then executes actual contracts on an ephemeral local EVM. It needs no testnet credentials or funds. It writes its observed status and canonical scenario to `artifacts/treasury-tests.json`.
 
 The nine scenarios cover:
 

@@ -105,7 +105,7 @@ export function PrivyAuthWrapper({ children }: { children: ReactNode }) {
   if (!appId || appId.includes("your-") || appId.includes("replace-")) {
     return <AuthContext.Provider value={empty}>{children}</AuthContext.Provider>;
   }
-  return <PrivyProvider appId={appId} config={{
+  return <PrivyProvider appId={appId} clientId={process.env.NEXT_PUBLIC_PRIVY_CLIENT_ID?.trim() || undefined} config={{
     appearance: { theme: "dark", accentColor: "#e4e4e7", walletChainType: "ethereum-only" },
     loginMethods: ["email", "wallet"], defaultChain: targetChain, supportedChains: [targetChain],
     embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" } },

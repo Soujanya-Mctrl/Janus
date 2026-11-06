@@ -4,12 +4,16 @@
 
 Use top-level `backend/`, `frontend/`, `contracts/` and `shared/`. Keep separate dependency lockfiles, root orchestration commands, preserved proof evidence, and one current context set. Keep archived research distinct from implementation status.
 
+Consistency gate verified on 6 November 2026 with Node.js 22.23.4: `npm run setup` installs module-local dependencies; `npm run check` validates source/lockfiles, lint, types, compilation, tests and frontend build. CI uses the same path. Generated contract reports stay in ignored artifacts rather than rewriting historical proof. Runtime configuration templates live with their owning frontend/backend modules.
+
 ## Next: finish Phase 1 integration readiness
 
 1. Review the treasury acceptance scenarios and accounting invariants against the intended MVP. Preserve existing pending-payment, epoch and owner-recovery behavior.
+   Explicitly resolve dossier differences: direct onchain reservation versus signed intent/quote, assignment leases, task suspension/closure, reservation bounds, pause/excess-token handling, and separate cancellation/release/withdrawal semantics. Implement or document the selected narrower scope before freezing the interface. Add an independent reference model and stateful accounting tests.
 2. Confirm the target settlement network; reconcile Sepolia frontend configuration with the existing Hedera route before wiring transactions.
 3. Establish the treasury interface and ABI/version export for backend/frontend consumption, with integer base units and distinct available/reserved/spent/returned/withdrawn fields.
 4. Verify deployment configuration and direct owner recovery without application services. Keep local proof and historical/live proof clearly labelled.
+5. Review frontend production dependency advisories and the existing peer-dependency compatibility setting. Migrate the wallet/authentication stack with session and wallet regression checks; do not use an unreviewed forced audit downgrade.
 
 Exit gate: reproducible contract tests, explicit network/configuration choice, stable integration interface and documented direct owner recovery. A successful dashboard build alone does not complete this gate.
 

@@ -31,7 +31,7 @@ export const useRelayAuth = () => useContext(AuthContext);
 function PrivyBridge({ children }: { children: ReactNode }) {
   const privy = usePrivy();
   const { getAccessToken } = privy;
-  const { wallets, ready: walletsReady } = useWallets();
+  const { wallets } = useWallets();
   const [selected, selectWallet] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
   const [chainId, setChainId] = useState<number | null>(null);
@@ -89,7 +89,7 @@ function PrivyBridge({ children }: { children: ReactNode }) {
     catch { setError("Wallet export was not completed. Please try again."); }
   }
   return <AuthContext.Provider value={{
-    configured: true, ready: privy.ready && walletsReady, authenticated: privy.authenticated,
+    configured: true, ready: privy.ready, authenticated: privy.authenticated,
     user: privy.user ? { id: privy.user.id, email: privy.user.email?.address } : null,
     walletAddress: wallet?.address ?? null, walletType: wallet?.walletClientType ?? null,
     chainId: privy.authenticated ? chainId : null, balance: privy.authenticated ? balance : null,

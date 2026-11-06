@@ -3,8 +3,8 @@ import "./globals.css";
 import { PrivyAuthWrapper } from "@/context/privy-auth-context";
 
 export const metadata: Metadata = {
-  title: "Janus | Keep the work moving. Keep control.",
-  description: "Payment-aware recovery for agent workflows. Scoped budgets, explicit accounting, and owner-controlled authority.",
+  title: "Intelligence Designed To Evolve",
+  description: "Build applications that reason, adapt and collaborate using a modular AI platform designed for production.",
   icons: {
     icon: "/favicon.ico",
   },
@@ -16,9 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-    >
+    <html lang="en">
       <body>
         <PrivyAuthWrapper>
           {children}

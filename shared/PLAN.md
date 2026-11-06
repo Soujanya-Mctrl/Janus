@@ -12,7 +12,7 @@ Consistency gate verified on 6 November 2026 with Node.js 22.23.4: `npm run setu
 - Exported the versioned treasury ABI/hash and decimal-string operation/authorization interface, with drift checks in the normal compile path.
 - Documented accepted narrower contract semantics in [TREASURY_INTERFACE.md](TREASURY_INTERFACE.md), preserving the existing contract and historical deployment.
 - Added an independent event-history accounting model, fixed-seed model histories and onchain differential traces.
-- Added a backend-independent owner recovery client with manifest/chain/code/owner/token checks and local recovery/restart tests. Browser recovery and fresh live proof remain later work; see [RECOVERY.md](RECOVERY.md).
+- Added a backend-independent owner recovery client with manifest/chain/code/owner/token checks and local recovery/restart tests. Browser recovery passes local Chromium wallet acceptance and bounded merchant payment/replay passes on Hedera testnet; manual live recovery remains pending; see [RECOVERY.md](RECOVERY.md).
 
 Exit gate: reproducible contract/model tests, explicit network configuration, stable exported integration interface and independently usable owner recovery. No live spending or contract redeployment is part of this phase.
 
@@ -36,9 +36,13 @@ Existing frontend wallet/authentication advisories and peer-dependency compatibi
 
 Before starting each phase and before publishing it: fetch origin/upstream, inspect incoming changes, and integrate both remote main branches while preserving local work. After the phase exit gate and relevant checks pass, commit and push to `origin/main`. Resolve non-fast-forward rejection by fetching and integrating, never force-pushing. Keep shared context current in the phase commit. Upstream checks happen during active work, not through an unattended scheduled task.
 
+## Independent browser recovery implementation
+
+A standalone static recovery page now shares the CLI recovery core and builds through `npm run recovery:build --prefix contracts`. It requires owner-wallet approval, validates deployment identity, displays the reserve-wide withdrawal effect and waits for receipts. See [RECOVERY.md](RECOVERY.md). Chromium browser-wallet acceptance now passes against a real local EVM with an injected EIP-1193 fixture: owner/network checks, rejected approvals, consent and plan invalidation, pending expiry, exact withdrawal and idempotent repeat. The static build and CI browser test are verified. Manual extension-wallet/live recovery remains untested; no live funds moved in this verification.
+
 ## Checkpointed handoff reference milestone
 
-Implemented and locally verified: durable checkpoint/assignment intent, stable paid-step replay, deterministic replacement selection, four independently progressing logical tasks and reconciliation after assignment acknowledgement loss. Reproduce with `npm run demo:handoff`; see [RUNNER.md](RUNNER.md). This is the core of the next phase, not completion of the broader process scheduler: authenticated task API, process-isolated workers, production storage/locking, encrypted checkpoints and a real model report remain required. Connected dashboard and browser-wallet validation remain separate gates.
+Implemented and locally verified: durable checkpoint/assignment intent, stable paid-step replay, deterministic replacement selection, four independently progressing logical tasks and reconciliation after assignment acknowledgement loss. Reproduce with `npm run demo:handoff`; see [RUNNER.md](RUNNER.md). This is the core of the next phase, not completion of the broader process scheduler: authenticated task API, process-isolated workers, production storage/locking, encrypted checkpoints and a real model report remain required. Connected dashboard and manual extension-wallet/live recovery remain separate gates.
 
 ## Live task-aware payment verified
 

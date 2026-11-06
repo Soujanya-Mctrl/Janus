@@ -16,12 +16,16 @@
     "test": "npm run phase0:test && npm run phase1:test",
     "interface:export": "node phase1/scripts/export-interface.mjs",
     "interface:check": "node phase1/scripts/export-interface.mjs --check",
-    "recovery:plan": "node phase1/scripts/recover.mjs"
+    "recovery:plan": "node phase1/scripts/recover.mjs",
+    "recovery:build": "node phase1/scripts/build-recovery.mjs",
+    "recovery:test:browser": "node --test phase1/test/browser-wallet.test.mjs"
   },
   "devDependencies": {
     "@hiero-ledger/sdk": "2.90.1",
     "@openzeppelin/contracts": "5.4.0",
+    "esbuild": "0.28.2",
     "ganache": "7.9.2",
+    "playwright": "1.65.0",
     "solc": "0.8.30",
     "viem": "2.57.16"
   }

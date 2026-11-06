@@ -1,0 +1,74 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import http from 'node:http';
+import { once } from 'node:events';
+import { fileURLToPath } from 'node:url';
+import { test } from 'node:test';
+import ganache from 'ganache';
+import { privateKeyToAccount } from 'viem/accounts';
+import { build } from 'esbuild';
+import { createPublicClient, createWalletClient, custom, defineChain, keccak256, stringToHex } from 'viem';
+
+// Browser tooling may be supplied by the developer/CI without a runtime dependency.
+const { chromium } = await import(process.env.JANUS_PLAYWRIGHT_MODULE || 'playwright');
+test('recovery browser checks wallet identity, rejection, consent, network and exact local withdrawal', async t => {
+ const rpc = ganache.server({ logging: { quiet: true }, wallet: { deterministic: true }, chain: { chainId: 1337, hardfork: 'shanghai' } });
+ await rpc.listen(0,'127.0.0.1'); t.after(() => rpc.close());
+ const provider = rpc.provider, addresses = await provider.request({ method: 'eth_accounts', params: [] });
+ const chain = defineChain({ id: 1337, name: 'Local recovery test', nativeCurrency: { name: 'Local Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [`http://127.0.0.1:${rpc.address().port}`] } } });
+ const client = createPublicClient({ chain, transport: custom(provider), cacheTime: 0, pollingInterval: 10 });
+ const owner = createWalletClient({ chain, transport: custom(provider), account: privateKeyToAccount(provider.getInitialAccounts()[addresses[0]].secretKey) });
+ const artifact = async name => JSON.parse(await fs.readFile(new URL(`../artifacts/${name}.json`,import.meta.url),'utf8'));
+ const tokenArtifact = await artifact('TestToken'), treasuryArtifact = await artifact('TaskTreasury');
+ const receipt = async hash => { const r = await client.waitForTransactionReceipt({hash});assert.equal(r.status,'success');return r; };
+ const token = (await receipt(await owner.deployContract({abi:tokenArtifact.abi,bytecode:tokenArtifact.bytecode}))).contractAddress;
+ const treasury = (await receipt(await owner.deployContract({abi:treasuryArtifact.abi,bytecode:treasuryArtifact.bytecode,args:[token]}))).contractAddress;
+ const abi=treasuryArtifact.abi,task=keccak256(stringToHex('browser-recovery'));
+ await receipt(await owner.writeContract({address:token,abi:tokenArtifact.abi,functionName:'approve',args:[treasury,1000n]}));
+ const send=(functionName,args)=>owner.writeContract({address:treasury,abi,functionName,args}).then(receipt);
+ await send('deposit',[1000n]);await send('createTask',[task,addresses[1],addresses[2],100n,30n]);
+ const operation=keccak256(stringToHex('pending-browser-purchase'));
+ const worker=createWalletClient({chain,transport:custom(provider),account:privateKeyToAccount(provider.getInitialAccounts()[addresses[1]].secretKey)});
+ await receipt(await worker.writeContract({address:treasury,abi,functionName:'reserve',args:[task,operation,keccak256(stringToHex('request')),10n,1n,1n,300n]}));
+ const descriptor=JSON.parse(await fs.readFile(new URL('../../../shared/treasury-interface.json',import.meta.url),'utf8'));
+ const manifest={interfaceVersion:descriptor.interfaceVersion,abiHash:descriptor.abiHash,mode:'local',chainId:1337,treasury,token,owner:addresses[0],runtimeCodeHash:keccak256(await client.getBytecode({address:treasury}))};
+ const network={...chain,chainId:1337,token:{address:token}};
+ const bundled=await build({entryPoints:[fileURLToPath(new URL('../browser/main.mjs',import.meta.url))],bundle:true,platform:'browser',target:'es2022',write:false,plugins:[{name:'local-fixture-only',setup(b){b.onLoad({filter:/shared\/(network|deployments\/hedera-testnet)\.json$/},args=>({contents:JSON.stringify(args.path.endsWith('network.json')?network:manifest),loader:'json'}));}}]});
+ const html=await fs.readFile(new URL('../browser/index.html',import.meta.url));
+ const server=http.createServer((req,res)=>{res.setHeader('content-type',req.url==='/recovery.js'?'text/javascript':'text/html');res.end(req.url==='/recovery.js'?bundled.outputFiles[0].contents:html);});
+ server.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>new Promise(resolve=>{server.closeAllConnections();server.close(resolve);}));
+ const browser=await chromium.launch({headless:true,...(process.env.JANUS_CHROMIUM_PATH?{executablePath:process.env.JANUS_CHROMIUM_PATH}:{})});t.after(()=>browser.close());
+ const page=await browser.newPage();let selected=addresses[1],wrongChain=false,rejectConnect=false,rejectTransaction=false,sends=0;
+ await page.exposeFunction('fixtureWalletRequest',async({method,params})=>{
+  if(method==='eth_requestAccounts'){if(rejectConnect)throw Error('User rejected wallet connection');return[selected];}
+  if(method==='eth_accounts')return[selected];
+  if(method==='eth_chainId'&&wrongChain)return'0x1';
+  if(method==='eth_sendTransaction'||method==='wallet_sendTransaction'){if(rejectTransaction)throw Error('User rejected transaction');assert.equal(params[0].from.toLowerCase(),selected.toLowerCase());sends++;}
+  if(method==='wallet_sendTransaction')method='eth_sendTransaction';
+  if(method==='eth_sendTransaction'&&!params[0].gas)params[0].gas=await provider.request({method:'eth_estimateGas',params:[params[0]]});
+  return provider.request({method,params:params??[]});
+ });
+ await page.addInitScript(()=>{const listeners={};window.ethereum={request:args=>window.fixtureWalletRequest(args),on:(name,fn)=>(listeners[name]??=[]).push(fn)};window.emitWalletEvent=(name)=>(listeners[name]??[]).forEach(fn=>fn());});
+ await page.goto(`http://127.0.0.1:${server.address().port}`);await page.locator('#task').fill(task);await page.locator('#operations').fill(operation);
+ const inspect=async()=>{await page.locator('#inspect').click();await page.waitForFunction(()=>!document.getElementById('inspect').disabled);assert.equal(await page.locator('#execute').isDisabled(),false,(await page.locator('#plan').textContent()).slice(0,600));};
+ const execute=async()=>{await page.locator('#consent').check();await page.locator('#execute').click();await page.waitForFunction(()=>!document.getElementById('inspect').disabled);};
+ await inspect();await page.locator('#execute').click();await page.waitForFunction(()=>document.getElementById('status').textContent.includes('acknowledge'));assert.equal(sends,0);
+ await execute();assert.match(await page.locator('#status').textContent(),/not the owner/);assert.equal(sends,0);
+ selected=addresses[0];wrongChain=true;await inspect();await execute();assert.match(await page.locator('#status').textContent(),/chain mismatch/);assert.equal(sends,0);
+ wrongChain=false;rejectConnect=true;await inspect();await execute();assert.match(await page.locator('#status').textContent(),/rejected/);assert.equal(sends,0);
+ rejectConnect=false;rejectTransaction=true;await inspect();await execute();assert.match(await page.locator('#status').textContent(),/rejected/);assert.equal(sends,0);
+ rejectTransaction=false;await inspect();await page.locator('#task').fill('0x'+'12'.repeat(32));assert.equal(await page.locator('#execute').isDisabled(),true);await page.locator('#task').fill(task);
+ await inspect();await page.evaluate(()=>window.emitWalletEvent('accountsChanged'));assert.equal(await page.locator('#execute').isDisabled(),true);
+ await inspect();await page.evaluate(()=>window.emitWalletEvent('chainChanged'));assert.equal(await page.locator('#execute').isDisabled(),true);
+ const before=await client.readContract({address:token,abi:tokenArtifact.abi,functionName:'balanceOf',args:[addresses[0]]});
+ await inspect();await execute();assert.doesNotMatch(await page.locator('#status').textContent(),/Execution stopped/);assert.equal(sends,3);
+ const withdrawn=await client.readContract({address:treasury,abi,functionName:'totalWithdrawn'});assert.equal(withdrawn,990n);
+ assert.equal((await client.readContract({address:treasury,abi,functionName:'tasks',args:[task]}))[2],10n);
+ await provider.request({method:'evm_increaseTime',params:[301]});await provider.request({method:'evm_mine',params:[]});
+ await inspect();await execute();assert.equal(sends,6);
+ assert.equal(await client.readContract({address:treasury,abi,functionName:'totalWithdrawn'}),1000n);
+ const after=await client.readContract({address:token,abi:tokenArtifact.abi,functionName:'balanceOf',args:[addresses[0]]});assert.equal(after-before,1000n);
+ assert.equal((await client.readContract({address:treasury,abi,functionName:'tasks',args:[task]}))[9],true);
+ await inspect();await execute();assert.equal(sends,6);
+ console.log('Browser wallet acceptance: consent, wrong owner/network, rejected connection/transaction, changed plan, exact withdrawal, idempotent repeat. Local fixtures only.');
+});

@@ -23,3 +23,8 @@ jobs:
             contracts/package-lock.json
       - run: npm run setup
       - run: npm run check
+      - name: Install recovery test browser
+        working-directory: contracts
+        run: npx playwright install --with-deps chromium
+      - name: Verify recovery wallet flow
+        run: npm run recovery:test:browser --prefix contracts

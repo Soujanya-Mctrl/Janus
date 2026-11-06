@@ -49,6 +49,10 @@ Network selection, versioned treasury interface and operation encoding are estab
 
 The task-aware reference SDK/server and durable result store are described in [PAID_WORKFLOW.md](PAID_WORKFLOW.md). Their local EVM integration is separate from the preserved Phase-0 service and historical Hedera proof. Backend integration tests require contract dependencies/artifacts. Checkpointed workers and connected dashboard remain later phases.
 
+## Independent browser recovery implementation
+
+A standalone static recovery page now shares the CLI recovery core and builds through `npm run recovery:build --prefix contracts`. It requires owner-wallet approval, validates deployment identity, displays the reserve-wide withdrawal effect and waits for receipts. See [RECOVERY.md](RECOVERY.md). Chromium browser-wallet acceptance now passes against a real local EVM with an injected EIP-1193 fixture: owner/network checks, rejected approvals, consent and plan invalidation, pending expiry, exact withdrawal and idempotent repeat. The static build and CI browser test are verified. Manual extension-wallet/live recovery remains untested; no live funds moved in this verification.
+
 ## Checkpoint runner reference
 
 `backend/runner/` owns the local checkpointed runner and demo controller. Its financial calls use the shared task SDK; it stores execution progress rather than a second budget ledger. Per-task state and assignment intents are private filesystem records with fail-closed locks. Four logical task clients and deterministic faults are verified on a local EVM, not four OS worker processes or a production task API. See [RUNNER.md](RUNNER.md).

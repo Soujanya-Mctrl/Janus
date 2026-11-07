@@ -1,0 +1,64 @@
+
+> janus@0.1.0 build
+> npm run build --prefix frontend
+
+
+> @janus/frontend@0.1.0 prebuild
+> node ../scripts/prepare-recovery.mjs
+
+Independent static recovery copy prepared at /recovery/index.html
+
+> @janus/frontend@0.1.0 build
+> next build
+
+▲ Next.js 16.4.5 (Turbopack)
+✓ Running next.config.ts took 82ms
+- Cache Components enabled
+- Partial Prefetching enabled
+- Experiments (use with caution):
+  ⨯ turbopackFileSystemCacheForBuild
+  ⨯ turbopackFileSystemCacheForDev
+
+  Creating an optimized production build ...
+
+-----
+FATAL: An unexpected Turbopack error occurred. A panic log has been written to <workspace>\.security-artifacts\tmp\next-panic-54ec227befc3c7cd304c02c53bfbd945.log.
+
+To help make Turbopack better, report this error by clicking here: https://bugs.nextjs.org/search?category=turbopack-error-report&title=Turbopack%20Error%3A%20Failed%20to%20write%20app%20endpoint%20%2Fpage&body=Turbopack%20version%3A%20%604e5335a0%60%0ANext.js%20version%3A%20%600.0.0%60%0A%0AError%20message%3A%0A%60%60%60%0AFailed%20to%20write%20app%20endpoint%20%2Fpage%0A%0ACaused%20by%3A%0A-%20reading%20file%20%22%5C%5C%5C%5C%3F%5C%5CD%3A%5C%5CProjects%5C%5CJanus%5C%5Cfrontend%5C%5Cnode_modules%5C%5C%40reown%5C%5Cappkit%5C%5Cnode_modules%5C%5C%40noble%5C%5Chashes%5C%5Csrc%5C%5Csha3.ts%22%0A-%20Insufficient%20system%20resources%20exist%20to%20complete%20the%20requested%20service.%20%28os%20error%201450%29%0A%0ADebug%20info%3A%0A-%20Execution%20of%20get_all_written_entrypoints_with_issues_operation%20failed%0A-%20Execution%20of%20EntrypointsOperation%3A%3Anew%20failed%0A-%20Execution%20of%20all_entrypoints_write_to_disk_operation%20failed%0A-%20Execution%20of%20output_assets_operation%20failed%0A-%20Execution%20of%20%3CAppEndpoint%20as%20Endpoint%3E%3A%3Aoutput%20failed%0A-%20Failed%20to%20write%20app%20endpoint%20%2Fpage%0A-%20Execution%20of%20AppEndpoint%3A%3Aoutput%20failed%0A-%20Execution%20of%20OutputAssetsWithReferenced%3A%3Aall_assets%20failed%0A-%20Execution%20of%20chunk_group_assets%20failed%0A-%20Execution%20of%20%2AChunkGroupResult%3A%3Aoutput_assets_with_referenced%20failed%0A-%20Execution%20of%20%3CNodeJsChunkingContext%20as%20ChunkingContext%3E%3A%3Achunk_group%20failed%0A-%20Execution%20of%20make_chunks%20failed%0A-%20Execution%20of%20batch_chunk_items_with_info_with_type%20failed%0A-%20Execution%20of%20chunk_items_with_info_with_type%20failed%0A-%20Execution%20of%20batch_size%20failed%0A-%20Execution%20of%20%3CEcmascriptChunkType%20as%20ChunkType%3E%3A%3Achunk_item_size%20failed%0A-%20Execution%20of%20%3CMergedEcmascriptModule%20as%20EcmascriptChunkPlaceable%3E%3A%3Achunk_item_content%20failed%0A-%20Execution%20of%20%2AEcmascriptChunkItemContent%3A%3Anew%20failed%0A-%20Execution%20of%20EcmascriptModuleContent%3A%3Anew_merged%20failed%0A-%20Execution%20of%20%3CSourceMapReference%20as%20GenerateSourceMap%3E%3A%3Agenerate_source_map%20failed%0A-%20Execution%20of%20%3CDiskFileSystem%20as%20FileSystem%3E%3A%3Aread%20failed%0A-%20reading%20file%20%22%5C%5C%5C%5C%3F%5C%5CD%3A%5C%5CProjects%5C%5CJanus%5C%5Cfrontend%5C%5Cnode_modules%5C%5C%40reown%5C%5Cappkit%5C%5Cnode_modules%5C%5C%40noble%5C%5Chashes%5C%5Csrc%5C%5Csha3.ts%22%0A-%20Insufficient%20system%20resources%20exist%20to%20complete%20the%20requested%20service.%20%28os%20error%201450%29%0A%60%60%60&labels=Turbopack,Turbopack%20Panic%20Backtrace
+-----
+
+
+> Build error occurred
+Error [TurbopackInternalError]: Failed to write app endpoint /page
+
+Caused by:
+- reading file "\\\\?\\<workspace>\\frontend\\node_modules\\@reown\\appkit\\node_modules\\@noble\\hashes\\src\\sha3.ts"
+- Insufficient system resources exist to complete the requested service. (os error 1450)
+
+Debug info:
+- Execution of get_all_written_entrypoints_with_issues_operation failed
+- Execution of EntrypointsOperation::new failed
+- Execution of all_entrypoints_write_to_disk_operation failed
+- Execution of output_assets_operation failed
+- Execution of <AppEndpoint as Endpoint>::output failed
+- Failed to write app endpoint /page
+- Execution of AppEndpoint::output failed
+- Execution of OutputAssetsWithReferenced::all_assets failed
+- Execution of chunk_group_assets failed
+- Execution of *ChunkGroupResult::output_assets_with_referenced failed
+- Execution of <NodeJsChunkingContext as ChunkingContext>::chunk_group failed
+- Execution of make_chunks failed
+- Execution of batch_chunk_items_with_info_with_type failed
+- Execution of chunk_items_with_info_with_type failed
+- Execution of batch_size failed
+- Execution of <EcmascriptChunkType as ChunkType>::chunk_item_size failed
+- Execution of <MergedEcmascriptModule as EcmascriptChunkPlaceable>::chunk_item_content failed
+- Execution of *EcmascriptChunkItemContent::new failed
+- Execution of EcmascriptModuleContent::new_merged failed
+- Execution of <SourceMapReference as GenerateSourceMap>::generate_source_map failed
+- Execution of <DiskFileSystem as FileSystem>::read failed
+- reading file "\\\\?\\<workspace>\\frontend\\node_modules\\@reown\\appkit\\node_modules\\@noble\\hashes\\src\\sha3.ts"
+- Insufficient system resources exist to complete the requested service. (os error 1450)
+    at <unknown> (TurbopackInternalError: Failed to write app endpoint /page) {
+  location: undefined
+}

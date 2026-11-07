@@ -1,20 +1,19 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomBytes, randomUUID, createHash, createCipheriv, createDecipheriv } from 'node:crypto';
+import { decodeKey, developmentKey, externalSecret } from '../lib/private-json.mjs';
 
 const identity = value => createHash('sha256').update(value).digest('hex');
 export function createWorkbenchStore(directory, configuredKey = process.env.JANUS_VAULT_KEY) {
   async function masterKey() {
     if (configuredKey) {
-      const key = Buffer.from(configuredKey, 'base64');
-      if (key.length !== 32) throw new Error('JANUS_VAULT_KEY must encode 32 bytes');
-      return key;
+      return decodeKey(configuredKey);
     }
     await fs.mkdir(directory, { recursive: true, mode: 0o700 });
+    if (process.env.JANUS_VAULT_KEY_FILE) return decodeKey(await externalSecret(process.env.JANUS_VAULT_KEY_FILE, directory));
+    if (process.env.NODE_ENV === 'production') throw new Error('Production requires JANUS_VAULT_KEY or external JANUS_VAULT_KEY_FILE');
     const target = path.join(directory, 'master.key');
-    try { await fs.writeFile(target, randomBytes(32), { flag: 'wx', mode: 0o600 }); }
-    catch (error) { if (error.code !== 'EEXIST') throw error; }
-    const key = await fs.readFile(target);
+    const key = await developmentKey(target);
     if (key.length !== 32) throw new Error('Vault key is unavailable');
     return key;
   }

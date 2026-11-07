@@ -1,5 +1,9 @@
 # Janus implementation plan
 
+## Security and sponsor-fit experiment
+
+Keep `experiment/security-sponsor-fit` separate from main under the user's current instruction. Evaluate encrypted private persistence, fail-closed production keys, offline maintenance, bounded research deletion and public-data minimization with existing payment/handoff/recovery regressions. See [SECURITY_EXPERIMENT.md](SECURITY_EXPERIMENT.md). Follow with dependency reachability/migration, deployed secret management, OS/signer isolation, backup/retention policy and manual live recovery. Actual x402 interoperability, integrated browser-paid research and final sponsor evidence remain gates. Funded Arkiv publication/read/handoff records were integrated from upstream `c065696`; do not repeat their former missing-writer blocker. Publish only this experimental branch, without merging or pushing main.
+
 ## Current direction: research-task demo
 
 Follow [demo.md](../demo.md). Preserve the local payment-aware handoff, recorded Hedera payment/replay and independent recovery. Paid research handoff and authoritative browser treasury controls are implemented with bounded local acceptance. Next complete integrated release verification and funded live Arkiv discovery evidence. Arkiv query results now drive operator-triggered eligible replacement selection; remote worker transport and browser orchestration remain separate. Dashboard agent creation, a single-host parallel research runtime, saved artifacts and account-private monitoring are now implemented. Paid research tools are verified through trusted CLI bindings; treasury controls are connected to the browser. No new sponsor acceptance is claimed.

@@ -4,6 +4,7 @@ import { addr, defineSchema, str, u64 } from '@arkiv-network/sdk/schema';
 import { and, asc, eq, gt } from '@arkiv-network/sdk/query';
 import { http } from 'viem';
 import spec from '../../shared/arkiv-worker.json' with { type: 'json' };
+import { publicWorkerProfile } from '../../shared/public-worker-profile.mjs';
 
 export { spec };
 export const WorkerProfiles = defineSchema(spec.schema, {
@@ -41,11 +42,10 @@ export function createArkivDirectory({ accessKey = process.env.ARKIV_ACCESS_KEY 
    throw new Error('Arkiv directory exceeds 1000 records; narrow the query');
   },
   async publish({ account, name, network }) {
-   if (!name?.trim() || name.length > 50 || !/^eip155:[1-9][0-9]*$/.test(network)) throw new Error('Invalid public worker profile');
+   const profile = publicWorkerProfile({ worker: account.address, name, network });
    if (await client.getChainId() !== spec.chainId) throw new Error('Arkiv chain mismatch');
    const wallet = createWalletClient({ chain, transport: rpc, account });
-   return wallet.createEntity(WorkerProfiles, { worker: addr(account.address), role: spec.role, status: 'ready',
-    capabilities: spec.capability, network, scheme: spec.scheme, validUntil: u64(BigInt(Math.floor(Date.now() / 1000) + spec.leaseSeconds)), name: name.trim() },
+   return wallet.createEntity(WorkerProfiles, { ...profile, worker: addr(profile.worker), validUntil: u64(BigInt(profile.validUntil)) },
     { expiration: ExpirationTime.fromHours(1) });
   },
  };

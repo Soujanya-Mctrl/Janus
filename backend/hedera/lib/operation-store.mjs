@@ -2,12 +2,14 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { canonicalJson, decodeAuthorization } from '../../../shared/protocol.mjs';
+import { createPrivateJsonStore } from '../../lib/private-json.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 
 // One durable directory per merchant. Chain adapters must reconcile before any
 // submission. An unknown outcome is never interpreted as an unpaid operation.
 export function createOperationStore({ directory, authenticate, reconcile, submit, produce }) {
+  const privateStore = createPrivateJsonStore(directory, { domain: 'merchant-operations-v1' });
   if (![authenticate, reconcile, submit, produce].every(fn => typeof fn === 'function')) throw new Error('Missing merchant adapter');
   return {
     async purchase({ authorization, request, principal }) {
@@ -25,16 +27,11 @@ export function createOperationStore({ directory, authenticate, reconcile, submi
         throw error;
       });
       const save = async value => {
-        const temporary = target + '.tmp';
-        const file = await fs.open(temporary, 'w', 0o600);
-        try { await file.writeFile(JSON.stringify(value) + '\n'); await file.sync(); } finally { await file.close(); }
-        await fs.rename(temporary, target);
-        const parent = await fs.open(directory, 'r');
-        try { await parent.sync(); } finally { await parent.close(); }
+        await privateStore.write(target, value);
       };
       try {
         let record;
-        try { record = JSON.parse(await fs.readFile(target, 'utf8')); }
+        try { record = await privateStore.read(target); }
         catch (error) { if (error.code !== 'ENOENT') throw error; }
         if (record && record.fingerprint !== fingerprint) throw new Error('Operation fingerprint conflict');
         const observed = await reconcile({ identity, request, knownReceipt: record?.receipt });

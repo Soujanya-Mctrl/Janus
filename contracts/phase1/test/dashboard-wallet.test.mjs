@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import http from 'node:http';
+import path from 'node:path';
+import os from 'node:os';
 import { once } from 'node:events';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-import ganache from 'ganache';
+import { createFixtureRpc } from './fixtures/local-rpc.mjs';
 import { privateKeyToAccount } from 'viem/accounts';
 import { build } from 'esbuild';
 import { createPublicClient, createWalletClient, custom, defineChain, keccak256, stringToHex } from 'viem';
@@ -12,8 +14,9 @@ import { createPublicClient, createWalletClient, custom, defineChain, keccak256,
 // Browser tooling may be supplied by the developer/CI without a runtime dependency.
 const { chromium } = await import(process.env.JANUS_PLAYWRIGHT_MODULE || 'playwright');
 test('dashboard confirms authoritative balances and wallet actions before independent offline-app recovery', async t => {
- const rpc = ganache.server({ logging: { quiet: true }, wallet: { deterministic: true }, chain: { chainId: 1337, hardfork: 'shanghai' } });
- await rpc.listen(0,'127.0.0.1'); t.after(() => rpc.close());
+ let browser;
+ const rpc = createFixtureRpc();
+ await rpc.listen(0,'127.0.0.1'); t.after(async () => { await browser?.close(); await rpc.close(); });
  const provider = rpc.provider, addresses = await provider.request({ method: 'eth_accounts', params: [] });
  const chain = defineChain({ id: 1337, name: 'Local recovery test', nativeCurrency: { name: 'Local Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [`http://127.0.0.1:${rpc.address().port}`] } } });
  const client = createPublicClient({ chain, transport: custom(provider), cacheTime: 0, pollingInterval: 10 });
@@ -33,19 +36,23 @@ test('dashboard confirms authoritative balances and wallet actions before indepe
  const descriptor=JSON.parse(await fs.readFile(new URL('../../../shared/treasury-interface.json',import.meta.url),'utf8'));
  const manifest={interfaceVersion:descriptor.interfaceVersion,abiHash:descriptor.abiHash,mode:'local',chainId:1337,treasury,token,owner:addresses[0],runtimeCodeHash:keccak256(await client.getBytecode({address:treasury}))};
  const network={...chain,chainId:1337,token:{address:token}};
- const directory = await fs.mkdtemp('/private/tmp/janus-treasury-ui-'); t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+ const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'janus-treasury-ui-')); t.after(()=>fs.rm(directory,{recursive:true,force:true}));
  const root = fileURLToPath(new URL('../../../',import.meta.url));
  const auth = `export const useRelayAuth=()=>({walletAddress:'${addresses[0]}',getWalletProvider:async()=>window.ethereum});`;
  const bundled = await build({stdin:{contents:`import React from 'react';import {createRoot} from 'react-dom/client';import Panel from './src/components/treasury-panel';createRoot(document.getElementById('root')).render(<Panel/>);`,resolveDir:root+'frontend',loader:'tsx'},bundle:true,jsx:'automatic',write:false,alias:{'@':root+'frontend/src'},plugins:[{name:'fixture',setup(b){
  b.onResolve({filter:/privy-auth-context/},()=>({path:'auth',namespace:'fixture'}));
  b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:auth,loader:'js'}));
- b.onLoad({filter:/shared\/(network|deployments\/hedera-testnet)\.json$/},args=>({contents:JSON.stringify(args.path.endsWith('network.json')?network:manifest),loader:'json'}));
+ b.onLoad({filter:/shared[\\/](network|deployments[\\/]hedera-testnet)\.json$/},args=>({contents:JSON.stringify(args.path.endsWith('network.json')?network:manifest),loader:'json'}));
  }}]});
  let available=true;
  const server=http.createServer((req,res)=>{res.setHeader('content-type',req.url==='/bundle.js'?'text/javascript':'text/html');res.end(req.url==='/bundle.js'?bundled.outputFiles[0].contents:'<html><body><div id="root"></div><script src="/bundle.js"></script></body></html>');});
  server.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>{if(available){server.closeAllConnections();server.close();}});
- const browser=await chromium.launch({headless:true,...(process.env.JANUS_CHROMIUM_PATH?{executablePath:process.env.JANUS_CHROMIUM_PATH}:{})});t.after(()=>browser.close());
+ browser=await chromium.launch({headless:true,...(process.env.JANUS_CHROMIUM_PATH?{executablePath:process.env.JANUS_CHROMIUM_PATH}:{})});
  const page=await browser.newPage();let rejectTransaction=false,sends=0;
+ const confirmed = async () => {
+  try { await page.getByRole('status').filter({hasText:'State refreshed.'}).waitFor(); }
+  catch (error) { throw new Error('Treasury confirmation failed: ' + await page.getByRole('status').textContent(), { cause: error }); }
+ };
  await page.exposeFunction('fixtureWalletRequest',async({method,params})=>{
  if(method==='eth_accounts'||method==='eth_requestAccounts')return[addresses[0]];
  if(method==='wallet_sendTransaction')method='eth_sendTransaction';
@@ -59,14 +66,14 @@ test('dashboard confirms authoritative balances and wallet actions before indepe
  await page.getByLabel('Selected task ID',{exact:true}).fill(task);
  await page.getByLabel('Replacement worker wallet').fill(addresses[3]);
  await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Assign replacement',exact:true}).click();
- await page.getByRole('status').filter({hasText:'State refreshed.'}).waitFor();
+ await confirmed();
  assert.equal((await client.readContract({address:treasury,abi,functionName:'tasks',args:[task]}))[8],2n);
  rejectTransaction=true;await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Cancel task',exact:true}).click();await page.getByRole('status').filter({hasText:'Reconcile any submitted hash'}).waitFor();
  assert.equal((await client.readContract({address:treasury,abi,functionName:'tasks',args:[task]}))[9],false);
- rejectTransaction=false;await refresh();await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Cancel task',exact:true}).click();await page.getByRole('status').filter({hasText:'State refreshed.'}).waitFor();
- await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Release available',exact:true}).click();await page.getByRole('status').filter({hasText:'State refreshed.'}).waitFor();
+ rejectTransaction=false;await refresh();await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Cancel task',exact:true}).click();await confirmed();
+ await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Release available',exact:true}).click();await confirmed();
  assert.equal((await client.readContract({address:treasury,abi,functionName:'tasks',args:[task]}))[1],0n);
- await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Withdraw entire reserve',exact:true}).click();await page.getByRole('status').filter({hasText:'State refreshed.'}).waitFor();
+ await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Withdraw entire reserve',exact:true}).click();await confirmed();
  assert.equal(await client.readContract({address:treasury,abi,functionName:'totalWithdrawn'}),990n);
  await page.screenshot({path:directory+'/dashboard.png',fullPage:true});
  // Shut down the entire dashboard host. Recovery imports no application service.

@@ -1,0 +1,33 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import os from 'node:os';
+import { randomBytes } from 'node:crypto';
+import { maintainPrivateState } from './state-maintenance.mjs';
+import { createPrivateJsonStore } from '../lib/private-json.mjs';
+
+test('offline migration plans without changing payloads, applies encryption and blocks active stores', async t => {
+  const parent = await fs.mkdtemp(path.join(os.tmpdir(), 'janus-migration-'));
+  t.after(() => fs.rm(parent, { recursive: true, force: true }));
+  const directory = path.join(parent, 'merchant'); await fs.mkdir(directory);
+  const file = path.join(directory, 'a'.repeat(64) + '.json'), value = { status: 'ready', result: 'private-purchased-source', receipt: { transaction: 'original' } };
+  const original = JSON.stringify(value); await fs.writeFile(file, original);
+  const keyFile = path.join(parent, 'keyring.json');
+  await fs.writeFile(keyFile, JSON.stringify({ active: 'one', keys: { one: randomBytes(32).toString('base64') } }));
+  const options = { directory, keyFile, domain: 'merchant-operations-v1' };
+  await assert.rejects(maintainPrivateState(options), /offline migration/);
+  assert.equal((await maintainPrivateState({ ...options, allowLegacy: true })).mode, 'read-only plan');
+  assert.equal(await fs.readFile(file, 'utf8'), original);
+  await fs.writeFile(file + '.lock', 'active');
+  await assert.rejects(maintainPrivateState({ ...options, allowLegacy: true, apply: true }), /Active or unresolved/);
+  await fs.unlink(file + '.lock');
+  assert.equal((await maintainPrivateState({ ...options, allowLegacy: true, apply: true })).records, 1);
+  assert.ok(!(await fs.readFile(file, 'utf8')).includes(value.result));
+  const store = createPrivateJsonStore(directory, { domain: options.domain, keyFile, production: true });
+  assert.deepEqual(await store.read(file), value);
+  await fs.writeFile(path.join(directory, '.maintenance.lock'), 'operator');
+  await assert.rejects(store.read(file), /maintenance/);
+  await assert.rejects(store.write(file, {}), /maintenance/);
+  await fs.unlink(path.join(directory, '.maintenance.lock'));
+});

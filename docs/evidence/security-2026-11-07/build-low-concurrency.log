@@ -1,0 +1,50 @@
+
+> janus@0.1.0 build
+> npm run build --prefix frontend
+
+
+> @janus/frontend@0.1.0 prebuild
+> node ../scripts/prepare-recovery.mjs
+
+Independent static recovery copy prepared at /recovery/index.html
+
+> @janus/frontend@0.1.0 build
+> next build
+
+▲ Next.js 16.4.5 (Turbopack)
+✓ Running next.config.ts took 77ms
+- Cache Components enabled
+- Partial Prefetching enabled
+- Experiments (use with caution):
+  ⨯ turbopackFileSystemCacheForBuild
+  ⨯ turbopackFileSystemCacheForDev
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 11.6s
+  Running TypeScript ...
+  Finished TypeScript in 15.7s ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/13) ...
+  Generating static pages using 11 workers (3/13) 
+  Generating static pages using 11 workers (6/13) 
+  Generating static pages using 11 workers (9/13) 
+✓ Generating static pages using 11 workers (13/13) in 1043ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/integrations
+├ ƒ /api/research
+├ ƒ /api/session
+├ ƒ /api/workbench
+├ ○ /dashboard
+├ ○ /dashboard/agents
+├ ○ /dashboard/credentials
+├ ○ /dashboard/runs
+└ ○ /login
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

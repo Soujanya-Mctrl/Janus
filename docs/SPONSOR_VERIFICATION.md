@@ -1,6 +1,8 @@
 # Janus sponsor implementation and verification plan
 
-Rules reviewed: 6 November 2026, Asia/Kolkata. This is the current acceptance and evidence plan, superseding sponsor assumptions in the archived dossier. It is not a prize-eligibility certificate. Only organizers and sponsors decide eligibility and awards.
+Rules reviewed: 7 November 2026, Asia/Kolkata. This is the current acceptance and evidence plan, superseding sponsor assumptions in the archived dossier. It is not a prize-eligibility certificate. Only organizers and sponsors decide eligibility and awards.
+
+Experimental update: [security/sponsor-fit work](../shared/SECURITY_EXPERIMENT.md) strengthens private persistence and disclosure while preserving bounded payments, portable discovery and owner exit. It does not establish x402 compliance, a root FOSS license, track registration or independent review. Local browser recovery/treasury controls and paid research have bounded implementation evidence in Phases 5/6. Funded Arkiv publication/read/handoff records were integrated from upstream `c065696`. No requirement is promoted to independently verified by this experiment.
 
 ## Reviewer entry point
 
@@ -33,7 +35,7 @@ The [event rules](https://ethglobal.com/events/mumbai/info/details) distinguish 
 
 ## What makes each integration meaningful
 
-Hedera is the shared financial enforcement boundary: a database display cannot replace epoch checks, conserved reservations and owner exit enforced by the treasury. Arkiv is implemented as an independently queryable replacement-worker directory, with funded publication evidence pending: it must affect which eligible replacement is selected, not just collect activity logs. CROPS is a property, not an installed dependency: the owner must retain a usable exit when Janus services are unavailable.
+Hedera is the shared financial enforcement boundary: a database display cannot replace epoch checks, conserved reservations and owner exit enforced by the treasury. Arkiv is an independently queryable replacement-worker directory with recorded funded publication/read-driven local handoff: it affects eligible replacement selection, rather than collecting unread activity logs. CROPS is a property, not an installed dependency: the owner must retain a usable exit when Janus services are unavailable.
 
 For each integration record the user problem, implementing files, actual runtime call, visible outcome and a removal experiment. A sponsor logo, package import, standalone token transfer, manually supplied worker list, or recovery button that still needs the main API is insufficient.
 
@@ -93,7 +95,7 @@ The register validator checks bookkeeping and existence, not truth, external acc
 
 Hedera task-aware payment/replay evidence is recorded in `backend/hedera/evidence/task-aware-live-proof.json`; the source was dirty and its executed-script hash is recorded, so independently reconcile the patch/provenance before promoting it. The record's scope is JSON-RPC receipt/event and exact balances, not native consensus child-record verification. Current custom HTTP compliance is still an open gate.
 
-CLI recovery and checkpointed handoff have source/tests and documented local observations. Browser recovery and the connected dashboard remain open. Arkiv v2 discovery and runner integration now have local adversarial/handoff proof and an independent live read; funded publication and combined live discovery evidence remain pending. Root FOSS licensing remains unverified. Classic versus Continuity registration, full provenance, AI/human contribution disclosure, final sponsor docs and videos remain unverified. No sponsor is marked submission-ready.
+CLI/static-browser recovery, authoritative treasury controls and checkpointed paid research have bounded local proofs. Arkiv v2 discovery has recorded funded publication, CLI/browser reads and live-discovery/local-finance handoff evidence from one writer. A combined live Hedera/Arkiv/research journey remains open. Root FOSS licensing, Classic versus Continuity registration, event provenance, complete AI/human contribution disclosure, final videos and independent review remain unresolved. No sponsor is marked submission-ready.
 
 ## Phase discipline
 

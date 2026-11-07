@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process';
 import { sessionResponse } from '../../../lib/session-response.mjs';
 import { createWorkbenchStore } from '../../../../../backend/workbench/store.mjs';
 import { defaultConfig } from '../../../../../backend/workbench/config.mjs';
-import { createRun, readRun, listRuns, controlRun } from '../../../../../backend/workbench/research.mjs';
+import { createRun, readRun, listRuns, controlRun, deleteRun } from '../../../../../backend/workbench/research.mjs';
 
 const headers = { 'Cache-Control': 'no-store' };
 function workspace() {
@@ -55,6 +55,10 @@ export async function POST(request: Request) {
       try { await launch(root, state, user, run.id); }
       catch { await controlRun(state, user, run.id, 'cancel'); throw new Error('Supervisor could not start; run cancelled'); }
       return Response.json({ run }, { status: 201, headers });
+    }
+    if (body.action === 'delete') {
+      if (body.confirmDelete !== true) throw new Error('Confirm permanent deletion of local research; payment records and provider copies remain');
+      return Response.json(await deleteRun(state, user, body.id), { headers });
     }
     const run = await controlRun(state, user, body.id, body.action);
     if (body.action === 'resume') await launch(root, state, user, body.id);

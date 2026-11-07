@@ -5,11 +5,13 @@ import { canonicalJson, bytes32 } from '../../shared/protocol.mjs';
 import { buyTaskDataset } from '../hedera/lib/task-client.mjs';
 import { taskTreasuryAbi as abi } from '../hedera/lib/treasury.mjs';
 import { validateTreasury } from '../../contracts/phase1/lib/recovery.mjs';
+import { createPrivateJsonStore } from '../lib/private-json.mjs';
 
 const hash = value => createHash('sha256').update(canonicalJson(value)).digest('hex');
 const same = (a, b) => a?.toLowerCase() === b?.toLowerCase();
 
 export function createCheckpointRunner({ directory, publicClient, manifest, endpoint, taskId, steps, validateResult }) {
+ const privateStore = createPrivateJsonStore(directory, { domain: 'paid-checkpoint-v1' });
  taskId = bytes32(taskId);
  if (!Array.isArray(steps) || !steps.length || new Set(steps.map(step => step.id)).size !== steps.length
    || steps.some(step => typeof step.id !== 'string' || !step.id || !step.request) || typeof validateResult !== 'function') throw new Error('Invalid workflow definition');
@@ -22,7 +24,7 @@ export function createCheckpointRunner({ directory, publicClient, manifest, endp
  };
  const load = async () => {
   try {
-   const envelope = JSON.parse(await fs.readFile(file, 'utf8'));
+   const envelope = await privateStore.read(file);
    if (envelope.hash !== hash(envelope.state) || envelope.state.version !== '1' || envelope.state.graphHash !== graphHash
       || envelope.state.taskId !== taskId || envelope.state.treasury !== manifest.treasury.toLowerCase()
       || envelope.state.chainId !== String(manifest.chainId) || !Array.isArray(envelope.state.completed)) throw new Error('Invalid or incompatible checkpoint');
@@ -37,10 +39,7 @@ export function createCheckpointRunner({ directory, publicClient, manifest, endp
  };
  const save = async state => {
   state.revision = (BigInt(state.revision) + 1n).toString();
-  const temporary = file + '.tmp', handle = await fs.open(temporary, 'w', 0o600);
-  try { await handle.writeFile(JSON.stringify({ hash: hash(state), state }) + '\n'); await handle.sync(); } finally { await handle.close(); }
-  await fs.rename(temporary, file);
-  const parent = await fs.open(directory, 'r'); try { await parent.sync(); } finally { await parent.close(); }
+  await privateStore.write(file, { hash: hash(state), state });
  };
  return {
   async inspect() { return locked(load); },

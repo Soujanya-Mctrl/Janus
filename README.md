@@ -47,9 +47,20 @@ npm run check
 
 ## Current status and next work
 
-The financial core implements task-isolated caps, reservation/settlement/expiry, worker epochs, cancellation and owner recovery. The frontend has identity plumbing and illustrative accounting. Frontend and backend now share Hedera testnet configuration. The dashboard remains illustrative and the Phase-0 merchant is not yet adapted to the multi-task treasury.
+The financial core implements task-isolated caps, reservation/settlement/expiry, worker epochs, cancellation and independent owner recovery. Overview/Tasks read validated chain state and expose receipt-confirmed controls; illustrative accounting is opt-in. The task-aware merchant, checkpointed handoff and CLI paid research have bounded local acceptance, with separate recorded Hedera payment/replay evidence. The ordinary browser research path still does not supply trusted paid-tool bindings.
 
-Treasury integration readiness establishes the shared network/ABI/version, canonical operation encoding, independent accounting model and direct owner recovery client. The narrower supported contract scope is documented in [the treasury interface](shared/TREASURY_INTERFACE.md). The next milestone is the task-aware payment SDK and durable merchant results, followed by checkpointed replacement, a connected dashboard and independent recovery UI. Detailed gates are in [PLAN.md](shared/PLAN.md).
+The experimental branch `experiment/security-sponsor-fit` adds encrypted private persistence, production key requirements, offline migration/rotation, bounded research deletion and explicit provider/public-directory disclosures. Follow [the experiment guide](shared/SECURITY_EXPERIMENT.md) before opening existing plaintext state. Local state has not been automatically migrated. Detailed remaining gates are in [PLAN.md](shared/PLAN.md).
+
+## CROPS
+
+- **C — Censorship resistance:** the independently saved recovery artifact can use another RPC and the owner's wallet without Janus, Privy, merchant or Arkiv services. Chain availability, gas, token operation and owner-key access remain necessary.
+- **O — Open source:** setup/build instructions and source are available, but a root FOSS license and third-party asset rights have not been established. This sponsor gate remains open; dependency licenses do not license the whole repository.
+- **P — Privacy:** research and paid-state payloads are encrypted at rest on this branch. Janus decrypts them during execution; model providers receive dispatched research, Privy handles identity, RPCs see requests, and chain/Arkiv metadata is public. No anonymity or end-to-end confidentiality is claimed.
+- **S — Security:** contracts enforce bounded authority and independent exit; production requires supplied vault/data keys. Host compromise, dependency advisories, worker isolation and independent review remain unresolved risks.
+
+Keys and research data leave the user's device because the trusted supervisor brokers provider calls and persists resumable work. Browser consent discloses this. Local research deletion cannot delete provider copies, public transactions or backups. No client tracker audit has been completed. See [security assumptions and key setup](shared/SECURITY_EXPERIMENT.md).
+
+Before this experiment, independent recovery, treasury controls, research orchestration and Arkiv discovery already existed. New work here strengthens storage privacy and disclosure; it does not establish what existed before the hackathon. Classic/Continuity registration and event provenance still need team confirmation. [AI-assisted contribution record](docs/AI_CONTRIBUTIONS.md).
 
 ## Live backend and configuration
 

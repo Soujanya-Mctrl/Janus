@@ -1,5 +1,7 @@
 # Shared Janus context
 
+Security experiment: [SECURITY_EXPERIMENT.md](SECURITY_EXPERIMENT.md) defines encrypted-state configuration, offline migration/rotation, deletion boundaries, threat assumptions and sponsor positioning on `experiment/security-sponsor-fit`.
+
 Dashboard runtime: [DASHBOARD_RUNTIME.md](DASHBOARD_RUNTIME.md) covers agent creation, parallel research, provider brokerage and persisted monitoring in the original dashboard shell.
 
 Research workspace: [WORKBENCH.md](WORKBENCH.md) covers research-role configuration, encrypted provider keys and Hedera/Arkiv preparation. The current product story and runnable handoff are defined in [demo.md](../demo.md).

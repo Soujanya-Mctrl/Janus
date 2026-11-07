@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { build } from '../../contracts/node_modules/esbuild/lib/main.js';
 import { chromium } from '../../contracts/node_modules/playwright/index.mjs';
 import { defaultConfig, validateWorkbenchConfig } from '../../backend/workbench/config.mjs';
-import { createRun, executeResearch, readRun, listRuns, controlRun } from '../../backend/workbench/research.mjs';
+import { createRun, executeResearch, readRun, listRuns, controlRun, deleteRun } from '../../backend/workbench/research.mjs';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const directory = await fs.mkdtemp(path.join(root, 'contracts/phase1/artifacts/dashboard-browser-'));
 let config = structuredClone(defaultConfig);
@@ -31,6 +31,7 @@ const server = http.createServer(async (req, res) => {
       if (req.method === 'POST') {
         let raw=''; for await(const chunk of req) raw+=chunk; const body=JSON.parse(raw);
         if (body.action === 'create') { const run=await createRun(directory,user,{...body,config}); const promise=executeResearch({root:directory,user,id:run.id}); pending.add(promise); promise.finally(()=>pending.delete(promise)); data={run}; }
+        else if(body.action==='delete'&&body.confirmDelete===true) data=await deleteRun(directory,user,body.id);
         else data={run:await controlRun(directory,user,body.id,body.action)};
       } else data=url.searchParams.has('id')?{run:await readRun(directory,user,url.searchParams.get('id'))}:{runs:await listRuns(directory,user)};
       res.setHeader('Content-Type','application/json'); res.end(JSON.stringify(data)); return;
@@ -64,7 +65,11 @@ try {
   await page.screenshot({path:path.join(directory,'desktop.png'),fullPage:true});
   await page.setViewportSize({width:390,height:844});
   await page.screenshot({path:path.join(directory,'mobile.png'),fullPage:true});
+  page.once('dialog', dialog=>dialog.accept());
+  await page.getByRole('button',{name:'Delete local research',exact:true}).click();
+  await page.getByRole('status').filter({hasText:'Local research deleted.'}).waitFor();
+  assert.deepEqual(await listRuns(directory,user),[]);
   assert.deepEqual(errors,[]);
-  console.log('Dashboard browser acceptance passed: original shell, agent creation, parallel run, checkpoint replacement, event filtering, final report and responsive rendering.');
+  console.log('Dashboard browser acceptance passed: original shell, agent creation, encrypted parallel run, checkpoint replacement, event filtering, final report, responsive rendering and confirmed local research deletion.');
   console.log('Screenshots: '+directory);
 } finally { await browser.close(); await Promise.allSettled([...pending]); await new Promise(resolve=>server.close(resolve)); }

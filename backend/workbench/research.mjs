@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { createWorkbenchStore } from './store.mjs';
 import { validateWorkbenchConfig } from './config.mjs';
 import { callProvider } from './providers.mjs';
+import { createPrivateJsonStore } from '../lib/private-json.mjs';
 
 const digest = value => createHash('sha256').update(value).digest('hex');
 const terminal = new Set(['completed', 'failed', 'cancelled']);
@@ -15,13 +16,11 @@ export function runDirectory(root, user, id) {
   return path.join(accountDirectory(root, user), id);
 }
 export async function atomic(file, value) {
-  await fs.mkdir(path.dirname(file), { recursive: true, mode: 0o700 });
-  const temp = file + '.' + randomUUID() + '.tmp';
-  const handle = await fs.open(temp, 'wx', 0o600);
-  try { await handle.writeFile(JSON.stringify(value)); await handle.sync(); } finally { await handle.close(); }
-  await fs.rename(temp, file);
+  const root = path.dirname(path.dirname(path.dirname(file)));
+  return createPrivateJsonStore(root, { domain: 'research-v1' }).write(file, value);
 }
-export const readRun = async (root, user, id) => JSON.parse(await fs.readFile(path.join(runDirectory(root, user, id), 'run.json'), 'utf8'));
+const privateRead = file => createPrivateJsonStore(path.dirname(path.dirname(path.dirname(file))), { domain: 'research-v1' }).read(file);
+export const readRun = async (root, user, id) => privateRead(path.join(runDirectory(root, user, id), 'run.json'));
 export async function listRuns(root, user) {
   let names;
   try { names = await fs.readdir(accountDirectory(root, user)); } catch (e) { if (e.code === 'ENOENT') return []; throw e; }
@@ -68,6 +67,29 @@ export async function controlRun(root, user, id, action) {
   return run;
 }
 
+// Deleting research never deletes the separate financial checkpoint/journal.
+export async function deleteRun(root, user, id) {
+  const directory = runDirectory(root, user, id), account = accountDirectory(root, user);
+  const accountLock = await fs.open(path.join(account, 'create.lock'), 'wx', 0o600).catch(() => { throw new Error('Account busy; retry deletion'); });
+  let supervisorLock;
+  try {
+    supervisorLock = await fs.open(path.join(directory, 'supervisor.lock'), 'wx', 0o600).catch(() => { throw new Error('Run active or unresolved; reconcile before deletion'); });
+    const run = await readRun(root, user, id);
+    if (!['completed', 'cancelled'].includes(run.status)) throw new Error('Only completed or cancelled runs can be deleted; reconcile other outcomes first');
+    const quarantine = path.join(account, '.deleting-' + id);
+    // Keep the exclusive lock FILE in place, but close its Windows handle before
+    // renaming the directory. New supervisors still fail open(..., 'wx').
+    await supervisorLock.close();
+    await fs.rename(directory, quarantine);
+    supervisorLock = null;
+    await fs.rm(quarantine, { recursive: true });
+    return { deleted: id };
+  } finally {
+    if (supervisorLock) { await supervisorLock.close(); await fs.unlink(path.join(directory, 'supervisor.lock')); }
+    await accountLock.close(); await fs.unlink(path.join(account, 'create.lock'));
+  }
+}
+
 export async function executeResearch({ root, user, id, providerCall = callProvider, paidTools, interruptAfterPaid = false }) {
   const directory = runDirectory(root, user, id), lockPath = path.join(directory, 'supervisor.lock');
   const lock = await fs.open(lockPath, 'wx', 0o600).catch(() => { throw new Error('Supervisor already active or stale lock; reconcile before retry'); });
@@ -83,7 +105,7 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
       await save();
     };
     const control = async () => {
-      try { return JSON.parse(await fs.readFile(path.join(directory, 'control.json'), 'utf8')).action; } catch (e) { if (e.code === 'ENOENT') return 'resume'; throw e; }
+      try { return (await privateRead(path.join(directory, 'control.json'))).action; } catch (e) { if (e.code === 'ENOENT') return 'resume'; throw e; }
     };
     const stopped = async () => ['pause', 'cancel'].includes(await control());
     run.status = 'running'; await event('run-started', 'orchestrator', paidTools ? 'Janus supervisor started with authorized paid research tools.' : 'Janus supervisor started. Research only; no wallet or payment calls.');
@@ -91,10 +113,13 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
     const infer = async (agent, step, prompt) => {
       if (run.artifacts[step]) { await event('artifact-reused', agent.id, 'Reused the saved response without another provider request.', { step }); return run.artifacts[step]; }
       if (await stopped()) throw new Error('DISPATCH_STOPPED');
+      const allowedSteps = new Set(['plan', 'report', ...run.config.agents.filter(item => item.id !== 'orchestrator').map(item => 'research:' + item.id)]);
+      if (!allowedSteps.has(step) || run.events.filter(item => item.type === 'provider-requested').length >= allowedSteps.size) throw new Error('Research provider-call limit reached; owner review required');
       const intent = path.join(directory, digest(step) + '.intent.json');
       try {
         const handle = await fs.open(intent, 'wx', 0o600);
-        try { await handle.writeFile(JSON.stringify({ step, agentId: agent.id, mode: run.mode, at: new Date().toISOString() })); await handle.sync(); } finally { await handle.close(); }
+        await handle.close();
+        await atomic(intent, { step, agentId: agent.id, mode: run.mode, at: new Date().toISOString() });
       }
       catch (e) { if (e.code === 'EEXIST') { run.status = 'reconciling'; throw new Error('Prior inference outcome uncertain. Reconcile provider history before any retry.'); } throw e; }
       await event('provider-requested', agent.id, run.mode === 'fixture' ? 'Local research fixture requested; no provider billing.' : `Request submitted to the configured model.`, { step });
@@ -191,7 +216,7 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
     return run;
   } catch (error) {
     if (run) {
-      let action; try { action = JSON.parse(await fs.readFile(path.join(directory, 'control.json'), 'utf8')).action; } catch { /* no control */ }
+      let action; try { action = (await privateRead(path.join(directory, 'control.json'))).action; } catch { /* no control */ }
       run.status = error.message === 'DISPATCH_STOPPED' ? action === 'cancel' ? 'cancelled' : 'paused' : run.status === 'reconciling' ? 'reconciling' : 'failed';
       run.error = error.message;
       await queue.catch(() => {});

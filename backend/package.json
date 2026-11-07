@@ -7,7 +7,9 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test hedera/test/*.test.mjs workbench/*.test.mjs arkiv/*.test.mjs",
+    "test": "node --test --test-concurrency=1 hedera/test/*.test.mjs workbench/*.test.mjs arkiv/*.test.mjs security/*.test.mjs",
+    "test:security": "node --test security/*.test.mjs",
+    "security:state": "node security/state-maintenance.mjs",
     "test:workbench": "node --test workbench/*.test.mjs",
     "hedera:init": "node hedera/scripts/init.mjs",
     "hedera:preflight": "node hedera/scripts/preflight.mjs",

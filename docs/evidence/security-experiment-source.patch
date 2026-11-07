@@ -1,0 +1,1592 @@
+diff --git a/.gitignore b/.gitignore
+index c17eb95..080985b 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -65,6 +65,7 @@ next-env.d.ts
+ **/.paper-state/
+ **/.workbench-state/
+ /.tools/
++/.security-artifacts/
+ 
+ # Reproducible standalone recovery assets, generated before frontend dev/build
+ /frontend/public/recovery/
+diff --git a/README.md b/README.md
+index fe219fd..ef19975 100644
+--- a/README.md
++++ b/README.md
+@@ -47,9 +47,20 @@ npm run check
+ 
+ ## Current status and next work
+ 
+-The financial core implements task-isolated caps, reservation/settlement/expiry, worker epochs, cancellation and owner recovery. The frontend has identity plumbing and illustrative accounting. Frontend and backend now share Hedera testnet configuration. The dashboard remains illustrative and the Phase-0 merchant is not yet adapted to the multi-task treasury.
++The financial core implements task-isolated caps, reservation/settlement/expiry, worker epochs, cancellation and independent owner recovery. Overview/Tasks read validated chain state and expose receipt-confirmed controls; illustrative accounting is opt-in. The task-aware merchant, checkpointed handoff and CLI paid research have bounded local acceptance, with separate recorded Hedera payment/replay evidence. The ordinary browser research path still does not supply trusted paid-tool bindings.
+ 
+-Treasury integration readiness establishes the shared network/ABI/version, canonical operation encoding, independent accounting model and direct owner recovery client. The narrower supported contract scope is documented in [the treasury interface](shared/TREASURY_INTERFACE.md). The next milestone is the task-aware payment SDK and durable merchant results, followed by checkpointed replacement, a connected dashboard and independent recovery UI. Detailed gates are in [PLAN.md](shared/PLAN.md).
++The experimental branch `experiment/security-sponsor-fit` adds encrypted private persistence, production key requirements, offline migration/rotation, bounded research deletion and explicit provider/public-directory disclosures. Follow [the experiment guide](shared/SECURITY_EXPERIMENT.md) before opening existing plaintext state. Local state has not been automatically migrated. Detailed remaining gates are in [PLAN.md](shared/PLAN.md).
++
++## CROPS
++
++- **C — Censorship resistance:** the independently saved recovery artifact can use another RPC and the owner's wallet without Janus, Privy, merchant or Arkiv services. Chain availability, gas, token operation and owner-key access remain necessary.
++- **O — Open source:** setup/build instructions and source are available, but a root FOSS license and third-party asset rights have not been established. This sponsor gate remains open; dependency licenses do not license the whole repository.
++- **P — Privacy:** research and paid-state payloads are encrypted at rest on this branch. Janus decrypts them during execution; model providers receive dispatched research, Privy handles identity, RPCs see requests, and chain/Arkiv metadata is public. No anonymity or end-to-end confidentiality is claimed.
++- **S — Security:** contracts enforce bounded authority and independent exit; production requires supplied vault/data keys. Host compromise, dependency advisories, worker isolation and independent review remain unresolved risks.
++
++Keys and research data leave the user's device because the trusted supervisor brokers provider calls and persists resumable work. Browser consent discloses this. Local research deletion cannot delete provider copies, public transactions or backups. No client tracker audit has been completed. See [security assumptions and key setup](shared/SECURITY_EXPERIMENT.md).
++
++Before this experiment, independent recovery, treasury controls, research orchestration and Arkiv discovery already existed. New work here strengthens storage privacy and disclosure; it does not establish what existed before the hackathon. Classic/Continuity registration and event provenance still need team confirmation. [AI-assisted contribution record](docs/AI_CONTRIBUTIONS.md).
+ 
+ ## Live backend and configuration
+ 
+diff --git a/backend/arkiv/directory.mjs b/backend/arkiv/directory.mjs
+index 697d731..cabf561 100644
+--- a/backend/arkiv/directory.mjs
++++ b/backend/arkiv/directory.mjs
+@@ -4,6 +4,7 @@ import { addr, defineSchema, str, u64 } from '@arkiv-network/sdk/schema';
+ import { and, asc, eq, gt } from '@arkiv-network/sdk/query';
+ import { http } from 'viem';
+ import spec from '../../shared/arkiv-worker.json' with { type: 'json' };
++import { publicWorkerProfile } from '../../shared/public-worker-profile.mjs';
+ 
+ export { spec };
+ export const WorkerProfiles = defineSchema(spec.schema, {
+@@ -41,11 +42,10 @@ export function createArkivDirectory({ accessKey = process.env.ARKIV_ACCESS_KEY
+    throw new Error('Arkiv directory exceeds 1000 records; narrow the query');
+   },
+   async publish({ account, name, network }) {
+-   if (!name?.trim() || name.length > 50 || !/^eip155:[1-9][0-9]*$/.test(network)) throw new Error('Invalid public worker profile');
++   const profile = publicWorkerProfile({ worker: account.address, name, network });
+    if (await client.getChainId() !== spec.chainId) throw new Error('Arkiv chain mismatch');
+    const wallet = createWalletClient({ chain, transport: rpc, account });
+-   return wallet.createEntity(WorkerProfiles, { worker: addr(account.address), role: spec.role, status: 'ready',
+-    capabilities: spec.capability, network, scheme: spec.scheme, validUntil: u64(BigInt(Math.floor(Date.now() / 1000) + spec.leaseSeconds)), name: name.trim() },
++   return wallet.createEntity(WorkerProfiles, { ...profile, worker: addr(profile.worker), validUntil: u64(BigInt(profile.validUntil)) },
+     { expiration: ExpirationTime.fromHours(1) });
+   },
+  };
+diff --git a/backend/hedera/lib/operation-store.mjs b/backend/hedera/lib/operation-store.mjs
+index 505424d..628c691 100644
+--- a/backend/hedera/lib/operation-store.mjs
++++ b/backend/hedera/lib/operation-store.mjs
+@@ -2,12 +2,14 @@ import fs from 'node:fs/promises';
+ import path from 'node:path';
+ import { createHash } from 'node:crypto';
+ import { canonicalJson, decodeAuthorization } from '../../../shared/protocol.mjs';
++import { createPrivateJsonStore } from '../../lib/private-json.mjs';
+ 
+ const hash = value => createHash('sha256').update(value).digest('hex');
+ 
+ // One durable directory per merchant. Chain adapters must reconcile before any
+ // submission. An unknown outcome is never interpreted as an unpaid operation.
+ export function createOperationStore({ directory, authenticate, reconcile, submit, produce }) {
++  const privateStore = createPrivateJsonStore(directory, { domain: 'merchant-operations-v1' });
+   if (![authenticate, reconcile, submit, produce].every(fn => typeof fn === 'function')) throw new Error('Missing merchant adapter');
+   return {
+     async purchase({ authorization, request, principal }) {
+@@ -25,16 +27,11 @@ export function createOperationStore({ directory, authenticate, reconcile, submi
+         throw error;
+       });
+       const save = async value => {
+-        const temporary = target + '.tmp';
+-        const file = await fs.open(temporary, 'w', 0o600);
+-        try { await file.writeFile(JSON.stringify(value) + '\n'); await file.sync(); } finally { await file.close(); }
+-        await fs.rename(temporary, target);
+-        const parent = await fs.open(directory, 'r');
+-        try { await parent.sync(); } finally { await parent.close(); }
++        await privateStore.write(target, value);
+       };
+       try {
+         let record;
+-        try { record = JSON.parse(await fs.readFile(target, 'utf8')); }
++        try { record = await privateStore.read(target); }
+         catch (error) { if (error.code !== 'ENOENT') throw error; }
+         if (record && record.fingerprint !== fingerprint) throw new Error('Operation fingerprint conflict');
+         const observed = await reconcile({ identity, request, knownReceipt: record?.receipt });
+diff --git a/backend/lib/private-json.mjs b/backend/lib/private-json.mjs
+new file mode 100644
+index 0000000..f8b7021
+--- /dev/null
++++ b/backend/lib/private-json.mjs
+@@ -0,0 +1,120 @@
++import fs from 'node:fs/promises';
++import path from 'node:path';
++import { createCipheriv, createDecipheriv, randomBytes, randomUUID } from 'node:crypto';
++
++export function decodeKey(value) {
++  if (typeof value !== 'string' || !/^[A-Za-z0-9+/]{43}=$/.test(value) || Buffer.from(value, 'base64').length !== 32 || Buffer.from(value, 'base64').toString('base64') !== value) throw new Error('Encryption key must be canonical base64 encoding of 32 bytes');
++  return Buffer.from(value, 'base64');
++}
++
++export async function syncDirectory(directory) {
++  // Windows does not support fsync on a directory handle. File fsync still
++  // precedes rename; do not claim Unix directory-entry durability on Windows.
++  if (process.platform === 'win32') return;
++  const handle = await fs.open(directory, 'r');
++  try { await handle.sync(); } finally { await handle.close(); }
++}
++
++// Publish a complete development key atomically; concurrent first writers never
++// observe an empty/partially written key. Production never generates local keys.
++export async function developmentKey(file) {
++  await fs.mkdir(path.dirname(file), { recursive: true, mode: 0o700 });
++  try { return await fs.readFile(file); } catch (error) { if (error.code !== 'ENOENT') throw error; }
++  const temp = file + '.' + randomUUID() + '.tmp';
++  const handle = await fs.open(temp, 'wx', 0o600);
++  try {
++    await handle.writeFile(randomBytes(32)); await handle.sync(); await handle.close();
++    try { await fs.link(temp, file); } catch (error) { if (error.code !== 'EEXIST') throw error; }
++  } finally { await handle.close().catch(() => {}); await fs.unlink(temp); }
++  return fs.readFile(file);
++}
++
++export async function externalSecret(file, directory) {
++  if (!path.isAbsolute(file)) throw new Error('Secret file must use an absolute path');
++  const [secret, state] = await Promise.all([fs.realpath(file), fs.realpath(directory)]);
++  const relative = path.relative(state, secret);
++  if (!relative || (!relative.startsWith('..' + path.sep) && relative !== '..' && !path.isAbsolute(relative))) throw new Error('Secret file must be outside the protected state directory');
++  return (await fs.readFile(secret, 'utf8')).trim();
++}
++
++// Host-side encryption, not end-to-end privacy. Bind ciphertext to its domain
++// and account/task-relative filename so copying it to another record fails.
++export function createPrivateJsonStore(directory, {
++  domain, keyring, keyFile = process.env.JANUS_DATA_KEYRING_FILE,
++  production = process.env.NODE_ENV === 'production',
++  allowLegacy = process.env.JANUS_ALLOW_LEGACY_PLAINTEXT === '1',
++  maintenance = false,
++} = {}) {
++  if (!domain) throw new Error('Private storage domain required');
++  const root = path.resolve(directory);
++  const relative = file => {
++    const value = path.relative(root, path.resolve(file));
++    if (!value || value === '..' || value.startsWith('..' + path.sep) || path.isAbsolute(value)) throw new Error('Private record must be inside its storage root');
++    return value.split(path.sep).join('/');
++  };
++  const keys = async () => {
++    let config = keyring;
++    if (!config && keyFile) {
++      // A missing key file is NOT a missing operation. Callers use ENOENT only
++      // for absent state; never let key loss reset their payment/checkpoint state.
++      let serialized;
++      try { serialized = await externalSecret(keyFile, root); }
++      catch (error) { throw new Error(error.code === 'ENOENT' ? 'Data keyring unavailable; key unavailable; restore it before retrying' : 'Data keyring unavailable; use an absolute secret path outside the protected state directory'); }
++      try { config = JSON.parse(serialized); } catch { throw new Error('Data keyring contains invalid JSON; restore it before retrying'); }
++    }
++    if (!config) {
++      if (production) throw new Error('Production requires an external JANUS_DATA_KEYRING_FILE');
++      const key = await developmentKey(path.join(root, '.private-key'));
++      if (key.length !== 32) throw new Error('Development encryption key unavailable');
++      config = { active: 'development', keys: { development: key.toString('base64') } };
++    }
++    if (!config || typeof config.active !== 'string' || !/^[a-zA-Z0-9_-]{1,64}$/.test(config.active) || !Object.hasOwn(config.keys ?? {}, config.active)) throw new Error('Invalid data keyring');
++    const entries = Object.entries(config.keys);
++    if (!entries.length || entries.length > 16) throw new Error('Invalid data keyring size');
++    return { active: config.active, keys: new Map(entries.map(([id, value]) => [id, decodeKey(value)])) };
++  };
++  const aad = file => Buffer.from(JSON.stringify(['janus-private-json', 1, domain, relative(file)]));
++  const available = async () => {
++    if (maintenance) return;
++    try { await fs.access(path.join(root, '.maintenance.lock')); }
++    catch (error) { if (error.code === 'ENOENT') return; throw error; }
++    throw new Error('Private storage maintenance in progress; stop and reconcile before retrying');
++  };
++  return {
++    async read(file) {
++      await available();
++      const context = aad(file), ring = await keys();
++      const raw = await fs.readFile(file, 'utf8');
++      let envelope;
++      try { envelope = JSON.parse(raw); } catch { throw new Error('Private record contains invalid JSON; reconcile before retrying'); }
++      if (!envelope || typeof envelope !== 'object' || Array.isArray(envelope)) throw new Error('Invalid private record envelope');
++      if (envelope.format !== 'janus-private-json') {
++        if (!production && allowLegacy) return envelope;
++        throw new Error('Plaintext private record requires explicit offline migration');
++      }
++      try {
++        const key = ring.keys.get(envelope.keyId);
++        if (envelope.version !== 1 || !key) throw new Error('Unsupported encryption identity');
++        const iv = Buffer.from(envelope.iv, 'base64'), tag = Buffer.from(envelope.tag, 'base64');
++        if (iv.length !== 12 || tag.length !== 16) throw new Error('Invalid encryption envelope');
++        const decipher = createDecipheriv('aes-256-gcm', key, iv);
++        decipher.setAAD(context); decipher.setAuthTag(tag);
++        return JSON.parse(Buffer.concat([decipher.update(Buffer.from(envelope.data, 'base64')), decipher.final()]).toString('utf8'));
++      } catch { throw new Error('Private record authentication failed; restore its key and reconcile before retrying'); }
++    },
++    async write(file, value) {
++      await available();
++      const context = aad(file);
++      await fs.mkdir(path.dirname(file), { recursive: true, mode: 0o700 });
++      const ring = await keys(), iv = randomBytes(12), cipher = createCipheriv('aes-256-gcm', ring.keys.get(ring.active), iv);
++      cipher.setAAD(context);
++      const data = Buffer.concat([cipher.update(JSON.stringify(value)), cipher.final()]);
++      const envelope = { format: 'janus-private-json', version: 1, keyId: ring.active, iv: iv.toString('base64'), tag: cipher.getAuthTag().toString('base64'), data: data.toString('base64') };
++      const temp = file + '.' + randomUUID() + '.tmp';
++      const handle = await fs.open(temp, 'wx', 0o600);
++      try { await handle.writeFile(JSON.stringify(envelope) + '\n'); await handle.sync(); }
++      finally { await handle.close(); }
++      try { await fs.rename(temp, file); await syncDirectory(path.dirname(file)); } finally { await fs.unlink(temp).catch(error => { if (error.code !== 'ENOENT') throw error; }); }
++    },
++  };
++}
+diff --git a/backend/package.json b/backend/package.json
+index af8231e..ada31ad 100644
+--- a/backend/package.json
++++ b/backend/package.json
+@@ -7,7 +7,9 @@
+     "node": ">=22"
+   },
+   "scripts": {
+-    "test": "node --test hedera/test/*.test.mjs workbench/*.test.mjs arkiv/*.test.mjs",
++    "test": "node --test --test-concurrency=1 hedera/test/*.test.mjs workbench/*.test.mjs arkiv/*.test.mjs security/*.test.mjs",
++    "test:security": "node --test security/*.test.mjs",
++    "security:state": "node security/state-maintenance.mjs",
+     "test:workbench": "node --test workbench/*.test.mjs",
+     "hedera:init": "node hedera/scripts/init.mjs",
+     "hedera:preflight": "node hedera/scripts/preflight.mjs",
+diff --git a/backend/runner/checkpoint-runner.mjs b/backend/runner/checkpoint-runner.mjs
+index a9c1030..438ffb5 100644
+--- a/backend/runner/checkpoint-runner.mjs
++++ b/backend/runner/checkpoint-runner.mjs
+@@ -5,11 +5,13 @@ import { canonicalJson, bytes32 } from '../../shared/protocol.mjs';
+ import { buyTaskDataset } from '../hedera/lib/task-client.mjs';
+ import { taskTreasuryAbi as abi } from '../hedera/lib/treasury.mjs';
+ import { validateTreasury } from '../../contracts/phase1/lib/recovery.mjs';
++import { createPrivateJsonStore } from '../lib/private-json.mjs';
+ 
+ const hash = value => createHash('sha256').update(canonicalJson(value)).digest('hex');
+ const same = (a, b) => a?.toLowerCase() === b?.toLowerCase();
+ 
+ export function createCheckpointRunner({ directory, publicClient, manifest, endpoint, taskId, steps, validateResult }) {
++ const privateStore = createPrivateJsonStore(directory, { domain: 'paid-checkpoint-v1' });
+  taskId = bytes32(taskId);
+  if (!Array.isArray(steps) || !steps.length || new Set(steps.map(step => step.id)).size !== steps.length
+    || steps.some(step => typeof step.id !== 'string' || !step.id || !step.request) || typeof validateResult !== 'function') throw new Error('Invalid workflow definition');
+@@ -22,7 +24,7 @@ export function createCheckpointRunner({ directory, publicClient, manifest, endp
+  };
+  const load = async () => {
+   try {
+-   const envelope = JSON.parse(await fs.readFile(file, 'utf8'));
++   const envelope = await privateStore.read(file);
+    if (envelope.hash !== hash(envelope.state) || envelope.state.version !== '1' || envelope.state.graphHash !== graphHash
+       || envelope.state.taskId !== taskId || envelope.state.treasury !== manifest.treasury.toLowerCase()
+       || envelope.state.chainId !== String(manifest.chainId) || !Array.isArray(envelope.state.completed)) throw new Error('Invalid or incompatible checkpoint');
+@@ -37,10 +39,7 @@ export function createCheckpointRunner({ directory, publicClient, manifest, endp
+  };
+  const save = async state => {
+   state.revision = (BigInt(state.revision) + 1n).toString();
+-  const temporary = file + '.tmp', handle = await fs.open(temporary, 'w', 0o600);
+-  try { await handle.writeFile(JSON.stringify({ hash: hash(state), state }) + '\n'); await handle.sync(); } finally { await handle.close(); }
+-  await fs.rename(temporary, file);
+-  const parent = await fs.open(directory, 'r'); try { await parent.sync(); } finally { await parent.close(); }
++  await privateStore.write(file, { hash: hash(state), state });
+  };
+  return {
+   async inspect() { return locked(load); },
+diff --git a/backend/security/fail-closed.test.mjs b/backend/security/fail-closed.test.mjs
+new file mode 100644
+index 0000000..0d7951e
+--- /dev/null
++++ b/backend/security/fail-closed.test.mjs
+@@ -0,0 +1,28 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs/promises';
++import path from 'node:path';
++import os from 'node:os';
++import { createOperationStore } from '../hedera/lib/operation-store.mjs';
++import { createCheckpointRunner } from '../runner/checkpoint-runner.mjs';
++import { encodeAuthorization } from '../../shared/protocol.mjs';
++
++test('missing external keys cannot reset a financial checkpoint or start another payment', async t => {
++  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'janus-key-loss-'));
++  const previous = process.env.JANUS_DATA_KEYRING_FILE;
++  process.env.JANUS_DATA_KEYRING_FILE = path.join(directory, 'missing-keyring');
++  t.after(async () => {
++    if (previous === undefined) delete process.env.JANUS_DATA_KEYRING_FILE; else process.env.JANUS_DATA_KEYRING_FILE = previous;
++    await fs.rm(directory, { recursive: true, force: true });
++  });
++  const taskId = '0x' + '11'.repeat(32), operationId = '0x' + '22'.repeat(32), treasury = '0x' + '33'.repeat(20);
++  let submissions = 0, reconciliations = 0;
++  const merchant = createOperationStore({ directory: path.join(directory, 'merchant'), authenticate: async () => {},
++    reconcile: async () => { reconciliations++; return { status: 'unpaid' }; },
++    submit: async () => { submissions++; throw new Error('Must never submit'); }, produce: async () => ({}) });
++  await assert.rejects(merchant.purchase({ authorization: encodeAuthorization(taskId, operationId, '1'), request: { chainId: '296', treasury }, principal: {} }), /key unavailable/);
++  assert.equal(submissions, 0); assert.equal(reconciliations, 0);
++  const runner = createCheckpointRunner({ directory: path.join(directory, 'checkpoints'), publicClient: {}, manifest: { chainId: 296, treasury }, taskId,
++    steps: [{ id: 'paid-source', request: { chainId: '296', treasury } }], validateResult: async () => true });
++  await assert.rejects(runner.inspect(), /key unavailable/);
++});
+diff --git a/backend/security/maintenance.test.mjs b/backend/security/maintenance.test.mjs
+new file mode 100644
+index 0000000..b5fe627
+--- /dev/null
++++ b/backend/security/maintenance.test.mjs
+@@ -0,0 +1,33 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs/promises';
++import path from 'node:path';
++import os from 'node:os';
++import { randomBytes } from 'node:crypto';
++import { maintainPrivateState } from './state-maintenance.mjs';
++import { createPrivateJsonStore } from '../lib/private-json.mjs';
++
++test('offline migration plans without changing payloads, applies encryption and blocks active stores', async t => {
++  const parent = await fs.mkdtemp(path.join(os.tmpdir(), 'janus-migration-'));
++  t.after(() => fs.rm(parent, { recursive: true, force: true }));
++  const directory = path.join(parent, 'merchant'); await fs.mkdir(directory);
++  const file = path.join(directory, 'a'.repeat(64) + '.json'), value = { status: 'ready', result: 'private-purchased-source', receipt: { transaction: 'original' } };
++  const original = JSON.stringify(value); await fs.writeFile(file, original);
++  const keyFile = path.join(parent, 'keyring.json');
++  await fs.writeFile(keyFile, JSON.stringify({ active: 'one', keys: { one: randomBytes(32).toString('base64') } }));
++  const options = { directory, keyFile, domain: 'merchant-operations-v1' };
++  await assert.rejects(maintainPrivateState(options), /offline migration/);
++  assert.equal((await maintainPrivateState({ ...options, allowLegacy: true })).mode, 'read-only plan');
++  assert.equal(await fs.readFile(file, 'utf8'), original);
++  await fs.writeFile(file + '.lock', 'active');
++  await assert.rejects(maintainPrivateState({ ...options, allowLegacy: true, apply: true }), /Active or unresolved/);
++  await fs.unlink(file + '.lock');
++  assert.equal((await maintainPrivateState({ ...options, allowLegacy: true, apply: true })).records, 1);
++  assert.ok(!(await fs.readFile(file, 'utf8')).includes(value.result));
++  const store = createPrivateJsonStore(directory, { domain: options.domain, keyFile, production: true });
++  assert.deepEqual(await store.read(file), value);
++  await fs.writeFile(path.join(directory, '.maintenance.lock'), 'operator');
++  await assert.rejects(store.read(file), /maintenance/);
++  await assert.rejects(store.write(file, {}), /maintenance/);
++  await fs.unlink(path.join(directory, '.maintenance.lock'));
++});
+diff --git a/backend/security/private-json.test.mjs b/backend/security/private-json.test.mjs
+new file mode 100644
+index 0000000..e9e3f78
+--- /dev/null
++++ b/backend/security/private-json.test.mjs
+@@ -0,0 +1,101 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs/promises';
++import path from 'node:path';
++import os from 'node:os';
++import { randomBytes } from 'node:crypto';
++import { createPrivateJsonStore } from '../lib/private-json.mjs';
++import { createWorkbenchStore } from '../workbench/store.mjs';
++import { publicWorkerProfile } from '../../shared/public-worker-profile.mjs';
++
++const key = () => randomBytes(32).toString('base64');
++test('Arkiv public projection excludes private agent configuration and uses a generic label', () => {
++  const profile = publicWorkerProfile({ worker: '0x' + '12'.repeat(20), network: 'eip155:296', now: 1000n,
++    prompt: 'private-prompt', credentialId: 'private-key-reference', checkpoint: 'private-path', report: 'private-report' });
++  assert.deepEqual(Object.keys(profile).sort(), ['worker', 'role', 'status', 'capabilities', 'network', 'scheme', 'validUntil', 'name'].sort());
++  assert.ok(!JSON.stringify(profile).includes('private-')); assert.equal(profile.name, 'Research worker');
++  assert.throws(() => publicWorkerProfile({ worker: '0x' + '00'.repeat(20), network: 'eip155:296' }), /Invalid/);
++});
++async function fixture(t) {
++  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'janus-private-'));
++  t.after(() => fs.rm(root, { recursive: true, force: true }));
++  return root;
++}
++
++test('research ciphertext rejects tampering and substitution across accounts and domains', async t => {
++  const root = await fixture(t), ring = { active: 'one', keys: { one: key() } };
++  const store = createPrivateJsonStore(root, { domain: 'research', keyring: ring });
++  const file = path.join(root, 'alice', 'run.json'), other = path.join(root, 'bob', 'run.json');
++  const record = { question: 'private-acquisition-question', report: 'sensitive-source-material' };
++  await store.write(file, record);
++  const raw = await fs.readFile(file, 'utf8');
++  assert.ok(!raw.includes(record.question)); assert.ok(!raw.includes(record.report));
++  assert.deepEqual(await store.read(file), record);
++  await fs.mkdir(path.dirname(other)); await fs.writeFile(other, raw);
++  await assert.rejects(store.read(other), /authentication failed/);
++  await assert.rejects(createPrivateJsonStore(root, { domain: 'merchant', keyring: ring }).read(file), /authentication failed/);
++  const envelope = JSON.parse(raw); envelope.tag = randomBytes(16).toString('base64');
++  await fs.writeFile(file, JSON.stringify(envelope));
++  await assert.rejects(store.read(file), /authentication failed/);
++  await assert.rejects(store.write(path.join(root, '..', 'escape.json'), record), /inside/);
++});
++
++test('rotation reads retained old keys, writes the active key, and refuses retired keys', async t => {
++  const root = await fixture(t), first = key(), second = key(), file = path.join(root, 'record.json');
++  const old = createPrivateJsonStore(root, { domain: 'rotation', keyring: { active: 'old', keys: { old: first } } });
++  await old.write(file, { result: 'original-purchase' });
++  const rotated = createPrivateJsonStore(root, { domain: 'rotation', keyring: { active: 'new', keys: { old: first, new: second } } });
++  const value = await rotated.read(file);
++  const retired = createPrivateJsonStore(root, { domain: 'rotation', keyring: { active: 'new', keys: { new: second } } });
++  await assert.rejects(retired.read(file), /authentication failed/);
++  await rotated.write(file, value);
++  assert.equal(JSON.parse(await fs.readFile(file, 'utf8')).keyId, 'new');
++  assert.deepEqual(await retired.read(file), value);
++  await assert.rejects(old.read(file), /authentication failed/);
++});
++
++test('production needs external keys and never silently accepts plaintext or resets state', async t => {
++  const parent = await fixture(t), root = path.join(parent, 'state'); await fs.mkdir(root);
++  const file = path.join(root, 'record.json');
++  const production = createPrivateJsonStore(root, { domain: 'production', production: true, keyFile: '' });
++  await assert.rejects(production.write(file, { private: true }), /Production requires/);
++  assert.deepEqual(await fs.readdir(root), []);
++  await assert.rejects(createPrivateJsonStore(root, { domain: 'production', production: true, keyFile: path.join(parent, 'missing-keyring') }).read(file), error => /key unavailable/.test(error.message) && error.code !== 'ENOENT');
++  const secret = path.join(parent, 'keyring.json');
++  await fs.writeFile(secret, JSON.stringify({ active: 'one', keys: { one: key() } }));
++  const external = createPrivateJsonStore(root, { domain: 'production', production: true, keyFile: secret, allowLegacy: true });
++  await external.write(file, { result: 'durable-result' });
++  assert.equal((await external.read(file)).result, 'durable-result');
++  await fs.writeFile(file, JSON.stringify({ result: 'legacy' }));
++  await assert.rejects(external.read(file), /offline migration/);
++  assert.equal(JSON.parse(await fs.readFile(file, 'utf8')).result, 'legacy');
++  await fs.copyFile(secret, path.join(root, 'keyring.json'));
++  await assert.rejects(createPrivateJsonStore(root, { domain: 'production', production: true, keyFile: path.join(root, 'keyring.json') }).read(file), /outside/);
++});
++
++test('concurrent development stores share a complete key and persist across restart', async t => {
++  const root = await fixture(t);
++  await Promise.all(Array.from({ length: 12 }, (_, index) => createPrivateJsonStore(root, { domain: 'concurrent', keyFile: '', production: false }).write(path.join(root, index + '.json'), { index })));
++  for (let index = 0; index < 12; index++) assert.deepEqual(await createPrivateJsonStore(root, { domain: 'concurrent', keyFile: '', production: false }).read(path.join(root, index + '.json')), { index });
++  assert.equal((await fs.readFile(path.join(root, '.private-key'))).length, 32);
++  assert.ok(!(await fs.readdir(root)).some(name => name.endsWith('.tmp')));
++});
++
++test('vault production refuses auto-generated master keys and supports an external key file', async t => {
++  const parent = await fixture(t), root = path.join(parent, 'vault');
++  const previous = { mode: process.env.NODE_ENV, file: process.env.JANUS_VAULT_KEY_FILE };
++  process.env.NODE_ENV = 'production'; delete process.env.JANUS_VAULT_KEY_FILE;
++  t.after(() => {
++    for (const [name, value] of [['NODE_ENV', previous.mode], ['JANUS_VAULT_KEY_FILE', previous.file]]) {
++      if (value === undefined) delete process.env[name]; else process.env[name] = value;
++    }
++  });
++  await assert.rejects(createWorkbenchStore(root, '').list('did:privy:test'), /Production requires/);
++  assert.deepEqual(await fs.readdir(root), []);
++  const secret = path.join(parent, 'vault.key'); await fs.writeFile(secret, key());
++  process.env.JANUS_VAULT_KEY_FILE = secret;
++  const store = createWorkbenchStore(root, '');
++  const record = await store.saveCredential('did:privy:test', { provider: 'groq', label: 'test', key: 'private-provider-key-fixture' });
++  assert.equal((await store.credential('did:privy:test', record.id)).key, 'private-provider-key-fixture');
++  assert.ok(!(await fs.readdir(root)).includes('master.key'));
++});
+diff --git a/backend/security/state-maintenance.mjs b/backend/security/state-maintenance.mjs
+new file mode 100644
+index 0000000..a7b34be
+--- /dev/null
++++ b/backend/security/state-maintenance.mjs
+@@ -0,0 +1,49 @@
++import fs from 'node:fs/promises';
++import path from 'node:path';
++import { pathToFileURL } from 'node:url';
++import { createPrivateJsonStore } from '../lib/private-json.mjs';
++
++const domains = new Set(['research-v1', 'paid-checkpoint-v1', 'merchant-operations-v1']);
++
++// Explicit offline migration/rotation only. Does not delete or reset records.
++export async function maintainPrivateState({ directory, domain, apply = false, allowLegacy = false, keyFile }) {
++  if (!path.isAbsolute(directory) || !domains.has(domain)) throw new Error('Use an absolute protected directory and a supported domain');
++  const root = await fs.realpath(directory), lockPath = path.join(root, '.maintenance.lock');
++  const lock = await fs.open(lockPath, 'wx', 0o600).catch(() => { throw new Error('Storage already under maintenance; reconcile before retry'); });
++  try {
++    const files = [];
++    const walk = async dir => {
++      for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
++        const file = path.join(dir, entry.name);
++        if (file === lockPath) continue;
++        if (entry.isSymbolicLink()) throw new Error('Symlinks are not supported during private-state maintenance');
++        if (entry.name.endsWith('.lock') || entry.name.endsWith('.tmp')) throw new Error('Active or unresolved storage; stop services and reconcile locks/intents first');
++        if (entry.isDirectory()) { await walk(file); continue; }
++        if (!entry.name.endsWith('.json')) continue;
++        const relative = path.relative(root, file).split(path.sep).join('/');
++        const supported = domain === 'research-v1'
++          ? /^[a-f0-9]{64}\/[a-f0-9-]{36}\/(?:run|control|[a-f0-9]{64}\.intent)\.json$/.test(relative)
++          : /^[a-f0-9]{64}\.json$/.test(relative);
++        if (!supported) throw new Error('Unexpected JSON record; choose the specific protected storage directory');
++        if ((await fs.stat(file)).size > 16 * 1024 * 1024 || files.length >= 5000) throw new Error('Maintenance size bound exceeded; use a reviewed migration');
++        files.push(file);
++      }
++    };
++    await walk(root);
++    const store = createPrivateJsonStore(root, { domain, keyFile, allowLegacy, production: false, maintenance: true });
++    // Authenticate EVERY record before mutating any, including retained keys.
++    const values = await Promise.all(files.map(file => store.read(file)));
++    if (apply) for (let index = 0; index < files.length; index++) await store.write(files[index], values[index]);
++    return { domain, records: files.length, mode: apply ? 'applied' : 'read-only plan', plaintextPermitted: allowLegacy,
++      limitations: 'Stop services first. Per-record atomic writes, not a directory transaction. Keep old keys/backups until all domains are migrated. No payloads printed.' };
++  } finally { await lock.close(); await fs.unlink(lockPath); }
++}
++
++if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
++  const args = process.argv.slice(2);
++  const option = name => { const at = args.indexOf(name); return at < 0 ? undefined : args[at + 1]; };
++  try {
++    console.log(JSON.stringify(await maintainPrivateState({ directory: option('--directory') ?? '', domain: option('--domain'),
++      apply: args.includes('--apply'), allowLegacy: args.includes('--allow-legacy'), keyFile: process.env.JANUS_DATA_KEYRING_FILE }), null, 2));
++  } catch (error) { console.error(error.message); process.exitCode = 1; }
++}
+diff --git a/backend/workbench/providers.mjs b/backend/workbench/providers.mjs
+index 2dee7da..9d0efa3 100644
+--- a/backend/workbench/providers.mjs
++++ b/backend/workbench/providers.mjs
+@@ -1,5 +1,6 @@
+ const instructions = 'Assist with research tasks. Distinguish source evidence from assumptions. No wallet or payment tools are available. Never claim a purchase or task execution that has not occurred.';
+ export async function callProvider({ credential, model, prompt, fetchImpl = fetch }) {
++  if (typeof prompt !== 'string' || prompt.length > 128000) throw new Error('Research prompt exceeds the input-size limit');
+   if (typeof model !== 'string' || !/^[a-zA-Z0-9._:/-]{1,100}$/.test(model)) throw new Error('Enter an explicit provider model ID');
+   const openai = credential.provider === 'openai';
+   const anthropic = credential.provider === 'anthropic', gemini = credential.provider === 'gemini';
+diff --git a/backend/workbench/research.mjs b/backend/workbench/research.mjs
+index 0e02950..b7c18f6 100644
+--- a/backend/workbench/research.mjs
++++ b/backend/workbench/research.mjs
+@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
+ import { createWorkbenchStore } from './store.mjs';
+ import { validateWorkbenchConfig } from './config.mjs';
+ import { callProvider } from './providers.mjs';
++import { createPrivateJsonStore } from '../lib/private-json.mjs';
+ 
+ const digest = value => createHash('sha256').update(value).digest('hex');
+ const terminal = new Set(['completed', 'failed', 'cancelled']);
+@@ -15,13 +16,11 @@ export function runDirectory(root, user, id) {
+   return path.join(accountDirectory(root, user), id);
+ }
+ export async function atomic(file, value) {
+-  await fs.mkdir(path.dirname(file), { recursive: true, mode: 0o700 });
+-  const temp = file + '.' + randomUUID() + '.tmp';
+-  const handle = await fs.open(temp, 'wx', 0o600);
+-  try { await handle.writeFile(JSON.stringify(value)); await handle.sync(); } finally { await handle.close(); }
+-  await fs.rename(temp, file);
++  const root = path.dirname(path.dirname(path.dirname(file)));
++  return createPrivateJsonStore(root, { domain: 'research-v1' }).write(file, value);
+ }
+-export const readRun = async (root, user, id) => JSON.parse(await fs.readFile(path.join(runDirectory(root, user, id), 'run.json'), 'utf8'));
++const privateRead = file => createPrivateJsonStore(path.dirname(path.dirname(path.dirname(file))), { domain: 'research-v1' }).read(file);
++export const readRun = async (root, user, id) => privateRead(path.join(runDirectory(root, user, id), 'run.json'));
+ export async function listRuns(root, user) {
+   let names;
+   try { names = await fs.readdir(accountDirectory(root, user)); } catch (e) { if (e.code === 'ENOENT') return []; throw e; }
+@@ -68,6 +67,29 @@ export async function controlRun(root, user, id, action) {
+   return run;
+ }
+ 
++// Deleting research never deletes the separate financial checkpoint/journal.
++export async function deleteRun(root, user, id) {
++  const directory = runDirectory(root, user, id), account = accountDirectory(root, user);
++  const accountLock = await fs.open(path.join(account, 'create.lock'), 'wx', 0o600).catch(() => { throw new Error('Account busy; retry deletion'); });
++  let supervisorLock;
++  try {
++    supervisorLock = await fs.open(path.join(directory, 'supervisor.lock'), 'wx', 0o600).catch(() => { throw new Error('Run active or unresolved; reconcile before deletion'); });
++    const run = await readRun(root, user, id);
++    if (!['completed', 'cancelled'].includes(run.status)) throw new Error('Only completed or cancelled runs can be deleted; reconcile other outcomes first');
++    const quarantine = path.join(account, '.deleting-' + id);
++    // Keep the exclusive lock FILE in place, but close its Windows handle before
++    // renaming the directory. New supervisors still fail open(..., 'wx').
++    await supervisorLock.close();
++    await fs.rename(directory, quarantine);
++    supervisorLock = null;
++    await fs.rm(quarantine, { recursive: true });
++    return { deleted: id };
++  } finally {
++    if (supervisorLock) { await supervisorLock.close(); await fs.unlink(path.join(directory, 'supervisor.lock')); }
++    await accountLock.close(); await fs.unlink(path.join(account, 'create.lock'));
++  }
++}
++
+ export async function executeResearch({ root, user, id, providerCall = callProvider, paidTools, interruptAfterPaid = false }) {
+   const directory = runDirectory(root, user, id), lockPath = path.join(directory, 'supervisor.lock');
+   const lock = await fs.open(lockPath, 'wx', 0o600).catch(() => { throw new Error('Supervisor already active or stale lock; reconcile before retry'); });
+@@ -83,7 +105,7 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
+       await save();
+     };
+     const control = async () => {
+-      try { return JSON.parse(await fs.readFile(path.join(directory, 'control.json'), 'utf8')).action; } catch (e) { if (e.code === 'ENOENT') return 'resume'; throw e; }
++      try { return (await privateRead(path.join(directory, 'control.json'))).action; } catch (e) { if (e.code === 'ENOENT') return 'resume'; throw e; }
+     };
+     const stopped = async () => ['pause', 'cancel'].includes(await control());
+     run.status = 'running'; await event('run-started', 'orchestrator', paidTools ? 'Janus supervisor started with authorized paid research tools.' : 'Janus supervisor started. Research only; no wallet or payment calls.');
+@@ -91,10 +113,13 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
+     const infer = async (agent, step, prompt) => {
+       if (run.artifacts[step]) { await event('artifact-reused', agent.id, 'Reused the saved response without another provider request.', { step }); return run.artifacts[step]; }
+       if (await stopped()) throw new Error('DISPATCH_STOPPED');
++      const allowedSteps = new Set(['plan', 'report', ...run.config.agents.filter(item => item.id !== 'orchestrator').map(item => 'research:' + item.id)]);
++      if (!allowedSteps.has(step) || run.events.filter(item => item.type === 'provider-requested').length >= allowedSteps.size) throw new Error('Research provider-call limit reached; owner review required');
+       const intent = path.join(directory, digest(step) + '.intent.json');
+       try {
+         const handle = await fs.open(intent, 'wx', 0o600);
+-        try { await handle.writeFile(JSON.stringify({ step, agentId: agent.id, mode: run.mode, at: new Date().toISOString() })); await handle.sync(); } finally { await handle.close(); }
++        await handle.close();
++        await atomic(intent, { step, agentId: agent.id, mode: run.mode, at: new Date().toISOString() });
+       }
+       catch (e) { if (e.code === 'EEXIST') { run.status = 'reconciling'; throw new Error('Prior inference outcome uncertain. Reconcile provider history before any retry.'); } throw e; }
+       await event('provider-requested', agent.id, run.mode === 'fixture' ? 'Local research fixture requested; no provider billing.' : `Request submitted to the configured model.`, { step });
+@@ -191,7 +216,7 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
+     return run;
+   } catch (error) {
+     if (run) {
+-      let action; try { action = JSON.parse(await fs.readFile(path.join(directory, 'control.json'), 'utf8')).action; } catch { /* no control */ }
++      let action; try { action = (await privateRead(path.join(directory, 'control.json'))).action; } catch { /* no control */ }
+       run.status = error.message === 'DISPATCH_STOPPED' ? action === 'cancel' ? 'cancelled' : 'paused' : run.status === 'reconciling' ? 'reconciling' : 'failed';
+       run.error = error.message;
+       await queue.catch(() => {});
+diff --git a/backend/workbench/research.test.mjs b/backend/workbench/research.test.mjs
+index 1507b9a..a444ed4 100644
+--- a/backend/workbench/research.test.mjs
++++ b/backend/workbench/research.test.mjs
+@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
+ import fs from 'node:fs/promises';
+ import path from 'node:path';
+ import os from 'node:os';
+-import { createRun, executeResearch, readRun, listRuns, controlRun, runDirectory } from './research.mjs';
++import { createRun, executeResearch, readRun, listRuns, controlRun, runDirectory, deleteRun } from './research.mjs';
+ import { defaultConfig } from './config.mjs';
+ import { createWorkbenchStore } from './store.mjs';
+ const user = 'did:privy:research-owner';
+@@ -43,7 +43,7 @@ test('provider runs require consent, account-owned credentials and reuse complet
+   let calls = 0;
+   const providerCall = async ({ credential: record }) => { calls++; assert.equal(record.key, 'fixture-secret-not-for-workers'); return { text: 'Fixture research response', provider: 'openai', model: 'fixture-model', requestId: 'fixture-' + calls, usage: null }; };
+   const result = await executeResearch({ root, user, id: run.id, providerCall });
+-  assert.equal(result.status, 'completed'); assert.equal(calls, 5);
++  assert.equal(result.status, 'completed', result.error); assert.equal(calls, 5);
+   assert.ok(!JSON.stringify(result).includes('fixture-secret-not-for-workers'));
+   await executeResearch({ root, user, id: run.id, providerCall }); assert.equal(calls, 5);
+ });
+@@ -69,3 +69,23 @@ test('uncertain inference is reconciled without automatic rebilling; run control
+   await fs.writeFile(path.join(dir, 'supervisor.lock'), 'fixture');
+   await assert.rejects(executeResearch({ root, user, id: run.id }), /Supervisor already/);
+ });
++
++test('research is encrypted on disk and deletion refuses active, foreign and unresolved runs', async t => {
++  const root = await fixture(t), question = 'Private question about an unpublished research strategy.';
++  const run = await createRun(root, user, { config: defaultConfig, question, mode: 'fixture' });
++  const file = path.join(runDirectory(root, user, run.id), 'run.json');
++  assert.ok(!(await fs.readFile(file, 'utf8')).includes(question));
++  await assert.rejects(deleteRun(root, user, run.id), /completed or cancelled/);
++  await assert.rejects(deleteRun(root, 'did:privy:other', run.id));
++  await executeResearch({ root, user, id: run.id });
++  const dir = runDirectory(root, user, run.id);
++  await fs.writeFile(path.join(dir, 'supervisor.lock'), 'fixture');
++  await assert.rejects(deleteRun(root, user, run.id), /active or unresolved/);
++  await fs.unlink(path.join(dir, 'supervisor.lock'));
++  // Financial state is deliberately outside research deletion's scope.
++  const journal = path.join(root, 'financial-record.json'); await fs.writeFile(journal, 'preserve');
++  assert.deepEqual(await deleteRun(root, user, run.id), { deleted: run.id });
++  await assert.rejects(readRun(root, user, run.id));
++  assert.deepEqual(await listRuns(root, user), []);
++  assert.equal(await fs.readFile(journal, 'utf8'), 'preserve');
++});
+diff --git a/backend/workbench/store.mjs b/backend/workbench/store.mjs
+index 59df71c..9809c23 100644
+--- a/backend/workbench/store.mjs
++++ b/backend/workbench/store.mjs
+@@ -1,20 +1,19 @@
+ import fs from 'node:fs/promises';
+ import path from 'node:path';
+ import { randomBytes, randomUUID, createHash, createCipheriv, createDecipheriv } from 'node:crypto';
++import { decodeKey, developmentKey, externalSecret } from '../lib/private-json.mjs';
+ 
+ const identity = value => createHash('sha256').update(value).digest('hex');
+ export function createWorkbenchStore(directory, configuredKey = process.env.JANUS_VAULT_KEY) {
+   async function masterKey() {
+     if (configuredKey) {
+-      const key = Buffer.from(configuredKey, 'base64');
+-      if (key.length !== 32) throw new Error('JANUS_VAULT_KEY must encode 32 bytes');
+-      return key;
++      return decodeKey(configuredKey);
+     }
+     await fs.mkdir(directory, { recursive: true, mode: 0o700 });
++    if (process.env.JANUS_VAULT_KEY_FILE) return decodeKey(await externalSecret(process.env.JANUS_VAULT_KEY_FILE, directory));
++    if (process.env.NODE_ENV === 'production') throw new Error('Production requires JANUS_VAULT_KEY or external JANUS_VAULT_KEY_FILE');
+     const target = path.join(directory, 'master.key');
+-    try { await fs.writeFile(target, randomBytes(32), { flag: 'wx', mode: 0o600 }); }
+-    catch (error) { if (error.code !== 'EEXIST') throw error; }
+-    const key = await fs.readFile(target);
++    const key = await developmentKey(target);
+     if (key.length !== 32) throw new Error('Vault key is unavailable');
+     return key;
+   }
+diff --git a/backend/workbench/workbench.test.mjs b/backend/workbench/workbench.test.mjs
+index f5fc588..9ae0efd 100644
+--- a/backend/workbench/workbench.test.mjs
++++ b/backend/workbench/workbench.test.mjs
+@@ -50,6 +50,7 @@ test('popular providers use fixed endpoints and return sanitized metadata', asyn
+     assert.equal(result.text, 'hold'); assert.ok(!JSON.stringify(result).includes('fixture-private-key'));
+   }
+   await assert.rejects(callProvider({ credential: { provider: 'openai', key: 'fixture-secret' }, model: 'model', prompt: '', fetchImpl: async () => new Response('secret-provider-error', { status: 401 }) }), error => !error.message.includes('secret-provider-error') && /HTTP 401/.test(error.message));
++  await assert.rejects(callProvider({ credential: { provider: 'openai', key: 'fixture-secret' }, model: 'model', prompt: 'x'.repeat(128001), fetchImpl: async () => { throw new Error('Should never dispatch'); } }), /input-size limit/);
+ });
+ test('research configuration rejects the removed execution configuration', () => {
+   assert.deepEqual(validateWorkbenchConfig(defaultConfig), defaultConfig);
+diff --git a/contracts/package-lock.json b/contracts/package-lock.json
+index 0134c88..a3025e6 100644
+--- a/contracts/package-lock.json
++++ b/contracts/package-lock.json
+@@ -14,7 +14,8 @@
+         "ganache": "7.9.2",
+         "playwright": "1.65.0",
+         "solc": "0.8.30",
+-        "viem": "2.57.16"
++        "viem": "2.57.16",
++        "memdown": "6.1.1"
+       },
+       "engines": {
+         "node": ">=22"
+@@ -5753,6 +5754,210 @@
+       "engines": {
+         "node": ">=12"
+       }
++    },
++    "node_modules/abstract-leveldown": {
++      "version": "7.2.0",
++      "resolved": "https://registry.npmjs.org/abstract-leveldown/-/abstract-leveldown-7.2.0.tgz",
++      "integrity": "sha512-DnhQwcFEaYsvYDnACLZhMmCWd3rkOeEvglpa4q5i/5Jlm3UIsWaxVzuXvDLFCSCWRO3yy2/+V/G7FusFgejnfQ==",
++      "deprecated": "Superseded by abstract-level (https://github.com/Level/community#faq)",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "buffer": "^6.0.3",
++        "catering": "^2.0.0",
++        "is-buffer": "^2.0.5",
++        "level-concat-iterator": "^3.0.0",
++        "level-supports": "^2.0.1",
++        "queue-microtask": "^1.2.3"
++      },
++      "engines": {
++        "node": ">=10"
++      }
++    },
++    "node_modules/base64-js": {
++      "version": "1.5.1",
++      "resolved": "https://registry.npmjs.org/base64-js/-/base64-js-1.5.1.tgz",
++      "integrity": "sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==",
++      "dev": true,
++      "funding": [
++        {
++          "type": "github",
++          "url": "https://github.com/sponsors/feross"
++        },
++        {
++          "type": "patreon",
++          "url": "https://www.patreon.com/feross"
++        },
++        {
++          "type": "consulting",
++          "url": "https://feross.org/support"
++        }
++      ],
++      "license": "MIT"
++    },
++    "node_modules/buffer": {
++      "version": "6.0.3",
++      "resolved": "https://registry.npmjs.org/buffer/-/buffer-6.0.3.tgz",
++      "integrity": "sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==",
++      "dev": true,
++      "funding": [
++        {
++          "type": "github",
++          "url": "https://github.com/sponsors/feross"
++        },
++        {
++          "type": "patreon",
++          "url": "https://www.patreon.com/feross"
++        },
++        {
++          "type": "consulting",
++          "url": "https://feross.org/support"
++        }
++      ],
++      "license": "MIT",
++      "dependencies": {
++        "base64-js": "^1.3.1",
++        "ieee754": "^1.2.1"
++      }
++    },
++    "node_modules/catering": {
++      "version": "2.1.1",
++      "resolved": "https://registry.npmjs.org/catering/-/catering-2.1.1.tgz",
++      "integrity": "sha512-K7Qy8O9p76sL3/3m7/zLKbRkyOlSZAgzEaLhyj2mXS8PsCud2Eo4hAb8aLtZqHh0QGqLcb9dlJSu6lHRVENm1w==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=6"
++      }
++    },
++    "node_modules/functional-red-black-tree": {
++      "version": "1.0.1",
++      "resolved": "https://registry.npmjs.org/functional-red-black-tree/-/functional-red-black-tree-1.0.1.tgz",
++      "integrity": "sha512-dsKNQNdj6xA3T+QlADDA7mOSlX0qiMINjn0cgr+eGHGsbSHzTabcIogz2+p/iqP1Xs6EP/sS2SbqH+brGTbq0g==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/ieee754": {
++      "version": "1.2.1",
++      "resolved": "https://registry.npmjs.org/ieee754/-/ieee754-1.2.1.tgz",
++      "integrity": "sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==",
++      "dev": true,
++      "funding": [
++        {
++          "type": "github",
++          "url": "https://github.com/sponsors/feross"
++        },
++        {
++          "type": "patreon",
++          "url": "https://www.patreon.com/feross"
++        },
++        {
++          "type": "consulting",
++          "url": "https://feross.org/support"
++        }
++      ],
++      "license": "BSD-3-Clause"
++    },
++    "node_modules/inherits": {
++      "version": "2.0.4",
++      "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz",
++      "integrity": "sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==",
++      "dev": true,
++      "license": "ISC"
++    },
++    "node_modules/is-buffer": {
++      "version": "2.0.5",
++      "resolved": "https://registry.npmjs.org/is-buffer/-/is-buffer-2.0.5.tgz",
++      "integrity": "sha512-i2R6zNFDwgEHJyQUtJEk0XFi1i0dPFn/oqjK3/vPCcDeJvW5NQ83V8QbicfF1SupOaB0h8ntgBC2YiE7dfyctQ==",
++      "dev": true,
++      "funding": [
++        {
++          "type": "github",
++          "url": "https://github.com/sponsors/feross"
++        },
++        {
++          "type": "patreon",
++          "url": "https://www.patreon.com/feross"
++        },
++        {
++          "type": "consulting",
++          "url": "https://feross.org/support"
++        }
++      ],
++      "license": "MIT",
++      "engines": {
++        "node": ">=4"
++      }
++    },
++    "node_modules/level-concat-iterator": {
++      "version": "3.1.0",
++      "resolved": "https://registry.npmjs.org/level-concat-iterator/-/level-concat-iterator-3.1.0.tgz",
++      "integrity": "sha512-BWRCMHBxbIqPxJ8vHOvKUsaO0v1sLYZtjN3K2iZJsRBYtp+ONsY6Jfi6hy9K3+zolgQRryhIn2NRZjZnWJ9NmQ==",
++      "deprecated": "Superseded by abstract-level (https://github.com/Level/community#faq)",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "catering": "^2.1.0"
++      },
++      "engines": {
++        "node": ">=10"
++      }
++    },
++    "node_modules/level-supports": {
++      "version": "2.1.0",
++      "resolved": "https://registry.npmjs.org/level-supports/-/level-supports-2.1.0.tgz",
++      "integrity": "sha512-E486g1NCjW5cF78KGPrMDRBYzPuueMZ6VBXHT6gC7A8UYWGiM14fGgp+s/L1oFfDWSPV/+SFkYCmZ0SiESkRKA==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=10"
++      }
++    },
++    "node_modules/ltgt": {
++      "version": "2.2.1",
++      "resolved": "https://registry.npmjs.org/ltgt/-/ltgt-2.2.1.tgz",
++      "integrity": "sha512-AI2r85+4MquTw9ZYqabu4nMwy9Oftlfa/e/52t9IjtfG+mGBbTNdAoZ3RQKLHR6r0wQnwZnPIEh/Ya6XTWAKNA==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/memdown": {
++      "version": "6.1.1",
++      "resolved": "https://registry.npmjs.org/memdown/-/memdown-6.1.1.tgz",
++      "integrity": "sha512-vh2RiuVrn6Vv73088C1KzLwy9+hhRwoZsgddYqIoVuFFrcoc2Rt+lq/KrmkFn6ulko7AtQ0AvqtYid35exb38A==",
++      "deprecated": "Superseded by memory-level (https://github.com/Level/community#faq)",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "abstract-leveldown": "^7.2.0",
++        "buffer": "^6.0.3",
++        "functional-red-black-tree": "^1.0.1",
++        "inherits": "^2.0.1",
++        "ltgt": "^2.2.0"
++      },
++      "engines": {
++        "node": ">=10"
++      }
++    },
++    "node_modules/queue-microtask": {
++      "version": "1.2.3",
++      "resolved": "https://registry.npmjs.org/queue-microtask/-/queue-microtask-1.2.3.tgz",
++      "integrity": "sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==",
++      "dev": true,
++      "funding": [
++        {
++          "type": "github",
++          "url": "https://github.com/sponsors/feross"
++        },
++        {
++          "type": "patreon",
++          "url": "https://www.patreon.com/feross"
++        },
++        {
++          "type": "consulting",
++          "url": "https://feross.org/support"
++        }
++      ],
++      "license": "MIT"
+     }
+   }
+ }
+diff --git a/contracts/package.json b/contracts/package.json
+index 77c8a36..e4366a5 100644
+--- a/contracts/package.json
++++ b/contracts/package.json
+@@ -27,6 +27,7 @@
+     "@openzeppelin/contracts": "5.4.0",
+     "esbuild": "0.28.2",
+     "ganache": "7.9.2",
++    "memdown": "6.1.1",
+     "playwright": "1.65.0",
+     "solc": "0.8.30",
+     "viem": "2.57.16"
+diff --git a/contracts/phase1/test/browser-wallet.test.mjs b/contracts/phase1/test/browser-wallet.test.mjs
+index ccfdc37..6638f65 100644
+--- a/contracts/phase1/test/browser-wallet.test.mjs
++++ b/contracts/phase1/test/browser-wallet.test.mjs
+@@ -4,7 +4,7 @@ import http from 'node:http';
+ import { once } from 'node:events';
+ import { fileURLToPath } from 'node:url';
+ import { test } from 'node:test';
+-import ganache from 'ganache';
++import { createFixtureRpc } from './fixtures/local-rpc.mjs';
+ import { privateKeyToAccount } from 'viem/accounts';
+ import { build } from 'esbuild';
+ import { createPublicClient, createWalletClient, custom, defineChain, keccak256, stringToHex } from 'viem';
+@@ -12,8 +12,9 @@ import { createPublicClient, createWalletClient, custom, defineChain, keccak256,
+ // Browser tooling may be supplied by the developer/CI without a runtime dependency.
+ const { chromium } = await import(process.env.JANUS_PLAYWRIGHT_MODULE || 'playwright');
+ test('recovery browser checks wallet identity, rejection, consent, network and exact local withdrawal', async t => {
+- const rpc = ganache.server({ logging: { quiet: true }, wallet: { deterministic: true }, chain: { chainId: 1337, hardfork: 'shanghai' } });
+- await rpc.listen(0,'127.0.0.1'); t.after(() => rpc.close());
++ let browser;
++ const rpc = createFixtureRpc();
++ await rpc.listen(0,'127.0.0.1'); t.after(async () => { await browser?.close(); await rpc.close(); });
+  const provider = rpc.provider, addresses = await provider.request({ method: 'eth_accounts', params: [] });
+  const chain = defineChain({ id: 1337, name: 'Local recovery test', nativeCurrency: { name: 'Local Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [`http://127.0.0.1:${rpc.address().port}`] } } });
+  const client = createPublicClient({ chain, transport: custom(provider), cacheTime: 0, pollingInterval: 10 });
+@@ -33,11 +34,11 @@ test('recovery browser checks wallet identity, rejection, consent, network and e
+  const descriptor=JSON.parse(await fs.readFile(new URL('../../../shared/treasury-interface.json',import.meta.url),'utf8'));
+  const manifest={interfaceVersion:descriptor.interfaceVersion,abiHash:descriptor.abiHash,mode:'local',chainId:1337,treasury,token,owner:addresses[0],runtimeCodeHash:keccak256(await client.getBytecode({address:treasury}))};
+  const network={...chain,chainId:1337,token:{address:token}};
+- const bundled=await build({entryPoints:[fileURLToPath(new URL('../browser/main.mjs',import.meta.url))],bundle:true,platform:'browser',target:'es2022',write:false,plugins:[{name:'local-fixture-only',setup(b){b.onLoad({filter:/shared\/(network|deployments\/hedera-testnet)\.json$/},args=>({contents:JSON.stringify(args.path.endsWith('network.json')?network:manifest),loader:'json'}));}}]});
++ const bundled=await build({entryPoints:[fileURLToPath(new URL('../browser/main.mjs',import.meta.url))],bundle:true,platform:'browser',target:'es2022',write:false,plugins:[{name:'local-fixture-only',setup(b){b.onLoad({filter:/shared[\\/](network|deployments[\\/]hedera-testnet)\.json$/},args=>({contents:JSON.stringify(args.path.endsWith('network.json')?network:manifest),loader:'json'}));}}]});
+  const html=await fs.readFile(new URL('../browser/index.html',import.meta.url));
+  const server=http.createServer((req,res)=>{res.setHeader('content-type',req.url==='/recovery.js'?'text/javascript':'text/html');res.end(req.url==='/recovery.js'?bundled.outputFiles[0].contents:html);});
+  server.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>new Promise(resolve=>{server.closeAllConnections();server.close(resolve);}));
+- const browser=await chromium.launch({headless:true,...(process.env.JANUS_CHROMIUM_PATH?{executablePath:process.env.JANUS_CHROMIUM_PATH}:{})});t.after(()=>browser.close());
++ browser=await chromium.launch({headless:true,...(process.env.JANUS_CHROMIUM_PATH?{executablePath:process.env.JANUS_CHROMIUM_PATH}:{})});
+  const page=await browser.newPage();let selected=addresses[1],wrongChain=false,rejectConnect=false,rejectTransaction=false,sends=0;
+  await page.exposeFunction('fixtureWalletRequest',async({method,params})=>{
+   if(method==='eth_requestAccounts'){if(rejectConnect)throw Error('User rejected wallet connection');return[selected];}
+diff --git a/contracts/phase1/test/dashboard-wallet.test.mjs b/contracts/phase1/test/dashboard-wallet.test.mjs
+index 81afd90..aba22c7 100644
+--- a/contracts/phase1/test/dashboard-wallet.test.mjs
++++ b/contracts/phase1/test/dashboard-wallet.test.mjs
+@@ -1,10 +1,12 @@
+ import assert from 'node:assert/strict';
+ import fs from 'node:fs/promises';
+ import http from 'node:http';
++import path from 'node:path';
++import os from 'node:os';
+ import { once } from 'node:events';
+ import { fileURLToPath } from 'node:url';
+ import { test } from 'node:test';
+-import ganache from 'ganache';
++import { createFixtureRpc } from './fixtures/local-rpc.mjs';
+ import { privateKeyToAccount } from 'viem/accounts';
+ import { build } from 'esbuild';
+ import { createPublicClient, createWalletClient, custom, defineChain, keccak256, stringToHex } from 'viem';
+@@ -12,8 +14,9 @@ import { createPublicClient, createWalletClient, custom, defineChain, keccak256,
+ // Browser tooling may be supplied by the developer/CI without a runtime dependency.
+ const { chromium } = await import(process.env.JANUS_PLAYWRIGHT_MODULE || 'playwright');
+ test('dashboard confirms authoritative balances and wallet actions before independent offline-app recovery', async t => {
+- const rpc = ganache.server({ logging: { quiet: true }, wallet: { deterministic: true }, chain: { chainId: 1337, hardfork: 'shanghai' } });
+- await rpc.listen(0,'127.0.0.1'); t.after(() => rpc.close());
++ let browser;
++ const rpc = createFixtureRpc();
++ await rpc.listen(0,'127.0.0.1'); t.after(async () => { await browser?.close(); await rpc.close(); });
+  const provider = rpc.provider, addresses = await provider.request({ method: 'eth_accounts', params: [] });
+  const chain = defineChain({ id: 1337, name: 'Local recovery test', nativeCurrency: { name: 'Local Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [`http://127.0.0.1:${rpc.address().port}`] } } });
+  const client = createPublicClient({ chain, transport: custom(provider), cacheTime: 0, pollingInterval: 10 });
+@@ -33,19 +36,23 @@ test('dashboard confirms authoritative balances and wallet actions before indepe
+  const descriptor=JSON.parse(await fs.readFile(new URL('../../../shared/treasury-interface.json',import.meta.url),'utf8'));
+  const manifest={interfaceVersion:descriptor.interfaceVersion,abiHash:descriptor.abiHash,mode:'local',chainId:1337,treasury,token,owner:addresses[0],runtimeCodeHash:keccak256(await client.getBytecode({address:treasury}))};
+  const network={...chain,chainId:1337,token:{address:token}};
+- const directory = await fs.mkdtemp('/private/tmp/janus-treasury-ui-'); t.after(()=>fs.rm(directory,{recursive:true,force:true}));
++ const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'janus-treasury-ui-')); t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+  const root = fileURLToPath(new URL('../../../',import.meta.url));
+  const auth = `export const useRelayAuth=()=>({walletAddress:'${addresses[0]}',getWalletProvider:async()=>window.ethereum});`;
+  const bundled = await build({stdin:{contents:`import React from 'react';import {createRoot} from 'react-dom/client';import Panel from './src/components/treasury-panel';createRoot(document.getElementById('root')).render(<Panel/>);`,resolveDir:root+'frontend',loader:'tsx'},bundle:true,jsx:'automatic',write:false,alias:{'@':root+'frontend/src'},plugins:[{name:'fixture',setup(b){
+  b.onResolve({filter:/privy-auth-context/},()=>({path:'auth',namespace:'fixture'}));
+  b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:auth,loader:'js'}));
+- b.onLoad({filter:/shared\/(network|deployments\/hedera-testnet)\.json$/},args=>({contents:JSON.stringify(args.path.endsWith('network.json')?network:manifest),loader:'json'}));
++ b.onLoad({filter:/shared[\\/](network|deployments[\\/]hedera-testnet)\.json$/},args=>({contents:JSON.stringify(args.path.endsWith('network.json')?network:manifest),loader:'json'}));
+  }}]});
+  let available=true;
+  const server=http.createServer((req,res)=>{res.setHeader('content-type',req.url==='/bundle.js'?'text/javascript':'text/html');res.end(req.url==='/bundle.js'?bundled.outputFiles[0].contents:'<html><body><div id="root"></div><script src="/bundle.js"></script></body></html>');});
+  server.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>{if(available){server.closeAllConnections();server.close();}});
+- const browser=await chromium.launch({headless:true,...(process.env.JANUS_CHROMIUM_PATH?{executablePath:process.env.JANUS_CHROMIUM_PATH}:{})});t.after(()=>browser.close());
++ browser=await chromium.launch({headless:true,...(process.env.JANUS_CHROMIUM_PATH?{executablePath:process.env.JANUS_CHROMIUM_PATH}:{})});
+  const page=await browser.newPage();let rejectTransaction=false,sends=0;
++ const confirmed = async () => {
++  try { await page.getByRole('status').filter({hasText:'State refreshed.'}).waitFor(); }
++  catch (error) { throw new Error('Treasury confirmation failed: ' + await page.getByRole('status').textContent(), { cause: error }); }
++ };
+  await page.exposeFunction('fixtureWalletRequest',async({method,params})=>{
+  if(method==='eth_accounts'||method==='eth_requestAccounts')return[addresses[0]];
+  if(method==='wallet_sendTransaction')method='eth_sendTransaction';
+@@ -59,14 +66,14 @@ test('dashboard confirms authoritative balances and wallet actions before indepe
+  await page.getByLabel('Selected task ID',{exact:true}).fill(task);
+  await page.getByLabel('Replacement worker wallet').fill(addresses[3]);
+  await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Assign replacement',exact:true}).click();
+- await page.getByRole('status').filter({hasText:'State refreshed.'}).waitFor();
++ await confirmed();
+  assert.equal((await client.readContract({address:treasury,abi,functionName:'tasks',args:[task]}))[8],2n);
+  rejectTransaction=true;await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Cancel task',exact:true}).click();await page.getByRole('status').filter({hasText:'Reconcile any submitted hash'}).waitFor();
+  assert.equal((await client.readContract({address:treasury,abi,functionName:'tasks',args:[task]}))[9],false);
+- rejectTransaction=false;await refresh();await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Cancel task',exact:true}).click();await page.getByRole('status').filter({hasText:'State refreshed.'}).waitFor();
+- await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Release available',exact:true}).click();await page.getByRole('status').filter({hasText:'State refreshed.'}).waitFor();
++ rejectTransaction=false;await refresh();await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Cancel task',exact:true}).click();await confirmed();
++ await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Release available',exact:true}).click();await confirmed();
+  assert.equal((await client.readContract({address:treasury,abi,functionName:'tasks',args:[task]}))[1],0n);
+- await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Withdraw entire reserve',exact:true}).click();await page.getByRole('status').filter({hasText:'State refreshed.'}).waitFor();
++ await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Withdraw entire reserve',exact:true}).click();await confirmed();
+  assert.equal(await client.readContract({address:treasury,abi,functionName:'totalWithdrawn'}),990n);
+  await page.screenshot({path:directory+'/dashboard.png',fullPage:true});
+  // Shut down the entire dashboard host. Recovery imports no application service.
+diff --git a/contracts/phase1/test/fixtures/local-rpc.mjs b/contracts/phase1/test/fixtures/local-rpc.mjs
+new file mode 100644
+index 0000000..0714a5b
+--- /dev/null
++++ b/contracts/phase1/test/fixtures/local-rpc.mjs
+@@ -0,0 +1,31 @@
++import http from 'node:http';
++import { once } from 'node:events';
++import ganache from 'ganache';
++import memdown from 'memdown';
++
++// Test-only HTTP transport. Ganache's native-server fallback leaves HTTP/DB
++// handles open on this Windows build; the provider itself has a working shutdown.
++export function createFixtureRpc() {
++  const provider = ganache.provider({ database: { db: memdown() }, logging: { quiet: true }, wallet: { deterministic: true }, chain: { chainId: 1337, hardfork: 'shanghai' } });
++  const answer = async request => {
++    try { return { jsonrpc: '2.0', id: request.id, result: await provider.request({ method: request.method, params: request.params ?? [] }) }; }
++    catch (error) { return { jsonrpc: '2.0', id: request.id, error: { code: typeof error.code === 'number' ? error.code : -32000, message: error.message } }; }
++  };
++  const server = http.createServer(async (req, res) => {
++    res.setHeader('Access-Control-Allow-Origin', '*'); res.setHeader('Access-Control-Allow-Headers', 'content-type');
++    if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
++    try {
++      const chunks = []; let bytes = 0;
++      for await (const chunk of req) { bytes += chunk.length; if (bytes > 1024 * 1024) throw new Error('Fixture request too large'); chunks.push(chunk); }
++      const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
++      const result = Array.isArray(body) ? await Promise.all(body.map(answer)) : await answer(body);
++      res.setHeader('content-type', 'application/json'); res.end(JSON.stringify(result));
++    } catch { res.writeHead(400); res.end(); }
++  });
++  return {
++    provider,
++    async listen(port, host) { server.listen(port, host); await once(server, 'listening'); },
++    address: () => server.address(),
++    async close() { server.closeAllConnections(); await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve())); await provider.disconnect(); },
++  };
++}
+diff --git a/demo.md b/demo.md
+index 3667954..148740b 100644
+--- a/demo.md
++++ b/demo.md
+@@ -1,5 +1,22 @@
+ # Janus demo runbook
+ 
++## Current sponsor-focused recording plan — 7 November
++
++Use `experiment/security-sponsor-fit` and [its security setup](shared/SECURITY_EXPERIMENT.md). The privacy upgrades are experimental; existing operator state has not been migrated. Keep every segment labelled **LOCAL EVM / MODEL FIXTURE**, **RECORDED HEDERA TESTNET**, or **RECORDED ARKIV TESTNET + LOCAL FINANCE**. Sponsor readiness remains false.
++
++Lead with: **“A research task keeps its budget and purchases when workers change, keeps private progress off the public directory, and leaves the owner an independent exit.”**
++
++1. **0:00–0:20 — Problem:** a worker fails after buying a source; the replacement must retain both the remaining budget and the purchase.
++2. **0:20–1:10 — Financial handoff:** run `npm run demo:paid-research --prefix backend`. Its default is real local contracts/HTTP and separate worker processes with model fixtures. Show three unique purchases, 60 local base units spent, confirmed replacement, original transaction reuse and stale-worker refusal. Existing recorded Groq output is separate evidence, not proof that this default invokes a live model.
++3. **1:10–1:35 — Arkiv's visible job:** show the [funded publication, independent CLI/browser reads and discovery-driven handoff](backend/arkiv/evidence/2026-11-07/README.md). The two profiles came from one writer, and the handoff finances were local. Show query-to-selected-entity evidence and the no-result waiting behavior. Records expire; do not imply current availability from an old screenshot.
++4. **1:35–2:00 — Hedera settlement:** show the recorded 0.02 test-USDC purchase and identical replay transaction below. Resolve the actual explorer link before recording. This is separate from the preceding local purchases; custom HTTP is not general x402 interoperability.
++5. **2:00–2:40 — CROPS lead property:** show actual static recovery with a local wallet fixture, stop the main application host and recover only available funds. Preserve pending obligations. Use independently saved HTML/JavaScript and an independently controlled owner wallet; the dashboard's live link alone is insufficient. Manual live extension-wallet recovery remains open.
++6. **2:40–3:00 — Privacy/trust boundary:** show billable-provider disclosure and public-profile disclosure before dispatch/publication. Explain encrypted checkpoints, separately supplied production keys, and confirmed deletion of completed local research. State that the host can decrypt active work, providers receive dispatched content, financial metadata is public, and backups/provider copies remain after local deletion.
++
++Independent reproduction: `npm run test:security`, `node frontend/scripts/verify-research-browser.mjs`, `npm run recovery:test:browser --prefix contracts`, and `npm run dashboard:test:browser --prefix contracts`. Browser tooling and a compatible installed Chromium are required. These use fixtures; do not enable live model billing or repeat testnet publication just to refresh evidence.
++
++The sequence is a script joining clearly labelled proofs, not a claim of one completed live browser-to-Hedera-to-Arkiv run. Final x402 protocol proof, FOSS licensing, event/track provenance, independent evidence review and the actual video remain submission gates. The following detailed walkthrough contains earlier local fixtures; this current plan and Phases 5/6 take precedence where they describe newer implementation.
++
+ ## The idea in one sentence
+ 
+ **Janus lets an agent task keep its money, paid results and progress when its worker fails, while the owner retains a direct exit for unused funds.**
+@@ -12,7 +29,7 @@ This runbook covers the complete product story and the three intended sponsor tr
+ 
+ “Imagine paying an AI agent to research something. It purchases a source, then crashes before delivering the answer. Starting again can mean paying twice, losing the result, or leaving the old worker able to spend. Janus keeps the financial state and execution progress with the task, so a replacement can reuse the purchase and finish the remaining work. If the service disappears, the owner can still recover available funds.”
+ 
+-Use a research task as the audience-facing example. The current runner uses deterministic artifacts; a real model-generated research report remains a future demonstration.
++Use a research task as the audience-facing example. Default demonstrations use deterministic artifacts/model fixtures; Phase 5 separately records real Groq output with local finances. The browser research path does not yet supply paid-tool bindings.
+ 
+ ## What each track contributes
+ 
+@@ -41,7 +58,7 @@ Prepare these views before recording:
+ 2. [Runner behavior and limitations](shared/RUNNER.md).
+ 3. [Recorded live payment evidence](backend/hedera/evidence/task-aware-live-proof.json).
+ 4. [Independent recovery instructions](shared/RECOVERY.md).
+-5. Optional frontend: `npm run dev`, then open `http://localhost:3000`. Configure authentication through [README.md](README.md) if showing login. Label dashboard balances and task controls **illustrative**.
++5. Optional frontend: `npm run dev`, then open `http://localhost:3000`. Configure authentication through [README.md](README.md) if showing login. Overview/Tasks use authoritative validated chain reads by default; label fixture accounting when explicitly selected. Browser research orchestration remains separate from the paid CLI bindings.
+ 
+ Keep clear on-screen labels: **LOCAL EVM**, **RECORDED HEDERA TESTNET**, **ILLUSTRATIVE UI**, and **PLANNED**. Never show environment files, private keys, tokens or signed transaction bytes. This runbook does not require new testnet spending.
+ 
+@@ -155,7 +172,7 @@ Use this during rehearsal so the demo covers behavior rather than just screens.
+ 
+ ## Arkiv discovery segment
+ 
+-Do not narrate this as a completed feature. The intended demonstration is:
++Funded publication and read-driven local-finance handoff are now recorded in the upstream evidence linked above. They do not establish every requirement below, two independent writers or the combined live journey. The complete acceptance target is:
+ 
+ 1. Publish at least two wallet-owned worker records on the current Arkiv testnet, containing deliberately public capability, network/scheme, sequence and expiry metadata.
+ 2. Show the real query, returned entity keys and writer addresses. Keep prompts, credentials and private checkpoint references out of public records.
+diff --git a/docs/AI_CONTRIBUTIONS.md b/docs/AI_CONTRIBUTIONS.md
+new file mode 100644
+index 0000000..66773dd
+--- /dev/null
++++ b/docs/AI_CONTRIBUTIONS.md
+@@ -0,0 +1,7 @@
++# AI-assisted experiment provenance
++
++The user requested an honest assessment of Janus's Web3, privacy and security, then asked to test the proposed improvements on a different branch and improve sponsor-track fit. The resulting work is on `experiment/security-sponsor-fit`, based on `7436e49e98c37e420830a1f30cf3b5211dd4066d` after upstream integration.
++
++Codex assisted with the private JSON encryption module, offline maintenance utility, production key policy, research deletion, provider limits/disclosures, public Arkiv projection, related tests and security/sponsor documentation. Git history identifies the exact files and patch. Existing treasury contracts, paid-task protocol, recovery artifacts, research supervisor and Arkiv discovery were present before this experiment; they are not claimed as new work here.
++
++The user supplied product direction, challenged the security/privacy assumptions and selected isolated experimentation. This record does not assert other human implementation/review contributions, event registration, pre-event provenance, asset licensing or sponsor eligibility. The team must supply those facts accurately before submission. No independent reviewer is invented and automated checks are not described as an independent audit.
+diff --git a/docs/SPONSOR_VERIFICATION.md b/docs/SPONSOR_VERIFICATION.md
+index 0826c01..b1374f1 100644
+--- a/docs/SPONSOR_VERIFICATION.md
++++ b/docs/SPONSOR_VERIFICATION.md
+@@ -1,6 +1,8 @@
+ # Janus sponsor implementation and verification plan
+ 
+-Rules reviewed: 6 November 2026, Asia/Kolkata. This is the current acceptance and evidence plan, superseding sponsor assumptions in the archived dossier. It is not a prize-eligibility certificate. Only organizers and sponsors decide eligibility and awards.
++Rules reviewed: 7 November 2026, Asia/Kolkata. This is the current acceptance and evidence plan, superseding sponsor assumptions in the archived dossier. It is not a prize-eligibility certificate. Only organizers and sponsors decide eligibility and awards.
++
++Experimental update: [security/sponsor-fit work](../shared/SECURITY_EXPERIMENT.md) strengthens private persistence and disclosure while preserving bounded payments, portable discovery and owner exit. It does not establish x402 compliance, a root FOSS license, track registration or independent review. Local browser recovery/treasury controls and paid research have bounded implementation evidence in Phases 5/6. Funded Arkiv publication/read/handoff records were integrated from upstream `c065696`. No requirement is promoted to independently verified by this experiment.
+ 
+ ## Reviewer entry point
+ 
+@@ -33,7 +35,7 @@ The [event rules](https://ethglobal.com/events/mumbai/info/details) distinguish
+ 
+ ## What makes each integration meaningful
+ 
+-Hedera is the shared financial enforcement boundary: a database display cannot replace epoch checks, conserved reservations and owner exit enforced by the treasury. Arkiv is implemented as an independently queryable replacement-worker directory, with funded publication evidence pending: it must affect which eligible replacement is selected, not just collect activity logs. CROPS is a property, not an installed dependency: the owner must retain a usable exit when Janus services are unavailable.
++Hedera is the shared financial enforcement boundary: a database display cannot replace epoch checks, conserved reservations and owner exit enforced by the treasury. Arkiv is an independently queryable replacement-worker directory with recorded funded publication/read-driven local handoff: it affects eligible replacement selection, rather than collecting unread activity logs. CROPS is a property, not an installed dependency: the owner must retain a usable exit when Janus services are unavailable.
+ 
+ For each integration record the user problem, implementing files, actual runtime call, visible outcome and a removal experiment. A sponsor logo, package import, standalone token transfer, manually supplied worker list, or recovery button that still needs the main API is insufficient.
+ 
+@@ -93,7 +95,7 @@ The register validator checks bookkeeping and existence, not truth, external acc
+ 
+ Hedera task-aware payment/replay evidence is recorded in `backend/hedera/evidence/task-aware-live-proof.json`; the source was dirty and its executed-script hash is recorded, so independently reconcile the patch/provenance before promoting it. The record's scope is JSON-RPC receipt/event and exact balances, not native consensus child-record verification. Current custom HTTP compliance is still an open gate.
+ 
+-CLI recovery and checkpointed handoff have source/tests and documented local observations. Browser recovery and the connected dashboard remain open. Arkiv v2 discovery and runner integration now have local adversarial/handoff proof and an independent live read; funded publication and combined live discovery evidence remain pending. Root FOSS licensing remains unverified. Classic versus Continuity registration, full provenance, AI/human contribution disclosure, final sponsor docs and videos remain unverified. No sponsor is marked submission-ready.
++CLI/static-browser recovery, authoritative treasury controls and checkpointed paid research have bounded local proofs. Arkiv v2 discovery has recorded funded publication, CLI/browser reads and live-discovery/local-finance handoff evidence from one writer. A combined live Hedera/Arkiv/research journey remains open. Root FOSS licensing, Classic versus Continuity registration, event provenance, complete AI/human contribution disclosure, final videos and independent review remain unresolved. No sponsor is marked submission-ready.
+ 
+ ## Phase discipline
+ 
+diff --git a/docs/evidence/sponsor-status.json b/docs/evidence/sponsor-status.json
+index 0eb2899..eb5bb66 100644
+--- a/docs/evidence/sponsor-status.json
++++ b/docs/evidence/sponsor-status.json
+@@ -1,6 +1,6 @@
+ {
+   "schemaVersion": 1,
+-  "rulesReviewedOn": "2026-11-06",
++  "rulesReviewedOn": "2026-11-07",
+   "timezone": "Asia/Calcutta",
+   "scope": "Internal evidence readiness; not sponsor eligibility or award confirmation",
+   "requirements": [
+@@ -9,8 +9,10 @@
+       "sponsor": "event",
+       "requirement": "Registered track, build provenance, reused assets and meaningful human/AI contribution disclosure",
+       "mandatory": true,
+-      "status": "missing",
+-      "evidencePaths": [],
++      "status": "partial",
++      "evidencePaths": [
++        "docs/AI_CONTRIBUTIONS.md"
++      ],
+       "verificationRecord": null
+     },
+     {
+@@ -133,7 +135,10 @@
+       "mandatory": true,
+       "status": "partial",
+       "evidencePaths": [
+-        "shared/RECOVERY.md"
++        "shared/RECOVERY.md",
++        "shared/PHASE6.md",
++        "shared/evidence/phase6-dashboard.json",
++        "shared/SECURITY_EXPERIMENT.md"
+       ],
+       "verificationRecord": null
+     },
+@@ -142,8 +147,12 @@
+       "sponsor": "crops",
+       "requirement": "Browser recovery UX, shutdown/network trace and three reset measurements",
+       "mandatory": true,
+-      "status": "missing",
+-      "evidencePaths": [],
++      "status": "partial",
++      "evidencePaths": [
++        "shared/PHASE6.md",
++        "shared/evidence/phase6-dashboard.json",
++        "shared/SECURITY_EXPERIMENT.md"
++      ],
+       "verificationRecord": null
+     },
+     {
+@@ -151,8 +160,12 @@
+       "sponsor": "crops",
+       "requirement": "Root license, README CROPS section, third-party visibility/key protection and no-trackers review",
+       "mandatory": true,
+-      "status": "missing",
+-      "evidencePaths": [],
++      "status": "partial",
++      "evidencePaths": [
++        "README.md",
++        "shared/SECURITY_EXPERIMENT.md",
++        "docs/AI_CONTRIBUTIONS.md"
++      ],
+       "verificationRecord": null
+     },
+     {
+diff --git a/frontend/.env.example b/frontend/.env.example
+index c20d5df..800aac4 100644
+--- a/frontend/.env.example
++++ b/frontend/.env.example
+@@ -6,9 +6,16 @@ NEXT_PUBLIC_PRIVY_CLIENT_ID=
+ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=
+ # Server-only ES256 public verification key. Literal \n separators are supported.
+ PRIVY_VERIFICATION_KEY=
+-# Server-only vault master key: optional base64-encoded 32 bytes. Local development
+-# generates an ignored .workbench-state/vault/master.key if this is empty.
++# Server-only vault master key: base64-encoded 32 bytes. Required in production
++# unless JANUS_VAULT_KEY_FILE is configured. Local development alone generates
++# an ignored .workbench-state/vault/master.key if both are empty.
+ JANUS_VAULT_KEY=
++# Absolute path outside the vault directory, containing a base64 vault key.
++JANUS_VAULT_KEY_FILE=
++# Absolute path outside protected state, containing a versioned data keyring.
++# Required in production for research/paid checkpoint/merchant persistence.
++# See shared/SECURITY_EXPERIMENT.md. Never use NEXT_PUBLIC_ for these values.
++JANUS_DATA_KEYRING_FILE=
+ # Optional absolute monorepo root and persistent private state directory.
+ JANUS_WORKSPACE_ROOT=
+ JANUS_WORKBENCH_STATE_DIR=
+diff --git a/frontend/scripts/verify-research-browser.mjs b/frontend/scripts/verify-research-browser.mjs
+index 3a9d9a6..567db58 100644
+--- a/frontend/scripts/verify-research-browser.mjs
++++ b/frontend/scripts/verify-research-browser.mjs
+@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
+ import { build } from '../../contracts/node_modules/esbuild/lib/main.js';
+ import { chromium } from '../../contracts/node_modules/playwright/index.mjs';
+ import { defaultConfig, validateWorkbenchConfig } from '../../backend/workbench/config.mjs';
+-import { createRun, executeResearch, readRun, listRuns, controlRun } from '../../backend/workbench/research.mjs';
++import { createRun, executeResearch, readRun, listRuns, controlRun, deleteRun } from '../../backend/workbench/research.mjs';
+ const root = fileURLToPath(new URL('../../', import.meta.url));
+ const directory = await fs.mkdtemp(path.join(root, 'contracts/phase1/artifacts/dashboard-browser-'));
+ let config = structuredClone(defaultConfig);
+@@ -31,6 +31,7 @@ const server = http.createServer(async (req, res) => {
+       if (req.method === 'POST') {
+         let raw=''; for await(const chunk of req) raw+=chunk; const body=JSON.parse(raw);
+         if (body.action === 'create') { const run=await createRun(directory,user,{...body,config}); const promise=executeResearch({root:directory,user,id:run.id}); pending.add(promise); promise.finally(()=>pending.delete(promise)); data={run}; }
++        else if(body.action==='delete'&&body.confirmDelete===true) data=await deleteRun(directory,user,body.id);
+         else data={run:await controlRun(directory,user,body.id,body.action)};
+       } else data=url.searchParams.has('id')?{run:await readRun(directory,user,url.searchParams.get('id'))}:{runs:await listRuns(directory,user)};
+       res.setHeader('Content-Type','application/json'); res.end(JSON.stringify(data)); return;
+@@ -64,7 +65,11 @@ try {
+   await page.screenshot({path:path.join(directory,'desktop.png'),fullPage:true});
+   await page.setViewportSize({width:390,height:844});
+   await page.screenshot({path:path.join(directory,'mobile.png'),fullPage:true});
++  page.once('dialog', dialog=>dialog.accept());
++  await page.getByRole('button',{name:'Delete local research',exact:true}).click();
++  await page.getByRole('status').filter({hasText:'Local research deleted.'}).waitFor();
++  assert.deepEqual(await listRuns(directory,user),[]);
+   assert.deepEqual(errors,[]);
+-  console.log('Dashboard browser acceptance passed: original shell, agent creation, parallel run, checkpoint replacement, event filtering, final report and responsive rendering.');
++  console.log('Dashboard browser acceptance passed: original shell, agent creation, encrypted parallel run, checkpoint replacement, event filtering, final report, responsive rendering and confirmed local research deletion.');
+   console.log('Screenshots: '+directory);
+ } finally { await browser.close(); await Promise.allSettled([...pending]); await new Promise(resolve=>server.close(resolve)); }
+diff --git a/frontend/src/app/api/research/route.ts b/frontend/src/app/api/research/route.ts
+index 62f89ff..060609f 100644
+--- a/frontend/src/app/api/research/route.ts
++++ b/frontend/src/app/api/research/route.ts
+@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process';
+ import { sessionResponse } from '../../../lib/session-response.mjs';
+ import { createWorkbenchStore } from '../../../../../backend/workbench/store.mjs';
+ import { defaultConfig } from '../../../../../backend/workbench/config.mjs';
+-import { createRun, readRun, listRuns, controlRun } from '../../../../../backend/workbench/research.mjs';
++import { createRun, readRun, listRuns, controlRun, deleteRun } from '../../../../../backend/workbench/research.mjs';
+ 
+ const headers = { 'Cache-Control': 'no-store' };
+ function workspace() {
+@@ -56,6 +56,10 @@ export async function POST(request: Request) {
+       catch { await controlRun(state, user, run.id, 'cancel'); throw new Error('Supervisor could not start; run cancelled'); }
+       return Response.json({ run }, { status: 201, headers });
+     }
++    if (body.action === 'delete') {
++      if (body.confirmDelete !== true) throw new Error('Confirm permanent deletion of local research; payment records and provider copies remain');
++      return Response.json(await deleteRun(state, user, body.id), { headers });
++    }
+     const run = await controlRun(state, user, body.id, body.action);
+     if (body.action === 'resume') await launch(root, state, user, body.id);
+     return Response.json({ run }, { headers });
+diff --git a/frontend/src/components/agent-control-center.tsx b/frontend/src/components/agent-control-center.tsx
+index 136e485..57a7440 100644
+--- a/frontend/src/components/agent-control-center.tsx
++++ b/frontend/src/components/agent-control-center.tsx
+@@ -83,7 +83,7 @@ export default function AgentControlCenter({ view }: { view: 'Agents' | 'Runs' |
+       <p className="agent-muted">Worker definitions do not hold a fresh allowance. Task budgets and spending authority remain with the treasury.</p>
+     </>}
+     {view === 'Credentials' && <div className="dashboard-two-col-grid">
+-      <section className="spotlight-card"><KeyRound size={20} /><h3>Add provider credential</h3><p className="agent-muted">Encrypted on the server and scoped to your verified account. Saving makes no provider request.</p>
++      <section className="spotlight-card"><KeyRound size={20} /><h3>Add provider credential</h3><p className="agent-muted">Encrypted on the server and scoped to your verified account. Janus decrypts keys to call your provider. Saving makes no provider request.</p>
+         <form onSubmit={event => { event.preventDefault(); void action(async () => { await request('/api/workbench', { action: 'saveCredential', credential: { provider, label, key } }); setKey(''); setLabel(''); setCredentials((await request('/api/workbench')).credentials); setMessage('Credential saved. Assign it to an agent.'); }); }}>
+           <label>Provider<select value={provider} onChange={event => setProvider(event.target.value)}>{providers.map(value => <option key={value}>{value}</option>)}</select></label>
+           <label>Label<input required maxLength={60} value={label} onChange={event => setLabel(event.target.value)} placeholder="Research team key" /></label>
+@@ -95,7 +95,7 @@ export default function AgentControlCenter({ view }: { view: 'Agents' | 'Runs' |
+     </div>}
+     {view === 'Integrations' && <>
+       <div className="dashboard-two-col-grid"><section className="spotlight-card"><h3>Hedera testnet</h3><p className="agent-muted">Read-only chain and deployment-code check. This does not submit a payment or establish general x402 compliance.</p><button className="btn-secondary-pill" disabled={busy} onClick={() => void action(async () => { const response = await fetch('/api/integrations', { method: 'POST' }); const data = await response.json(); if (!response.ok) throw new Error(data.error); setNetwork(data.hedera); })}><RefreshCw size={14} />Check testnet</button>{network && <p>Chain {network.chainId} · {network.deploymentPresent ? 'Contract code found' : 'No contract code found'}</p>}</section>
+-      <section className="spotlight-card"><h3>Arkiv research directory</h3><p className="agent-muted">Public, expiring worker profiles. A profile is discovery metadata, not financial permission.</p><div className="agent-actions"><button className="btn-secondary-pill" disabled={busy} onClick={() => void action(async () => { const directory = await import('@/lib/arkiv-directory'); setProfiles(await directory.listArkivWorkers()); })}>Read directory</button><button className="btn-secondary-pill" disabled={busy || !auth.walletAddress} onClick={() => void action(async () => { const wallet = await auth.getWalletProvider(); if (!wallet || !auth.walletAddress) throw new Error('Connect a dedicated testnet wallet'); const directory = await import('@/lib/arkiv-directory'); const result = await directory.registerArkivWorker(wallet, auth.walletAddress as `0x${string}`, activeAgents.find(item => item.id !== 'orchestrator')?.name || 'Research worker'); setMessage(`Profile published: ${result.entityKey}. Transaction: ${result.txHash}`); setProfiles(await directory.listArkivWorkers()); })}>Publish worker</button></div><p className="agent-muted">Publishing requests a wallet signature and testnet gas. Never publish secrets or private prompts. Research-run automatic reassignment is not connected yet.</p></section></div>
++      <section className="spotlight-card"><h3>Arkiv research directory</h3><p className="agent-muted">Your wallet address, generic worker label, capability and availability are public. Expiry does not guarantee erasure of historical copies. A profile grants no spending permission.</p><div className="agent-actions"><button className="btn-secondary-pill" disabled={busy} onClick={() => void action(async () => { const directory = await import('@/lib/arkiv-directory'); setProfiles(await directory.listArkivWorkers()); })}>Read directory</button><button className="btn-secondary-pill" disabled={busy || !auth.walletAddress} onClick={() => void action(async () => { const wallet = await auth.getWalletProvider(); if (!wallet || !auth.walletAddress) throw new Error('Connect a dedicated testnet wallet'); const directory = await import('@/lib/arkiv-directory'); const result = await directory.registerArkivWorker(wallet, auth.walletAddress as `0x${string}`, 'Research worker'); setMessage(`Profile published: ${result.entityKey}. Transaction: ${result.txHash}`); setProfiles(await directory.listArkivWorkers()); })}>Publish worker</button></div><p className="agent-muted">Publishing requests a wallet signature and testnet gas. Never publish secrets or private prompts. Research-run automatic reassignment is not connected yet.</p></section></div>
+       {profiles && <section className="spotlight-card"><h3>Worker profiles</h3>{profiles.length === 0 && <p className="agent-muted">No eligible profiles returned. Do not assume a replacement is available.</p>}{profiles.map(profile => <div className="agent-list-row" key={profile.entityKey}><div><strong>{profile.name}</strong><p className="agent-muted">{profile.worker} · {profile.capabilities}</p></div><button className="btn-secondary-pill" disabled={busy || !config || agents.length >= 7} onClick={() => setAgent({ ...emptyAgent(), name: profile.name.slice(0, 50), responsibility: `Research using the public ${profile.capabilities} worker profile ${profile.entityKey}. Check evidence and respect task authority.` })}>Configure worker</button></div>)}</section>}
+     </>}
+     {view === 'Runs' && <>
+@@ -103,12 +103,20 @@ export default function AgentControlCenter({ view }: { view: 'Agents' | 'Runs' |
+         <form onSubmit={event => { event.preventDefault(); void action(async () => { if (!config) throw new Error('Workspace is not loaded'); const data = await request('/api/research', { action: 'create', question, mode, confirmProviderBilling: billing, interrupt }); setRun(data.run); setRunId(data.run.id); setRuns(current => [data.run, ...current]); }); }}>
+           <label>Research question<textarea rows={3} required minLength={10} maxLength={6000} value={question} onChange={event => setQuestion(event.target.value)} /></label>
+           <label>Execution mode<select value={mode} onChange={event => { setMode(event.target.value); setBilling(false); }}><option value="fixture">Local fixture · no provider calls</option><option value="llm">Live models · your saved API keys</option></select></label>
+-          {mode === 'fixture' ? <label className="agent-checkbox"><input type="checkbox" checked={interrupt} onChange={event => setInterrupt(event.target.checked)} />Interrupt first worker after checkpoint; demonstrate replacement</label> : <label className="agent-checkbox"><input type="checkbox" checked={billing} onChange={event => setBilling(event.target.checked)} />I approve provider billing: one planning call, one per active worker, and one report call (up to 800 output tokens each).</label>}
++          {mode === 'fixture' ? <label className="agent-checkbox"><input type="checkbox" checked={interrupt} onChange={event => setInterrupt(event.target.checked)} />Interrupt first worker after checkpoint; demonstrate replacement</label> : <label className="agent-checkbox"><input type="checkbox" checked={billing} onChange={event => setBilling(event.target.checked)} />I approve sending my question, assigned research context and purchased source content to the configured model providers, with separate provider billing: one planning call, one per active worker, and one report call (up to 800 output tokens each).</label>}
+           <button className="btn-secondary-pill" disabled={busy || !config || (mode === 'llm' && !billing)}><Play size={14} />Start run</button>
+         </form><p className="agent-muted">This research runtime has no web or payment tools yet. It uses supplied context; it does not purchase sources or change treasury balances.</p>
+       </section><section className="spotlight-card"><h3>Saved runs</h3><div className="agent-run-list">{runs.length === 0 && <p className="agent-muted">Your research runs will appear here.</p>}{runs.map(item => <button aria-pressed={runId === item.id} className="agent-run-option" key={item.id} onClick={() => { setRunId(item.id); setFilter('all'); }}><span>{item.question}</span><small>{item.status} · {item.mode === 'fixture' ? 'LOCAL FIXTURE' : 'LIVE MODELS'}</small></button>)}</div></section></div>
+       {run && <>
+         <div className="agent-section-bar"><div><h3>Janus orchestrator <span className="hash-tag">{run.status.toUpperCase()}</span></h3><p className="agent-muted">Run {run.id} · {run.mode === 'fixture' ? 'Local fixture — no live spending' : 'Provider research — externally billed'}</p></div><div className="agent-actions">{!terminal.includes(run.status) && <><button className="btn-secondary-pill" disabled={busy || !['running', 'queued'].includes(run.status)} onClick={() => void action(async () => { await request('/api/research', { action: 'pause', id: run.id }); setMessage('Pause requested. In-flight calls finish before the run pauses.'); })}><Pause size={13} />Pause</button><button className="btn-secondary-pill" disabled={busy || run.status !== 'paused'} onClick={() => void action(async () => { await request('/api/research', { action: 'resume', id: run.id }); setMessage('Resume requested for the original run.'); })}><RefreshCw size={13} />Resume</button><button className="btn-secondary-pill" disabled={busy} onClick={() => void action(async () => { await request('/api/research', { action: 'cancel', id: run.id }); setMessage('Cancellation requested. No treasury cancellation or refund is implied.'); })}><X size={13} />Cancel</button></>}</div></div>
++        {['completed', 'cancelled'].includes(run.status) && <div className="agent-actions"><button className="btn-secondary-pill" disabled={busy} onClick={() => {
++          if (!window.confirm('Permanently delete this local research run and its report? Provider copies, backups and financial records remain.')) return;
++          void action(async () => {
++            await request('/api/research', { action: 'delete', id: run.id, confirmDelete: true });
++            setRuns(current => current.filter(item => item.id !== run.id)); setRun(null); setRunId('');
++            setMessage('Local research deleted. Provider copies, backups and financial records are unchanged.');
++          });
++        }}>Delete local research</button></div>}
+         {run.error && <div className="notice" role="alert">{run.error}</div>}
+         <div className="agent-card-grid">{run.config.agents.map(item => { const state = run.workers[item.id]; return <article className="spotlight-card" key={item.id}><div className="agent-section-bar"><Bot size={18} /><span className="hash-tag">{item.id === 'orchestrator' ? 'COORDINATOR' : state?.status || 'WAITING'}</span></div><h3>{item.name}</h3><p className="agent-muted">{item.responsibility}</p><dl className="agent-facts"><div><dt>Process</dt><dd>{state?.pid ?? 'Supervisor'}</dd></div><div><dt>Heartbeat</dt><dd>{state?.heartbeat ? new Date(state.heartbeat).toLocaleTimeString() : "—"}</dd></div><div><dt>Attempt</dt><dd>{state?.attempt ?? 1}</dd></div><div><dt>Artifacts</dt><dd>{Object.values(run.artifacts).filter(a => a.agentId === item.id).length}</dd></div></dl></article>; })}</div>
+         <section className="spotlight-card"><div className="agent-section-bar"><h3><Activity size={16} /> Activity timeline</h3><label className="agent-filter">Filter agent<select aria-label="Filter activity by agent" value={filter} onChange={event => setFilter(event.target.value)}><option value="all">All agents</option>{run.config.agents.map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label></div><ol className="agent-timeline" aria-live="polite">{filteredEvents.map(event => <li key={event.sequence}><span className="agent-event-number">{String(event.sequence).padStart(2, '0')}</span><div><strong>{event.type.replaceAll('-', ' ')}</strong><p>{event.summary}</p><small>{run.config.agents.find(a => a.id === event.agentId)?.name} · {new Date(event.at).toLocaleTimeString()}{event.pid ? ` · process ${event.pid}` : ''}</small></div></li>)}</ol></section>
+diff --git a/frontend/src/lib/arkiv-directory.ts b/frontend/src/lib/arkiv-directory.ts
+index 2f31d33..570646f 100644
+--- a/frontend/src/lib/arkiv-directory.ts
++++ b/frontend/src/lib/arkiv-directory.ts
+@@ -5,6 +5,7 @@ import { and, eq, gt } from '@arkiv-network/sdk/query';
+ import { custom, http, type Address, type EIP1193Provider } from 'viem';
+ import spec from '../../../shared/arkiv-worker.json';
+ import network from '../../../shared/network.json';
++import { publicWorkerProfile } from '../../../shared/public-worker-profile.mjs';
+ 
+ export interface ArkivProfileRecord {
+   $key: string;
+@@ -46,12 +47,11 @@ export async function listArkivWorkers(): Promise<WorkerProfile[]> {
+     worker: row.worker.value, role: row.role.value, status: row.status.value, capabilities: row.capabilities.value, name: row.name.value }));
+ }
+ export async function registerArkivWorker(provider: Pick<EIP1193Provider, 'request'>, address: Address, name: string) {
+-  if (!name.trim() || name.length > 50) throw new Error('Enter a worker name of up to 50 characters');
++  const profile = publicWorkerProfile({ worker: address, name, network: `eip155:${network.chainId}` });
+   const chain = rabdi({ accessKey: '' });
+   const wallet = createWalletClient({ chain, transport: custom(provider), account: address });
+   await wallet.addChain({ chain });
+   await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: `0x${chain.id.toString(16)}` }] });
+-  return wallet.createEntity(WorkerProfiles, { worker: addr(address), role: spec.role, status: 'ready', capabilities: spec.capability,
+-    network: `eip155:${network.chainId}`, scheme: spec.scheme, validUntil: u64(BigInt(Math.floor(Date.now() / 1000) + spec.leaseSeconds)), name: name.trim() },
++  return wallet.createEntity(WorkerProfiles, { ...profile, worker: addr(address), validUntil: u64(BigInt(profile.validUntil)) },
+     { expiration: ExpirationTime.fromHours(1) });
+ }
+diff --git a/frontend/test/research.test.mjs b/frontend/test/research.test.mjs
+index e6a0222..e8b9774 100644
+--- a/frontend/test/research.test.mjs
++++ b/frontend/test/research.test.mjs
+@@ -38,4 +38,8 @@ test('research routes enforce identity, billable consent, and account-private du
+   assert.ok(result.report.text.includes('Research fixture report'));
+   assert.ok(result.events.some(event => event.type === 'worker-replaced'));
+   assert.equal((await (await GET(request(owner))).json()).runs[0].id, run.id);
++  assert.equal((await POST(request(other, { action: 'delete', id: run.id, confirmDelete: true }))).status, 400);
++  assert.equal((await POST(request(owner, { action: 'delete', id: run.id }))).status, 400);
++  assert.equal((await POST(request(owner, { action: 'delete', id: run.id, confirmDelete: true }))).status, 200);
++  assert.equal((await GET(request(owner, null, '?id=' + run.id))).status, 404);
+ });
+diff --git a/package.json b/package.json
+index 68a7e13..bdacc49 100644
+--- a/package.json
++++ b/package.json
+@@ -22,6 +22,7 @@
+     "test:protocol": "node --test shared/test/*.test.mjs",
+     "demo:handoff": "npm run demo:handoff --prefix backend",
+     "test:workbench": "npm run test:workbench --prefix backend",
++    "test:security": "npm run test:security --prefix backend",
+     "sponsors:check": "node scripts/check-sponsors.mjs",
+     "sponsors:ready": "node scripts/check-sponsors.mjs --require-ready",
+     "arkiv:query": "npm run arkiv:query --prefix backend",
+diff --git a/shared/ARCHITECTURE.md b/shared/ARCHITECTURE.md
+index 80b2c39..4128baf 100644
+--- a/shared/ARCHITECTURE.md
++++ b/shared/ARCHITECTURE.md
+@@ -1,5 +1,9 @@
+ # Janus module boundaries
+ 
++## Experimental privacy boundary
++
++`backend/lib/private-json.mjs` owns authenticated private JSON and production data-key policy. Research account/run-relative records, checkpoint task files and merchant operation files use distinct encryption domains; they remain private host state, not public Arkiv entities. `backend/security/state-maintenance.mjs` owns explicit offline migration/rotation. `shared/public-worker-profile.mjs` defines the public-field projection used by frontend/backend publication. `api/research` adds identity-scoped confirmed local deletion; financial journals are outside that deletion boundary. Production vault/data key configuration and limitations are in [SECURITY_EXPERIMENT.md](SECURITY_EXPERIMENT.md). This does not isolate the trusted supervisor or provide confidential inference.
++
+ ## Research workspace boundary
+ 
+ `frontend/src/components/dashboard-shell.tsx` preserves the unified dashboard shell; `agent-control-center.tsx` owns agent creation, credentials, runs, monitoring and Hedera/Arkiv preparation. `api/workbench` verifies Privy identity and stores encrypted credentials/configuration through `backend/workbench/store.mjs`; it cannot launch processes or execute runs. The separate authenticated `api/research` route starts a detached fixed supervisor in `backend/workbench/`. It brokers fixed-endpoint model calls, manages separate worker processes and persists account-private events/artifacts; it does not submit financial transactions. See [DASHBOARD_RUNTIME.md](DASHBOARD_RUNTIME.md). `backend/runner/` and `backend/hedera/` retain the paid task/checkpoint path described in [demo.md](../demo.md). Arkiv profiles advertise research capability without granting spending authority. See [WORKBENCH.md](WORKBENCH.md).
+diff --git a/shared/CONTEXT.md b/shared/CONTEXT.md
+index 05a8974..82b6e54 100644
+--- a/shared/CONTEXT.md
++++ b/shared/CONTEXT.md
+@@ -1,5 +1,11 @@
+ # Janus product and current context
+ 
++## Experimental security branch — current override
++
++Upstream `c065696` was integrated before publication and supplies recorded funded Arkiv publication, independent CLI/browser reads and live-discovery/local-finance handoff evidence. The previous missing-writer blocker is cleared; broader sponsor acceptance and combined live execution remain open.
++
++On `experiment/security-sponsor-fit`, new research snapshots/controls/intents, runner checkpoints and task-aware merchant records are encrypted with identity/domain-bound AES-GCM. Production requires externally supplied keys; offline migration/rotation is explicit and existing state has not been migrated. Completed/cancelled local research can be deleted with confirmation. Provider dispatch/public Arkiv disclosures and a public-field projection are implemented. Read [SECURITY_EXPERIMENT.md](SECURITY_EXPERIMENT.md) for setup and residual risks. Earlier plaintext descriptions below describe the baseline, not new writes on this branch. The November 7 audit still reports 28 production advisories; no sponsor is newly qualified. Overview/Tasks are authoritative as documented in Phase 6 despite older illustrative-dashboard statements below.
++
+ ## Research-task workspace
+ 
+ The current implementation follows [demo.md](../demo.md): task-owned budgets, paid-source reuse, checkpointed worker handoff and independent owner recovery. `/dashboard/agents` creates/configures workers and `/dashboard/runs` executes and monitors parallel research; `/dashboard/credentials` retains encrypted provider-key storage. User-key provider brokerage is connected to the separate research runtime; live provider calls remain unverified. The paid checkpoint runner is not yet wired into browser research steps. Arkiv v2 profile publication/query now feeds operator-triggered checkpoint replacement with owner policy and signed readiness. Local fixture-directory handoff and a live independent query pass; funded testnet publication, remote worker transport and combined live evidence remain pending. See [ARKIV.md](ARKIV.md). Read-only Hedera checks remain available. See [WORKBENCH.md](WORKBENCH.md) and [DASHBOARD_RUNTIME.md](DASHBOARD_RUNTIME.md).
+diff --git a/shared/PLAN.md b/shared/PLAN.md
+index 04de137..2c28db9 100644
+--- a/shared/PLAN.md
++++ b/shared/PLAN.md
+@@ -1,5 +1,9 @@
+ # Janus implementation plan
+ 
++## Security and sponsor-fit experiment
++
++Keep `experiment/security-sponsor-fit` separate from main under the user's current instruction. Evaluate encrypted private persistence, fail-closed production keys, offline maintenance, bounded research deletion and public-data minimization with existing payment/handoff/recovery regressions. See [SECURITY_EXPERIMENT.md](SECURITY_EXPERIMENT.md). Follow with dependency reachability/migration, deployed secret management, OS/signer isolation, backup/retention policy and manual live recovery. Actual x402 interoperability, integrated browser-paid research and final sponsor evidence remain gates. Funded Arkiv publication/read/handoff records were integrated from upstream `c065696`; do not repeat their former missing-writer blocker. Publish only this experimental branch, without merging or pushing main.
++
+ ## Current direction: research-task demo
+ 
+ Follow [demo.md](../demo.md). Preserve the local payment-aware handoff, recorded Hedera payment/replay and independent recovery. Paid research handoff and authoritative browser treasury controls are implemented with bounded local acceptance. Next complete integrated release verification and funded live Arkiv discovery evidence. Arkiv query results now drive operator-triggered eligible replacement selection; remote worker transport and browser orchestration remain separate. Dashboard agent creation, a single-host parallel research runtime, saved artifacts and account-private monitoring are now implemented. Paid research tools are verified through trusted CLI bindings; treasury controls are connected to the browser. No new sponsor acceptance is claimed.
+diff --git a/shared/README.md b/shared/README.md
+index b7cf9f0..48597d8 100644
+--- a/shared/README.md
++++ b/shared/README.md
+@@ -1,5 +1,7 @@
+ # Shared Janus context
+ 
++Security experiment: [SECURITY_EXPERIMENT.md](SECURITY_EXPERIMENT.md) defines encrypted-state configuration, offline migration/rotation, deletion boundaries, threat assumptions and sponsor positioning on `experiment/security-sponsor-fit`.
++
+ Dashboard runtime: [DASHBOARD_RUNTIME.md](DASHBOARD_RUNTIME.md) covers agent creation, parallel research, provider brokerage and persisted monitoring in the original dashboard shell.
+ 
+ Research workspace: [WORKBENCH.md](WORKBENCH.md) covers research-role configuration, encrypted provider keys and Hedera/Arkiv preparation. The current product story and runnable handoff are defined in [demo.md](../demo.md).
+diff --git a/shared/SECURITY_EXPERIMENT.md b/shared/SECURITY_EXPERIMENT.md
+new file mode 100644
+index 0000000..3f49346
+--- /dev/null
++++ b/shared/SECURITY_EXPERIMENT.md
+@@ -0,0 +1,71 @@
++# Security and sponsor-fit experiment
++
++Branch: `experiment/security-sponsor-fit`. Baseline: `7436e49e98c37e420830a1f30cf3b5211dd4066d` after integrating the fetched upstream change. This branch is an experiment, not a production release or completion of every security phase. Main is unchanged.
++
++Before publication, upstream `c0656969570179a4135d14523b80d1b024c93245` added funded Arkiv publication/read/handoff evidence and was integrated without changing the tested runtime implementation. Those records belong to their recorded run, not this experiment's local tests. Two profiles came from one wallet; they do not prove two independent operators or an always-available directory.
++
++## Implemented changes
++
++New research snapshots, controls and inference intents, paid-runner checkpoints, and task-aware merchant records use AES-256-GCM envelopes. Authenticated data binds each record to its storage domain and account/task-relative filename. Copying a record between accounts, runs or domains fails authentication. Missing keys, corrupted ciphertext and legacy plaintext never cause a reset to an unpaid/new operation.
++
++Production refuses automatic local key generation. Provider credentials require `JANUS_VAULT_KEY` or `JANUS_VAULT_KEY_FILE`. Private JSON requires `JANUS_DATA_KEYRING_FILE`, an absolute path outside the protected directory. A secret manager may provision these files; no managed KMS integration or isolated signer service is claimed. Keep secret mounts outside ALL state volumes, with host ACLs restricted to the service identity. Development alone generates local keys; copying development state and its key defeats storage confidentiality.
++
++The data keyring is JSON with `active` naming an entry in `keys`; each value encodes 32 random bytes in canonical base64. Example shape only: `{ "active": "key-2026-11", "keys": { "key-2026-11": "BASE64_32_RANDOM_BYTES" } }`. The example value is invalid deliberately. Generate secrets with a cryptographic generator into a protected file, never a public command transcript. Keep vault and data keys distinct. No key material belongs in Git, browser variables, evidence or public Arkiv entities.
++
++The authenticated research API now accepts explicit confirmed deletion only for completed/cancelled runs. It refuses active locks, unresolved runs and foreign-account records. The UI explains that payment journals, provider copies and backups remain. Deletion removes local research, not funds or purchase identity. A failed directory removal can leave a hidden `.deleting-<run-id>` quarantine; operators must reconcile/remove it while services are stopped. No automatic backup erasure or retention scheduler exists.
++
++Provider calls retain fixed HTTPS destinations, redirect refusal, 800-output-token bounds, and now a 128,000-character input bound. The supervisor permits only the plan, configured worker steps and report within their bounded call count. These are request bounds, not a dollar-denominated provider budget. Billable consent discloses off-device research context. Model output remains text, not an instruction to invoke a wallet or shell.
++
++Frontend/backend Arkiv publication share an explicit public field projection. The browser uses a generic worker label instead of publishing a private agent name automatically. Wallet address, network, capability, availability and timings remain public. A deliberately supplied public label may itself disclose information. Entity expiry is not a guarantee that historical copies disappear.
++
++## Migration and rotation
++
++Stop research supervisors and merchants before maintenance. Preserve encrypted backups, old keys, deployment manifests and unsettled-operation journals. Do not delete state to get past a decryption failure. Existing operator files were NOT migrated by this experiment.
++
++Run from the repository root, substituting an absolute directory. For research, use the `research` subdirectory of the workbench state root. Merchant/checkpoint directories contain their hash-named JSON records. Do not target the repository or a mixed evidence directory.
++
++```sh
++npm run security:state --prefix backend -- --directory ABSOLUTE_PROTECTED_DIRECTORY --domain research-v1
++```
++
++Supported domains: `research-v1`, `paid-checkpoint-v1`, `merchant-operations-v1`. The default authenticates records and reports a plan without changing payloads. `--allow-legacy` explicitly permits existing plaintext during offline migration. `--apply` encrypts/rewrites records under the active key. The tool refuses unexpected JSON paths, symlinks, unresolved temporary files and active/stale locks; normal stores refuse reads/writes while its maintenance lock exists.
++
++For rotation, provision a keyring containing both old and new keys with the new key active, run the plan and apply for EVERY protected domain, verify replay/recovery, then retire old keys according to backup retention. Development ciphertext uses key ID `development`; an offline transition must retain its existing 32-byte `.private-key` under that ID until rewritten. Do not print it. Vault key rotation is a separate unimplemented migration; changing its key without re-encrypting vaults makes credentials inaccessible.
++
++Migration is atomic per record, not across a directory. An interruption leaves a mix of authenticated old/new records; retain both keys and rerun after reconciliation. Locks are not automatically stolen. POSIX directory fsync is retained where supported; Windows supports file fsync here but not directory fsync. This does not establish equivalent power-loss durability or correct Windows ACLs.
++
++## Threat model and residual risks
++
++- Another authenticated account: verified session scoping plus ciphertext identity binding protect against record substitution; account hashes are pseudonyms, not anonymous identities.
++- Storage-only theft: production files without separately mounted keys do not expose protected payloads. Paths, file sizes, timing and key IDs remain visible. Backups inherit the same key-management obligations.
++- Compromised application host: the running service can decrypt data and use authorized provider/signing capabilities. Encryption at rest does not solve this. Separate OS identities/containers and a policy-limited remote signer remain open.
++- Compromised worker/scheduler: contracts bound spending, but a scheduler can assign a malicious worker within existing task policy. Useful-result quality and prompt-injection resistance are not proven by settlement.
++- Public observers: chain addresses, amounts, task IDs and authority events are public. RPCs can observe requests/client metadata. Arkiv is a public directory; hashes are not confidentiality.
++- Providers: receive dispatched research and source text. Provider retention, backups and subprocessors depend on the selected service; no zero-retention guarantee is made.
++- Dependency attackers: fresh npm production audit reports 28 findings (17 high, 11 moderate). Non-forced audit-fix preview changed zero packages and left all 28. A breaking suggested Privy downgrade was not applied. Reachability review and a tested wallet-stack migration remain release blockers.
++- Merchant/server loss: encryption does not restore unavailable paid artifacts. Independent owner recovery protects available funds, not settled purchases or every failure of chain/token/wallet infrastructure.
++
++## Six-phase acceptance status
++
++1. Baseline: threat model and fresh dependency audit recorded. Reachability review and deployment-host ACL verification remain open.
++2. Credentials/signers: production key configuration fails closed; retained-key data rotation is tested. Managed KMS, vault rotation and isolated policy signing remain open.
++3. Research privacy: encrypted persistence, offline migration, provider disclosure and bounded local deletion implemented. Backup deletion and timed retention remain open.
++4. Worker containment: request/call-count limits implemented. Separate-identity sandboxing, egress enforcement and monetary provider caps remain open.
++5. Financial recovery: rerun local treasury, payment/replay, paid research and independent browser regressions. Manual live extension-wallet rehearsal and independent security audit remain open.
++6. Product/sponsors: one story and honest disclosures documented. Funded Arkiv publication/read/handoff records are now integrated from upstream. Browser-paid research, actual x402 interoperability, track provenance, licensing, independent review and final video remain open.
++
++Reproduce with `npm run test:security`, `npm run check`, `npm run recovery:test:browser --prefix contracts`, and `npm run dashboard:test:browser --prefix contracts`. Tests use fixtures/local EVMs and do not authorize live provider billing or chain transactions. See the append-only [experiment evidence](../docs/evidence/security-sponsor-experiment.json) for actual outcomes.
++
++This Windows host's C: drive became full during verification. Final checks used workspace scratch/cache directories on D:. The normal Turbopack build passed with `RAYON_NUM_THREADS=1`, `UV_THREADPOOL_SIZE=2` and `NODE_OPTIONS=--max-old-space-size=1536`; no build configuration or global environment was changed. Backend test files now run serially to avoid concurrent local-chain/worker memory pressure. Browser fixtures use an in-memory LevelDOWN database and standard loopback HTTP transport, preserving actual EVM execution and all wallet assertions while avoiding Ganache's Windows disk-cleanup failure. See initial failures and successful reruns in the evidence record.
++
++## Sponsor positioning
++
++The product promise is: **a research task keeps its budget and purchases when workers change, keeps private progress off the public directory, and preserves the owner's independent exit.**
++
++Hedera: emphasize contract-enforced spending, original-purchase replay and stale-worker refusal. Next show an actually interoperable HTTP 402 challenge/payment flow and useful paid source on Hedera; encrypted state does not replace the x402 qualification gate. [Official track](https://ethglobal.com/events/mumbai/prizes/hedera).
++
++EF CROPS: lead with the independently hosted recovery artifact, and demonstrate encrypted private progress plus honest third-party disclosure. Recovery already existed at this branch baseline; do not present it as a new experiment feature. This branch improves storage privacy, not anonymous payments. FOSS licensing, tracker/network review and correct Classic/Continuity provenance remain mandatory. [Official categories](https://ethglobal.com/events/mumbai/prizes/ethereum-foundation).
++
++Arkiv: emphasize wallet-owned expiring availability, public independent queries, policy/readiness-checked replacement and no fallback on missing directory data. Keep prompts, keys, results and checkpoint locations off Arkiv. Show publication/read-driven selection and the feature waiting when no eligible worker exists. No external adoption is claimed. [Official categories](https://ethglobal.com/events/mumbai/prizes/arkiv).
++
++For a combined recording, label every local/testnet segment. Show a purchase, interruption, directory-selected replacement, original artifact reuse and backend-off owner exit, with the privacy boundary visible before provider dispatch/publication. This script is an acceptance target, not a claim that a combined live recording exists.
+diff --git a/shared/public-worker-profile.mjs b/shared/public-worker-profile.mjs
+new file mode 100644
+index 0000000..30f977c
+--- /dev/null
++++ b/shared/public-worker-profile.mjs
+@@ -0,0 +1,11 @@
++import spec from './arkiv-worker.json' with { type: 'json' };
++
++// Deliberate public projection. Never spread agent configuration or a private
++// checkpoint into an entity. Caller-supplied labels are themselves public.
++export function publicWorkerProfile({ worker, network, name = 'Research worker', now = BigInt(Math.floor(Date.now() / 1000)) }) {
++  if (!/^0x[0-9a-fA-F]{40}$/.test(worker ?? '') || /^0x0{40}$/.test(worker)
++    || !/^eip155:[1-9][0-9]*$/.test(network ?? '') || typeof name !== 'string' || !name.trim() || name.length > 50
++    || typeof now !== 'bigint' || now < 0n || now + BigInt(spec.leaseSeconds) > (1n << 64n) - 1n) throw new Error('Invalid public worker profile');
++  return { worker, role: spec.role, status: 'ready', capabilities: spec.capability, network, scheme: spec.scheme,
++    validUntil: (now + BigInt(spec.leaseSeconds)).toString(), name: name.trim() };
++}

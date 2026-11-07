@@ -1,5 +1,6 @@
 const instructions = 'Assist with research tasks. Distinguish source evidence from assumptions. No wallet or payment tools are available. Never claim a purchase or task execution that has not occurred.';
 export async function callProvider({ credential, model, prompt, fetchImpl = fetch }) {
+  if (typeof prompt !== 'string' || prompt.length > 128000) throw new Error('Research prompt exceeds the input-size limit');
   if (typeof model !== 'string' || !/^[a-zA-Z0-9._:/-]{1,100}$/.test(model)) throw new Error('Enter an explicit provider model ID');
   const openai = credential.provider === 'openai';
   const anthropic = credential.provider === 'anthropic', gemini = credential.provider === 'gemini';

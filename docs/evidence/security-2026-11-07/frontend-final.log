@@ -1,0 +1,69 @@
+
+> @janus/frontend@0.1.0 test
+> node --experimental-strip-types --test test/*.test.mjs
+
+TAP version 13
+# Subtest: research routes enforce identity, billable consent, and account-private durable execution
+ok 1 - research routes enforce identity, billable consent, and account-private durable execution
+  ---
+  duration_ms: 1912.4513
+  type: 'test'
+  ...
+# Subtest: session verification enforces identity and accepts environment PEM encoding
+    # Subtest: missing bearer token returns 401 without caching
+    ok 1 - missing bearer token returns 401 without caching
+      ---
+      duration_ms: 2.8204
+      type: 'test'
+      ...
+    # Subtest: valid token with multiline PEM returns verified identity
+    ok 2 - valid token with multiline PEM returns verified identity
+      ---
+      duration_ms: 6.955
+      type: 'test'
+      ...
+    # Subtest: literal newline separators in environment PEM work
+    ok 3 - literal newline separators in environment PEM work
+      ---
+      duration_ms: 2.1167
+      type: 'test'
+      ...
+    # Subtest: wrong audience, issuer, subject and expired tokens are rejected
+    ok 4 - wrong audience, issuer, subject and expired tokens are rejected
+      ---
+      duration_ms: 5.1653
+      type: 'test'
+      ...
+    # Subtest: missing or invalid verification configuration returns 503
+    ok 5 - missing or invalid verification configuration returns 503
+      ---
+      duration_ms: 2.1196
+      type: 'test'
+      ...
+    1..5
+ok 2 - session verification enforces identity and accepts environment PEM encoding
+  ---
+  duration_ms: 25.7152
+  type: 'test'
+  ...
+# Subtest: credential and config routes reject unauthenticated or cross-origin access
+ok 3 - credential and config routes reject unauthenticated or cross-origin access
+  ---
+  duration_ms: 6.0596
+  type: 'test'
+  ...
+# Subtest: verified accounts can save keys but cannot read or revoke another account credential
+ok 4 - verified accounts can save keys but cannot read or revoke another account credential
+  ---
+  duration_ms: 70.7339
+  type: 'test'
+  ...
+1..4
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2167.8898

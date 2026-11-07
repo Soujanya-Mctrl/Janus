@@ -5,6 +5,7 @@ import { and, eq, gt } from '@arkiv-network/sdk/query';
 import { custom, http, type Address, type EIP1193Provider } from 'viem';
 import spec from '../../../shared/arkiv-worker.json';
 import network from '../../../shared/network.json';
+import { publicWorkerProfile } from '../../../shared/public-worker-profile.mjs';
 
 export interface ArkivProfileRecord {
   $key: string;
@@ -46,12 +47,11 @@ export async function listArkivWorkers(): Promise<WorkerProfile[]> {
     worker: row.worker.value, role: row.role.value, status: row.status.value, capabilities: row.capabilities.value, name: row.name.value }));
 }
 export async function registerArkivWorker(provider: Pick<EIP1193Provider, 'request'>, address: Address, name: string) {
-  if (!name.trim() || name.length > 50) throw new Error('Enter a worker name of up to 50 characters');
+  const profile = publicWorkerProfile({ worker: address, name, network: `eip155:${network.chainId}` });
   const chain = rabdi({ accessKey: '' });
   const wallet = createWalletClient({ chain, transport: custom(provider), account: address });
   await wallet.addChain({ chain });
   await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: `0x${chain.id.toString(16)}` }] });
-  return wallet.createEntity(WorkerProfiles, { worker: addr(address), role: spec.role, status: 'ready', capabilities: spec.capability,
-    network: `eip155:${network.chainId}`, scheme: spec.scheme, validUntil: u64(BigInt(Math.floor(Date.now() / 1000) + spec.leaseSeconds)), name: name.trim() },
+  return wallet.createEntity(WorkerProfiles, { ...profile, worker: addr(address), validUntil: u64(BigInt(profile.validUntil)) },
     { expiration: ExpirationTime.fromHours(1) });
 }

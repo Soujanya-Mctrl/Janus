@@ -1,5 +1,9 @@
 # Janus module boundaries
 
+## Experimental privacy boundary
+
+`backend/lib/private-json.mjs` owns authenticated private JSON and production data-key policy. Research account/run-relative records, checkpoint task files and merchant operation files use distinct encryption domains; they remain private host state, not public Arkiv entities. `backend/security/state-maintenance.mjs` owns explicit offline migration/rotation. `shared/public-worker-profile.mjs` defines the public-field projection used by frontend/backend publication. `api/research` adds identity-scoped confirmed local deletion; financial journals are outside that deletion boundary. Production vault/data key configuration and limitations are in [SECURITY_EXPERIMENT.md](SECURITY_EXPERIMENT.md). This does not isolate the trusted supervisor or provide confidential inference.
+
 ## Research workspace boundary
 
 `frontend/src/components/dashboard-shell.tsx` preserves the unified dashboard shell; `agent-control-center.tsx` owns agent creation, credentials, runs, monitoring and Hedera/Arkiv preparation. `api/workbench` verifies Privy identity and stores encrypted credentials/configuration through `backend/workbench/store.mjs`; it cannot launch processes or execute runs. The separate authenticated `api/research` route starts a detached fixed supervisor in `backend/workbench/`. It brokers fixed-endpoint model calls, manages separate worker processes and persists account-private events/artifacts; it does not submit financial transactions. See [DASHBOARD_RUNTIME.md](DASHBOARD_RUNTIME.md). `backend/runner/` and `backend/hedera/` retain the paid task/checkpoint path described in [demo.md](../demo.md). Arkiv profiles advertise research capability without granting spending authority. See [WORKBENCH.md](WORKBENCH.md).

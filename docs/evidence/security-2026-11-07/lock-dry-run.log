@@ -1,0 +1,19 @@
+add queue-microtask 1.2.3
+add ltgt 2.2.1
+add level-supports 2.1.0
+add level-concat-iterator 3.1.0
+add is-buffer 2.0.5
+add inherits 2.0.4
+add ieee754 1.2.1
+add functional-red-black-tree 1.0.1
+add catering 2.1.1
+add buffer 6.0.3
+add base64-js 1.5.1
+add abstract-leveldown 7.2.0
+add playwright-core 1.65.0
+add @esbuild/win32-x64 0.28.2
+change playwright 1.65.0 => 1.65.0
+change memdown 6.1.1 => 6.1.1
+change esbuild 0.28.2 => 0.28.2
+
+added 14 packages, and changed 3 packages in 2s

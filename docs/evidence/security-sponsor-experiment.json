@@ -1,0 +1,241 @@
+{
+  "schemaVersion": 1,
+  "status": "recorded-local-verification",
+  "recordedAt": "2026-11-06T23:59:17.264Z",
+  "timezone": "Asia/Kolkata",
+  "branch": "experiment/security-sponsor-fit",
+  "sourceCommit": "c0656969570179a4135d14523b80d1b024c93245",
+  "initialBaselineCommit": "7436e49e98c37e420830a1f30cf3b5211dd4066d",
+  "dirty": true,
+  "patchSha256": "698e46d9da142ec6e93751e379984f4a912d8f6b903b2ff20f5d9b52ce369813",
+  "sourcePatchPath": "docs/evidence/security-experiment-source.patch",
+  "sourcePatchScope": "Staged experiment source/docs relative to sourceCommit; excludes generated security evidence, this record and the patch itself. SHA-256 sourceFiles use Git-normalized blobs.",
+  "sourceFiles": {
+    ".gitignore": "21118f3c87b4200c68ed4b3b6e0d8efabd51ed0dec75ed60643c3747e332cfc5",
+    "README.md": "93d68c9f8c68b6d6a6488df4d7fe3a2dee7b99ced6d13b39a012ae7d4966fecd",
+    "backend/arkiv/directory.mjs": "31741ebeb6260125428ca5d357f91112eda95ce138f2ec58cc288c4fe1c19706",
+    "backend/hedera/lib/operation-store.mjs": "1f39f263923fafd349b11be150e855fbe966a23118f27daab018b3fca8481de5",
+    "backend/lib/private-json.mjs": "f4d0e4ea16dd41ed3eed8edc72c7c1d465098bd494b8035007d27a46b2d25e7c",
+    "backend/package.json": "5723cd9bbdf4d259dc36fe266e50c41811e8e4ff89f0a8425b4710f7d9d41784",
+    "backend/runner/checkpoint-runner.mjs": "538ce77a87253b5b336f34b1f55b3672ed65d5dd2038b32bef2faaf919738696",
+    "backend/security/fail-closed.test.mjs": "d3fa95b7be92495b9148a682d3ee2e12f3fdd3343b96adaad88310e7abdb66e2",
+    "backend/security/maintenance.test.mjs": "b04ad3c87de04cf6040ff07517f655ecb4b2714f0bac4c8bce70eb7b4c5c3472",
+    "backend/security/private-json.test.mjs": "d21695e3ba5240c56c3d3a7de1ef8c0f958295c803448102282941cc9c4d7c93",
+    "backend/security/state-maintenance.mjs": "cb7fd7e1a751952fb09c0a4b4b2e34bc3c555497ccb0f913ed8f3e352351cf98",
+    "backend/workbench/providers.mjs": "09d97d873ac0747a04c5fd1e13658e58f16eeb61215a266eb27c5d583e744a3e",
+    "backend/workbench/research.mjs": "8cb1ba9608d2672958ebbaa5d597e6bace51086dad914893b50e0c5b0441f832",
+    "backend/workbench/research.test.mjs": "3d09c04b10df8a60117d367c02700b3398500f268ead91f22e9441a7b305ec6f",
+    "backend/workbench/store.mjs": "0bdc16cbf81bf26b5319bd9d9e2cf7b778ae0302ed9d368113e4990a874cd64e",
+    "backend/workbench/workbench.test.mjs": "5e02055b8894a6f12411db44007f5ba932209eae5414989db70981fc932b3ecf",
+    "contracts/package-lock.json": "f6c3603a287e1adf58ddf5fde5402dab86b95a3481bbc9059feb49f1714409ad",
+    "contracts/package.json": "1daee57aece92550bdd81b9df916e86e49dc107edf84b76bcb734d6a2c7ed7fc",
+    "contracts/phase1/test/browser-wallet.test.mjs": "8d2c30e10cdd2cc962fc8601d93f7ba04bb709006d3b5daa9ba33c82afd31c14",
+    "contracts/phase1/test/dashboard-wallet.test.mjs": "135434085eb921aef4b678a9f24cf9a8083991e5ba435ebaca2ececfe3fc1ee9",
+    "contracts/phase1/test/fixtures/local-rpc.mjs": "9253636b67761863f995ac4f08420d273ddfe7f2d533a50a2bd7678714d727f6",
+    "demo.md": "91f2d61574c8ee7b6e0bf1f1fd5de15dc13268008aa07d2612d3f2c58f04f947",
+    "docs/AI_CONTRIBUTIONS.md": "e884cd5997b2f021b0c3e88da889ead29a3aad46313fdba90daf96b8da11eb73",
+    "docs/SPONSOR_VERIFICATION.md": "274b80c63bef236cf5a124bb38032a1232274e61267ef21ca948e3fa315eb022",
+    "docs/evidence/sponsor-status.json": "1f11ed93d8f4e6dcc6116d9143bbd9cdf802502200a3bfd4ee7354ac9fbdc790",
+    "frontend/.env.example": "ddb083aaadd03bdf5c334591e92d89a17e651253c38e6b271a0932904010e1e0",
+    "frontend/scripts/verify-research-browser.mjs": "3941a1241f3d8e28cb1943a987b5b05e7ad076e29e20210acb3a10e9b8fd7d76",
+    "frontend/src/app/api/research/route.ts": "057c25ad76f9cf91c5642b473d59abb7d31f1a35ca5b725ef54b80958a540943",
+    "frontend/src/components/agent-control-center.tsx": "ed2a3054463b70958e45eb35fa7f710ff03f307d49e0cb3d58b1cb0a001430a2",
+    "frontend/src/lib/arkiv-directory.ts": "d69839dea48cabaf3fc76a9156bde4d56e51ffd33451ef598cb07a81b05e45b6",
+    "frontend/test/research.test.mjs": "424ed5b1c0f5ec029b4a4c0186f03205a38443cf2686bacfb61cb05926058dc5",
+    "package.json": "1aaed3ae3f14e24174f6c44fc50125334b5b5299bf6a67d5240c8f9f99990e20",
+    "shared/ARCHITECTURE.md": "6833d58c4bf15d9ac2573680959a9279b6d1f1f1fe2429d9d279ad644ea48131",
+    "shared/CONTEXT.md": "ae152268729d063a847e55acb02ee2e2ac2b40579869d769363b607a28341e0c",
+    "shared/PLAN.md": "7d3a80b397f3daaa60f3cb8c764d78085cf768d757008d8e4046cdfe3c418fca",
+    "shared/README.md": "c5327eff32a6dd28abc47c1bd4bfd22cc8c10c55554183789b3cf4c072c6dd2f",
+    "shared/SECURITY_EXPERIMENT.md": "1e4b36802ae58cd8cad8bf91287ce6e0591716564f51138049b645151468e416",
+    "shared/public-worker-profile.mjs": "3f3f8eef8b816dd280d8700c523e5a2e5845d1483d44854bf61e70c14b801a28"
+  },
+  "runtime": {
+    "node": "v22.21.1",
+    "platform": "win32",
+    "release": "10.0.26300",
+    "architecture": "x64"
+  },
+  "environment": "Local Windows; fixture providers/keys; ephemeral EVMs; installed Chrome. No new live chain writes or model billing in this experiment.",
+  "setup": {
+    "temporaryAndNpmCache": "Ignored workspace directories on D:; C: had zero free space",
+    "build": {
+      "RAYON_NUM_THREADS": "1",
+      "UV_THREADPOOL_SIZE": "2",
+      "NODE_OPTIONS": "--max-old-space-size=1536"
+    },
+    "browser": "JANUS_CHROMIUM_PATH points to installed Chrome; declared esbuild/playwright supplied locally; wallet fixture DB uses memdown 6.1.1"
+  },
+  "checks": [
+    {
+      "command": "npm run check",
+      "exitCode": 1,
+      "result": "Initial combined run failed under resource pressure; its protocol (5), Phase-0 (10) and Phase-1 (13) node-reported tests passed. Backend and remaining components were rerun successfully separately.",
+      "raw": "docs/evidence/security-2026-11-07/check.log"
+    },
+    {
+      "command": "node --test --test-concurrency=1 --test-timeout=180000 backend/hedera/test/*.test.mjs backend/workbench/*.test.mjs backend/arkiv/*.test.mjs backend/security/*.test.mjs",
+      "exitCode": 0,
+      "tests": 44,
+      "passed": 44,
+      "failed": 0,
+      "raw": "docs/evidence/security-2026-11-07/backend-stable.log"
+    },
+    {
+      "command": "npm run test:security",
+      "exitCode": 0,
+      "tests": 8,
+      "passed": 8,
+      "failed": 0,
+      "raw": "docs/evidence/security-2026-11-07/security-final.log"
+    },
+    {
+      "command": "npm test --prefix frontend",
+      "exitCode": 0,
+      "tests": 9,
+      "passed": 9,
+      "failed": 0,
+      "raw": "docs/evidence/security-2026-11-07/frontend-final.log"
+    },
+    {
+      "command": "node frontend/scripts/verify-research-browser.mjs",
+      "exitCode": 0,
+      "result": "Actual UI: agents, parallel fixture research, encrypted persistence, replacement, report, responsive screenshots and confirmed local deletion",
+      "raw": "docs/evidence/security-2026-11-07/research-browser-final.log"
+    },
+    {
+      "command": "node --test contracts/phase1/test/browser-wallet.test.mjs",
+      "exitCode": 0,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "raw": "docs/evidence/security-2026-11-07/recovery-isolated.log"
+    },
+    {
+      "command": "node --test contracts/phase1/test/dashboard-wallet.test.mjs",
+      "exitCode": 0,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "raw": "docs/evidence/security-2026-11-07/dashboard-isolated.log"
+    },
+    {
+      "command": "npm run build (with setup.build environment)",
+      "exitCode": 0,
+      "result": "Normal Turbopack production build and generated independent recovery copy",
+      "raw": "docs/evidence/security-2026-11-07/build-low-concurrency.log"
+    },
+    {
+      "command": "Isolated next start HTTP smoke",
+      "exitCode": 0,
+      "result": "200 for /, /login, /dashboard and both recovery files; 401 for unauthenticated /api/session; server stopped",
+      "raw": "docs/evidence/security-2026-11-07/production-smoke.json"
+    },
+    {
+      "command": "npm ci --prefix contracts --ignore-scripts --dry-run --offline --no-audit --no-fund",
+      "exitCode": 0,
+      "result": "Focused lockfile accepted; no lifecycle execution or dependency-tree replacement",
+      "raw": "docs/evidence/security-2026-11-07/lock-dry-run.log"
+    },
+    {
+      "command": "npm run check:repo; npm run lint; npm run typecheck; git diff --check",
+      "exitCode": 0,
+      "result": "Passed; final repository/sponsor bookkeeping rerun before commit"
+    },
+    {
+      "command": "npm run sponsors:check",
+      "exitCode": 0,
+      "result": "References/bookkeeping valid; no claim of sponsor approval"
+    },
+    {
+      "command": "npm run sponsors:ready",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "result": "Correctly NOT READY; mandatory independent review/submission gates remain open"
+    }
+  ],
+  "adversarialCoverage": [
+    "Ciphertext tampering",
+    "Cross-account/file/domain substitution",
+    "Retained-key rotation and old-key retirement",
+    "Production missing/inside-state keys and legacy plaintext refusal",
+    "Missing key cannot reset checkpoint or initiate payment",
+    "Concurrent development-key initialization",
+    "Offline migration refuses locks and leaves payloads unchanged in plan mode",
+    "Arkiv public projection excludes private configuration",
+    "Deletion rejects active/foreign/unresolved runs and preserves separate financial records",
+    "Original paid artifact reuse, stale-worker refusal and independent owner recovery"
+  ],
+  "dependencyAudit": {
+    "scope": "frontend production dependencies",
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 11,
+      "high": 17,
+      "critical": 0,
+      "total": 28
+    },
+    "nonForcedFixPreview": "zero changed packages, all 28 advisories remain; breaking Privy downgrade not applied"
+  },
+  "initialFailures": [
+    "Windows directory fsync unsupported: documented file-fsync/rename behavior and conditional directory sync",
+    "Windows open-handle directory rename: close handle while retaining exclusive lock file",
+    "Sandbox loopback/DNS restrictions: local checks retried with approved tool permissions",
+    "System drive full and concurrent worker/chain memory exhaustion: use D: scratch and serial test files",
+    "Ganache Windows disk cleanup and open server handles: use in-memory fixture DB plus standard loopback HTTP transport",
+    "Concurrent build caused a dashboard confirmation timeout; isolated wallet suites passed",
+    "Normal build initially failed Windows os error 1450; low-concurrency normal build passed",
+    "Checkout synchronization occurred during one backend run; that timed-out run was discarded and the stable checkout passed 44/44"
+  ],
+  "upstreamIntegration": {
+    "commit": "c0656969570179a4135d14523b80d1b024c93245",
+    "evidenceBlobChecksumsMatched": 10,
+    "scope": "Recorded funded Arkiv publication/read-driven local-finance handoff; one writer, two expiring profiles; not rerun live here"
+  },
+  "rawEvidencePaths": [
+    "docs/evidence/security-2026-11-07/check.log",
+    "docs/evidence/security-2026-11-07/backend-stable.log",
+    "docs/evidence/security-2026-11-07/backend-complete.log",
+    "docs/evidence/security-2026-11-07/security-final.log",
+    "docs/evidence/security-2026-11-07/frontend-final.log",
+    "docs/evidence/security-2026-11-07/research-browser-final.log",
+    "docs/evidence/security-2026-11-07/recovery-isolated.log",
+    "docs/evidence/security-2026-11-07/dashboard-isolated.log",
+    "docs/evidence/security-2026-11-07/build-final.log",
+    "docs/evidence/security-2026-11-07/build-low-concurrency.log",
+    "docs/evidence/security-2026-11-07/lock-dry-run.log",
+    "docs/evidence/security-2026-11-07/production-smoke.json",
+    "docs/evidence/security-2026-11-07/audit-before.json",
+    "docs/evidence/security-experiment-source.patch"
+  ],
+  "artifactSha256": {
+    "docs/evidence/security-2026-11-07/check.log": "5f3868dfbed8697a0283f8dd9f63f321d771496ddea415f37578f25e99ec8064",
+    "docs/evidence/security-2026-11-07/backend-stable.log": "fc7dfd5f809cd7e51ee024727a46090ed2408c4a2ee1cc20761496cbcc85e094",
+    "docs/evidence/security-2026-11-07/backend-complete.log": "1442a287dfa6105d28e2e2fbad299899f5a30bcd69751ed2518b06ae1130d426",
+    "docs/evidence/security-2026-11-07/security-final.log": "d55d37db650054041175a38f77e3a56eeaf7d3cf70684d3dabe6bd18133fe8f9",
+    "docs/evidence/security-2026-11-07/frontend-final.log": "0cbe15f0174944222e1fc0c3a2d35a3dd4d4f03417a6159907a92a32351463be",
+    "docs/evidence/security-2026-11-07/research-browser-final.log": "baf01d161bce32ebad94d7382cc5f8b2b6ba333199cdbcf7b77ff1e7924bdd76",
+    "docs/evidence/security-2026-11-07/recovery-isolated.log": "ef8e7349046289ac5a08c0c616a4cbd02f213ef94360361e720efb6dab62e4c9",
+    "docs/evidence/security-2026-11-07/dashboard-isolated.log": "a4ab7be1278b29bdb7f16c564e9ef35dc72e84e912eb6fb3943330a78406d4b2",
+    "docs/evidence/security-2026-11-07/build-final.log": "1988d332323c92b72b460d09be61f05e1f4bcbd1a2a15f10d7a5f35834e377c5",
+    "docs/evidence/security-2026-11-07/build-low-concurrency.log": "25a2d55680b7a75525f37d902cd9e52af02a5f7d71525515cc2f0e58f42493d0",
+    "docs/evidence/security-2026-11-07/lock-dry-run.log": "6f54ace4cc23ad6c25f7309c23db75786e4e4174e83b891ce3a1ab2643879108",
+    "docs/evidence/security-2026-11-07/production-smoke.json": "536fc3f94a30b2c7eda2b62d12c3f3a6b225c43a61801dcd2b4500335f3c4e1d",
+    "docs/evidence/security-2026-11-07/audit-before.json": "ef40293588b8471b033a7eb1b41be1f433b65e222a34a9b1133d0fd086ad6cc0",
+    "docs/evidence/security-experiment-source.patch": "698e46d9da142ec6e93751e379984f4a912d8f6b903b2ff20f5d9b52ce369813"
+  },
+  "independentReview": false,
+  "reviewer": null,
+  "sponsorEligibilityClaimed": false,
+  "productionReadinessClaimed": false,
+  "remainingGates": [
+    "Dependency reachability review and tested wallet-stack migration",
+    "Deployment-host ACL verification, managed secret provisioning and vault-key rotation",
+    "OS-level worker containment and an isolated policy-limited signer",
+    "Backup/retention lifecycle and provider-copy deletion policy",
+    "Real x402 interoperability and browser-paid research binding",
+    "Manual live extension-wallet recovery and independent security review",
+    "Root FOSS/asset licensing, accurate event provenance and human/AI disclosure, registered categories, final public video and independent sponsor evidence review"
+  ]
+}

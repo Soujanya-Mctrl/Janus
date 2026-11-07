@@ -1,5 +1,22 @@
 # Janus demo runbook
 
+## Current sponsor-focused recording plan — 7 November
+
+Use `experiment/security-sponsor-fit` and [its security setup](shared/SECURITY_EXPERIMENT.md). The privacy upgrades are experimental; existing operator state has not been migrated. Keep every segment labelled **LOCAL EVM / MODEL FIXTURE**, **RECORDED HEDERA TESTNET**, or **RECORDED ARKIV TESTNET + LOCAL FINANCE**. Sponsor readiness remains false.
+
+Lead with: **“A research task keeps its budget and purchases when workers change, keeps private progress off the public directory, and leaves the owner an independent exit.”**
+
+1. **0:00–0:20 — Problem:** a worker fails after buying a source; the replacement must retain both the remaining budget and the purchase.
+2. **0:20–1:10 — Financial handoff:** run `npm run demo:paid-research --prefix backend`. Its default is real local contracts/HTTP and separate worker processes with model fixtures. Show three unique purchases, 60 local base units spent, confirmed replacement, original transaction reuse and stale-worker refusal. Existing recorded Groq output is separate evidence, not proof that this default invokes a live model.
+3. **1:10–1:35 — Arkiv's visible job:** show the [funded publication, independent CLI/browser reads and discovery-driven handoff](backend/arkiv/evidence/2026-11-07/README.md). The two profiles came from one writer, and the handoff finances were local. Show query-to-selected-entity evidence and the no-result waiting behavior. Records expire; do not imply current availability from an old screenshot.
+4. **1:35–2:00 — Hedera settlement:** show the recorded 0.02 test-USDC purchase and identical replay transaction below. Resolve the actual explorer link before recording. This is separate from the preceding local purchases; custom HTTP is not general x402 interoperability.
+5. **2:00–2:40 — CROPS lead property:** show actual static recovery with a local wallet fixture, stop the main application host and recover only available funds. Preserve pending obligations. Use independently saved HTML/JavaScript and an independently controlled owner wallet; the dashboard's live link alone is insufficient. Manual live extension-wallet recovery remains open.
+6. **2:40–3:00 — Privacy/trust boundary:** show billable-provider disclosure and public-profile disclosure before dispatch/publication. Explain encrypted checkpoints, separately supplied production keys, and confirmed deletion of completed local research. State that the host can decrypt active work, providers receive dispatched content, financial metadata is public, and backups/provider copies remain after local deletion.
+
+Independent reproduction: `npm run test:security`, `node frontend/scripts/verify-research-browser.mjs`, `npm run recovery:test:browser --prefix contracts`, and `npm run dashboard:test:browser --prefix contracts`. Browser tooling and a compatible installed Chromium are required. These use fixtures; do not enable live model billing or repeat testnet publication just to refresh evidence.
+
+The sequence is a script joining clearly labelled proofs, not a claim of one completed live browser-to-Hedera-to-Arkiv run. Final x402 protocol proof, FOSS licensing, event/track provenance, independent evidence review and the actual video remain submission gates. The following detailed walkthrough contains earlier local fixtures; this current plan and Phases 5/6 take precedence where they describe newer implementation.
+
 ## The idea in one sentence
 
 **Janus lets an agent task keep its money, paid results and progress when its worker fails, while the owner retains a direct exit for unused funds.**
@@ -12,7 +29,7 @@ This runbook covers the complete product story and the three intended sponsor tr
 
 “Imagine paying an AI agent to research something. It purchases a source, then crashes before delivering the answer. Starting again can mean paying twice, losing the result, or leaving the old worker able to spend. Janus keeps the financial state and execution progress with the task, so a replacement can reuse the purchase and finish the remaining work. If the service disappears, the owner can still recover available funds.”
 
-Use a research task as the audience-facing example. The current runner uses deterministic artifacts; a real model-generated research report remains a future demonstration.
+Use a research task as the audience-facing example. Default demonstrations use deterministic artifacts/model fixtures; Phase 5 separately records real Groq output with local finances. The browser research path does not yet supply paid-tool bindings.
 
 ## What each track contributes
 
@@ -41,7 +58,7 @@ Prepare these views before recording:
 2. [Runner behavior and limitations](shared/RUNNER.md).
 3. [Recorded live payment evidence](backend/hedera/evidence/task-aware-live-proof.json).
 4. [Independent recovery instructions](shared/RECOVERY.md).
-5. Optional frontend: `npm run dev`, then open `http://localhost:3000`. Configure authentication through [README.md](README.md) if showing login. Label dashboard balances and task controls **illustrative**.
+5. Optional frontend: `npm run dev`, then open `http://localhost:3000`. Configure authentication through [README.md](README.md) if showing login. Overview/Tasks use authoritative validated chain reads by default; label fixture accounting when explicitly selected. Browser research orchestration remains separate from the paid CLI bindings.
 
 Keep clear on-screen labels: **LOCAL EVM**, **RECORDED HEDERA TESTNET**, **ILLUSTRATIVE UI**, and **PLANNED**. Never show environment files, private keys, tokens or signed transaction bytes. This runbook does not require new testnet spending.
 
@@ -155,7 +172,7 @@ Use this during rehearsal so the demo covers behavior rather than just screens.
 
 ## Arkiv discovery segment
 
-Do not narrate this as a completed feature. The intended demonstration is:
+Funded publication and read-driven local-finance handoff are now recorded in the upstream evidence linked above. They do not establish every requirement below, two independent writers or the combined live journey. The complete acceptance target is:
 
 1. Publish at least two wallet-owned worker records on the current Arkiv testnet, containing deliberately public capability, network/scheme, sequence and expiry metadata.
 2. Show the real query, returned entity keys and writer addresses. Keep prompts, credentials and private checkpoint references out of public records.

@@ -1,5 +1,11 @@
 # Janus product and current context
 
+## Experimental security branch — current override
+
+Upstream `c065696` was integrated before publication and supplies recorded funded Arkiv publication, independent CLI/browser reads and live-discovery/local-finance handoff evidence. The previous missing-writer blocker is cleared; broader sponsor acceptance and combined live execution remain open.
+
+On `experiment/security-sponsor-fit`, new research snapshots/controls/intents, runner checkpoints and task-aware merchant records are encrypted with identity/domain-bound AES-GCM. Production requires externally supplied keys; offline migration/rotation is explicit and existing state has not been migrated. Completed/cancelled local research can be deleted with confirmation. Provider dispatch/public Arkiv disclosures and a public-field projection are implemented. Read [SECURITY_EXPERIMENT.md](SECURITY_EXPERIMENT.md) for setup and residual risks. Earlier plaintext descriptions below describe the baseline, not new writes on this branch. The November 7 audit still reports 28 production advisories; no sponsor is newly qualified. Overview/Tasks are authoritative as documented in Phase 6 despite older illustrative-dashboard statements below.
+
 ## Research-task workspace
 
 The current implementation follows [demo.md](../demo.md): task-owned budgets, paid-source reuse, checkpointed worker handoff and independent owner recovery. `/dashboard/agents` creates/configures workers and `/dashboard/runs` executes and monitors parallel research; `/dashboard/credentials` retains encrypted provider-key storage. User-key provider brokerage is connected to the separate research runtime; live provider calls remain unverified. The paid checkpoint runner is not yet wired into browser research steps. Arkiv v2 profile publication/query now feeds operator-triggered checkpoint replacement with owner policy and signed readiness. Local fixture-directory handoff and a live independent query pass; funded testnet publication, remote worker transport and combined live evidence remain pending. See [ARKIV.md](ARKIV.md). Read-only Hedera checks remain available. See [WORKBENCH.md](WORKBENCH.md) and [DASHBOARD_RUNTIME.md](DASHBOARD_RUNTIME.md).

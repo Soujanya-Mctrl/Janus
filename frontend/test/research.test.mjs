@@ -38,4 +38,8 @@ test('research routes enforce identity, billable consent, and account-private du
   assert.ok(result.report.text.includes('Research fixture report'));
   assert.ok(result.events.some(event => event.type === 'worker-replaced'));
   assert.equal((await (await GET(request(owner))).json()).runs[0].id, run.id);
+  assert.equal((await POST(request(other, { action: 'delete', id: run.id, confirmDelete: true }))).status, 400);
+  assert.equal((await POST(request(owner, { action: 'delete', id: run.id }))).status, 400);
+  assert.equal((await POST(request(owner, { action: 'delete', id: run.id, confirmDelete: true }))).status, 200);
+  assert.equal((await GET(request(owner, null, '?id=' + run.id))).status, 404);
 });

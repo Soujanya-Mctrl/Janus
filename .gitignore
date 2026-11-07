@@ -65,6 +65,7 @@ next-env.d.ts
 **/.paper-state/
 **/.workbench-state/
 /.tools/
+/.security-artifacts/
 
 # Reproducible standalone recovery assets, generated before frontend dev/build
 /frontend/public/recovery/

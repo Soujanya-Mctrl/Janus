@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "rulesReviewedOn": "2026-11-06",
+  "rulesReviewedOn": "2026-11-07",
   "timezone": "Asia/Calcutta",
   "scope": "Internal evidence readiness; not sponsor eligibility or award confirmation",
   "requirements": [
@@ -9,8 +9,10 @@
       "sponsor": "event",
       "requirement": "Registered track, build provenance, reused assets and meaningful human/AI contribution disclosure",
       "mandatory": true,
-      "status": "missing",
-      "evidencePaths": [],
+      "status": "partial",
+      "evidencePaths": [
+        "docs/AI_CONTRIBUTIONS.md"
+      ],
       "verificationRecord": null
     },
     {
@@ -133,7 +135,10 @@
       "mandatory": true,
       "status": "partial",
       "evidencePaths": [
-        "shared/RECOVERY.md"
+        "shared/RECOVERY.md",
+        "shared/PHASE6.md",
+        "shared/evidence/phase6-dashboard.json",
+        "shared/SECURITY_EXPERIMENT.md"
       ],
       "verificationRecord": null
     },
@@ -142,8 +147,12 @@
       "sponsor": "crops",
       "requirement": "Browser recovery UX, shutdown/network trace and three reset measurements",
       "mandatory": true,
-      "status": "missing",
-      "evidencePaths": [],
+      "status": "partial",
+      "evidencePaths": [
+        "shared/PHASE6.md",
+        "shared/evidence/phase6-dashboard.json",
+        "shared/SECURITY_EXPERIMENT.md"
+      ],
       "verificationRecord": null
     },
     {
@@ -151,8 +160,12 @@
       "sponsor": "crops",
       "requirement": "Root license, README CROPS section, third-party visibility/key protection and no-trackers review",
       "mandatory": true,
-      "status": "missing",
-      "evidencePaths": [],
+      "status": "partial",
+      "evidencePaths": [
+        "README.md",
+        "shared/SECURITY_EXPERIMENT.md",
+        "docs/AI_CONTRIBUTIONS.md"
+      ],
       "verificationRecord": null
     },
     {

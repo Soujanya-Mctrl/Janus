@@ -50,6 +50,7 @@ test('popular providers use fixed endpoints and return sanitized metadata', asyn
     assert.equal(result.text, 'hold'); assert.ok(!JSON.stringify(result).includes('fixture-private-key'));
   }
   await assert.rejects(callProvider({ credential: { provider: 'openai', key: 'fixture-secret' }, model: 'model', prompt: '', fetchImpl: async () => new Response('secret-provider-error', { status: 401 }) }), error => !error.message.includes('secret-provider-error') && /HTTP 401/.test(error.message));
+  await assert.rejects(callProvider({ credential: { provider: 'openai', key: 'fixture-secret' }, model: 'model', prompt: 'x'.repeat(128001), fetchImpl: async () => { throw new Error('Should never dispatch'); } }), /input-size limit/);
 });
 test('research configuration rejects the removed execution configuration', () => {
   assert.deepEqual(validateWorkbenchConfig(defaultConfig), defaultConfig);

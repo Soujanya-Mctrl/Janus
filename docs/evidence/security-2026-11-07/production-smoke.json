@@ -1,0 +1,30 @@
+{
+  "status": "passed",
+  "network": "loopback production build; no authenticated requests or live writes",
+  "checks": [
+    {
+      "route": "/",
+      "status": 200
+    },
+    {
+      "route": "/login",
+      "status": 200
+    },
+    {
+      "route": "/dashboard",
+      "status": 200
+    },
+    {
+      "route": "/api/session",
+      "status": 401
+    },
+    {
+      "route": "/recovery/index.html",
+      "status": 200
+    },
+    {
+      "route": "/recovery/recovery.js",
+      "status": 200
+    }
+  ]
+}

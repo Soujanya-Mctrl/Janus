@@ -1,0 +1,623 @@
+
+> janus@0.1.0 check
+> npm run check:repo && npm run lint && npm run typecheck && npm run contracts:compile && npm test && npm run build
+
+
+> janus@0.1.0 check:repo
+> node scripts/check-repository.mjs
+
+Repository structure, lockfiles, documentation links, merge markers and JavaScript syntax passed.
+
+> janus@0.1.0 lint
+> npm run lint --prefix frontend
+
+
+> @janus/frontend@0.1.0 lint
+> eslint
+
+
+> janus@0.1.0 typecheck
+> npm run typecheck --prefix frontend
+
+
+> @janus/frontend@0.1.0 typecheck
+> next typegen && tsc --noEmit
+
+Generating route types...
+✓ Types generated successfully
+
+> janus@0.1.0 contracts:compile
+> npm run phase0:compile --prefix contracts && npm run phase1:compile --prefix contracts && npm run interface:check --prefix contracts
+
+
+> @janus/contracts@0.0.1 phase0:compile
+> node --no-wasm-tier-up --wasm-num-compilation-tasks=1 phase0/scripts/compile.mjs
+
+Compiled PaymentProbe, TestToken, HederaPaymentProbe using 0.8.30+commit.73712a01.Emscripten.clang
+
+> @janus/contracts@0.0.1 phase1:compile
+> node --no-wasm-tier-up --wasm-num-compilation-tasks=1 phase1/scripts/compile.mjs
+
+Compiled TaskTreasury, HederaTaskTreasury, TestToken, AdversarialToken
+
+> @janus/contracts@0.0.1 interface:check
+> node phase1/scripts/export-interface.mjs --check
+
+Verified janus-task-treasury/1 (0x03d9c3dfe08d90cf1b4681490af193f61c505d1e913c57643853d78b709e3d9a)
+
+> janus@0.1.0 test
+> npm run test:protocol && npm test --prefix contracts && npm test --prefix backend && npm test --prefix frontend
+
+
+> janus@0.1.0 test:protocol
+> node --test shared/test/*.test.mjs
+
+TAP version 13
+# Subtest: wire integers and 96-byte authorization reject ambiguity and overflow
+ok 1 - wire integers and 96-byte authorization reject ambiguity and overflow
+  ---
+  duration_ms: 1.8425
+  type: 'test'
+  ...
+# Subtest: canonical operation identity survives worker changes and is domain scoped
+ok 2 - canonical operation identity survives worker changes and is domain scoped
+  ---
+  duration_ms: 8.1186
+  type: 'test'
+  ...
+# Subtest: task wire accounting keeps returned-to-reserve distinct from withdrawal
+ok 3 - task wire accounting keeps returned-to-reserve distinct from withdrawal
+  ---
+  duration_ms: 0.2457
+  type: 'test'
+  ...
+# Subtest: independent model derives pending obligations and recovery from history
+ok 4 - independent model derives pending obligations and recovery from history
+  ---
+  duration_ms: 1.0944
+  type: 'test'
+  ...
+# Subtest: model conservation across 100 fixed-seed histories
+ok 5 - model conservation across 100 fixed-seed histories
+  ---
+  duration_ms: 36.3331
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 146.6079
+
+> @janus/contracts@0.0.1 test
+> npm run phase0:test && npm run phase1:test
+
+
+> @janus/contracts@0.0.1 phase0:test
+> node --no-wasm-tier-up --wasm-num-compilation-tasks=1 --test --test-concurrency=1 phase0/test/payment.test.mjs
+
+TAP version 13
+# This version of µWS is not compatible with your Node.js build:
+# Error: Cannot find module '../binaries/uws_win32_x64_127.node'
+# Require stack:
+# - <workspace>\\contracts\\node_modules\\ganache\\node_modules\\@trufflesuite\\uws-js-unofficial\\src\\uws.js
+# - <workspace>\\contracts\\node_modules\\ganache\\dist\\node\\core.js
+# Falling back to a NodeJS implementation; performance may be degraded.
+# Subtest: Phase 0: contract-controlled local payments and independent recovery
+    # Subtest: 100 funded, 20 paid through executor, 80 withdrawn directly by owner
+    ok 1 - 100 funded, 20 paid through executor, 80 withdrawn directly by owner
+      ---
+      duration_ms: 9376.5152
+      type: 'test'
+      ...
+    # Subtest: outsider cannot reserve, replace worker, cancel, or withdraw
+    ok 2 - outsider cannot reserve, replace worker, cancel, or withdraw
+      ---
+      duration_ms: 4888.3071
+      type: 'test'
+      ...
+    # Subtest: worker cannot reserve beyond available budget
+    ok 3 - worker cannot reserve beyond available budget
+      ---
+      duration_ms: 6048.5695
+      type: 'test'
+      ...
+    # Subtest: authorization binds exact payer, asset, recipient and amount
+    ok 4 - authorization binds exact payer, asset, recipient and amount
+      ---
+      duration_ms: 6050.4048
+      type: 'test'
+      ...
+    # Subtest: duplicate settlement and operation rebinding are rejected
+    ok 5 - duplicate settlement and operation rebinding are rejected
+      ---
+      duration_ms: 7485.4554
+      type: 'test'
+      ...
+    # Subtest: handoff fences old worker while preserving already reserved payments
+    ok 6 - handoff fences old worker while preserving already reserved payments
+      ---
+      duration_ms: 9627.4842
+      type: 'test'
+      ...
+    # Subtest: cancel and withdrawal cannot confiscate pending merchant commitments
+    ok 7 - cancel and withdrawal cannot confiscate pending merchant commitments
+      ---
+      duration_ms: 9922.1267
+      type: 'test'
+      ...
+    # Subtest: expired reservation releases once and cannot settle
+    ok 8 - expired reservation releases once and cannot settle
+      ---
+      duration_ms: 8438.0476
+      type: 'test'
+      ...
+    # Subtest: no reservation can be created with an unbounded deadline
+    ok 9 - no reservation can be created with an unbounded deadline
+      ---
+      duration_ms: 4786.6446
+      type: 'test'
+      ...
+    1..9
+ok 1 - Phase 0: contract-controlled local payments and independent recovery
+  ---
+  duration_ms: 66634.7114
+  type: 'test'
+  ...
+1..1
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 68670.1984
+
+> @janus/contracts@0.0.1 phase1:test
+> node --no-wasm-tier-up --wasm-num-compilation-tasks=1 --test --test-concurrency=1 phase1/test/treasury.test.mjs
+
+TAP version 13
+# This version of µWS is not compatible with your Node.js build:
+# Error: Cannot find module '../binaries/uws_win32_x64_127.node'
+# Require stack:
+# - <workspace>\\contracts\\node_modules\\ganache\\node_modules\\@trufflesuite\\uws-js-unofficial\\src\\uws.js
+# - <workspace>\\contracts\\node_modules\\ganache\\dist\\node\\core.js
+# Falling back to a NodeJS implementation; performance may be degraded.
+# Subtest: Phase 1: isolated task budgets and owner-controlled financial recovery
+    # Subtest: canonical 1000-unit treasury: A handoff and recovery preserve B, C and D
+    ok 1 - canonical 1000-unit treasury: A handoff and recovery preserve B, C and D
+      ---
+      duration_ms: 29692.9903
+      type: 'test'
+      ...
+    # Subtest: budgets and per-operation limits cannot borrow from other tasks
+    ok 2 - budgets and per-operation limits cannot borrow from other tasks
+      ---
+      duration_ms: 10802.9241
+      type: 'test'
+      ...
+    # Subtest: scheduler can assign workers but cannot alter money or owner policy
+    ok 3 - scheduler can assign workers but cannot alter money or owner policy
+      ---
+      duration_ms: 13876.2376
+      type: 'test'
+      ...
+    # Subtest: same operation ID is task-scoped and exact payment fields cannot change
+    ok 4 - same operation ID is task-scoped and exact payment fields cannot change
+      ---
+      duration_ms: 15344.6998
+      type: 'test'
+      ...
+    # Subtest: expiry boundary and retry attempts fence old payment authorizations
+    ok 5 - expiry boundary and retry attempts fence old payment authorizations
+      ---
+      duration_ms: 15025.8506
+      type: 'test'
+      ...
+    # Subtest: owner recovery protects reservations and releases expired funds from cancelled tasks
+    ok 6 - owner recovery protects reservations and releases expired funds from cancelled tasks
+      ---
+      duration_ms: 18178.8204
+      type: 'test'
+      ...
+    # Subtest: released budget can fund a fresh task; unsolicited tokens do not inflate accounting
+    ok 7 - released budget can fund a fresh task; unsolicited tokens do not inflate accounting
+      ---
+      duration_ms: 15716.3164
+      type: 'test'
+      ...
+    # Subtest: invalid task policies and malformed reservations never change accounting
+    ok 8 - invalid task policies and malformed reservations never change accounting
+      ---
+      duration_ms: 10057.187
+      type: 'test'
+      ...
+    # Subtest: non-exact tokens revert deposit/payment/withdrawal and preserve accounting
+    ok 9 - non-exact tokens revert deposit/payment/withdrawal and preserve accounting
+      ---
+      duration_ms: 15708.9469
+      type: 'test'
+      ...
+    # Subtest: seeded contract transitions match independent event-history accounting after every action
+    ok 10 - seeded contract transitions match independent event-history accounting after every action
+      ---
+      duration_ms: 77350.263
+      type: 'test'
+      ...
+    # Subtest: independent owner recovery validates deployment, preserves pending obligations and resumes after expiry
+    ok 11 - independent owner recovery validates deployment, preserves pending obligations and resumes after expiry
+      ---
+      duration_ms: 18405.1773
+      type: 'test'
+      ...
+    # Subtest: recovery restart after release-before-withdraw retrieves unallocated reserve
+    ok 12 - recovery restart after release-before-withdraw retrieves unallocated reserve
+      ---
+      duration_ms: 13180.3686
+      type: 'test'
+      ...
+    1..12
+ok 1 - Phase 1: isolated task budgets and owner-controlled financial recovery
+  ---
+  duration_ms: 253353.5911
+  type: 'test'
+  ...
+1..1
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 260608.0551
+
+> @janus/backend@0.0.1 test
+> node --test hedera/test/*.test.mjs workbench/*.test.mjs arkiv/*.test.mjs security/*.test.mjs
+
+TAP version 13
+# Rabdi: no access key, so requests go to the public endpoint, which is heavily rate limited. Get a free key at https://hub.arkiv.network/access-keys and pass it as rabdi({ accessKey }).
+# Subtest: signed readiness is bound to the task, treasury, epoch, entity and fresh nonce
+ok 1 - signed readiness is bound to the task, treasury, epoch, entity and fresh nonce
+  ---
+  duration_ms: 26.6461
+  type: 'test'
+  ...
+# Subtest: ownership, lease seconds, expiry blocks, compatibility and policy reject unsafe workers
+ok 2 - ownership, lease seconds, expiry blocks, compatibility and policy reject unsafe workers
+  ---
+  duration_ms: 0.9685
+  type: 'test'
+  ...
+# Subtest: copied signatures, busy and unreachable workers cannot be selected; RPC failure has no fallback
+ok 3 - copied signatures, busy and unreachable workers cannot be selected; RPC failure has no fallback
+  ---
+  duration_ms: 16.3727
+  type: 'test'
+  ...
+# Subtest: duplicate publications resolve deterministically to the newest valid wallet record
+ok 4 - duplicate publications resolve deterministically to the newest valid wallet record
+  ---
+  duration_ms: 13.4966
+  type: 'test'
+  ...
+# Subtest: expired readiness response and lease expiry during the probe are rejected
+ok 5 - expired readiness response and lease expiry during the probe are rejected
+  ---
+  duration_ms: 3.5525
+  type: 'test'
+  ...
+# Subtest: real SDK sends typed v2 filters and decodes expiry as blocks
+ok 6 - real SDK sends typed v2 filters and decodes expiry as blocks
+  ---
+  duration_ms: 8.5746
+  type: 'test'
+  ...
+# Subtest: SDK pagination counts schema-skipped rows and refuses a truncated directory
+ok 7 - SDK pagination counts schema-skipped rows and refuses a truncated directory
+  ---
+  duration_ms: 13.3655
+  type: 'test'
+  ...
+# Subtest: wrong-chain RPC is rejected before querying a directory
+ok 8 - wrong-chain RPC is rejected before querying a directory
+  ---
+  duration_ms: 0.4575
+  type: 'test'
+  ...
+# This version of µWS is not compatible with your Node.js build:
+# Error: Cannot find module '../binaries/uws_win32_x64_127.node'
+# Require stack:
+# - <workspace>\\contracts\\node_modules\\ganache\\node_modules\\@trufflesuite\\uws-js-unofficial\\src\\uws.js
+# - <workspace>\\contracts\\node_modules\\ganache\\dist\\node\\core.js
+# Falling back to a NodeJS implementation; performance may be degraded.
+# Subtest: four-task checkpointed handoff reuses a paid result and reconciles assignment acknowledgement loss
+not ok 9 - four-task checkpointed handoff reuses a paid result and reconciles assignment acknowledgement loss
+  ---
+  duration_ms: 23083.0044
+  type: 'test'
+  location: '<workspace>\\backend\\hedera\\test\\checkpoint-runner.test.mjs:17:1'
+  failureType: 'testCodeFailure'
+  error: 'Merchant rejected request or payment requires reconciliation; do not blindly retry'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    post (file:///D:/Projects/Janus/backend/hedera/lib/task-client.mjs:21:27)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async buyTaskDataset (file:///D:/Projects/Janus/backend/hedera/lib/task-client.mjs:36:17)
+    async file:///D:/Projects/Janus/backend/runner/checkpoint-runner.mjs:56:21
+    async locked (file:///D:/Projects/Janus/backend/runner/checkpoint-runner.mjs:23:16)
+    async TestContext.<anonymous> (file:///D:/Projects/Janus/backend/hedera/test/checkpoint-runner.test.mjs:108:18)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: merchant HTTP flow preserves facilitator reconciliation on paid retries
+    # Subtest: unpaid request returns a challenge without settlement
+    ok 1 - unpaid request returns a challenge without settlement
+      ---
+      duration_ms: 34.1358
+      type: 'test'
+      ...
+    # Subtest: paid request and retry return the same original transaction
+    ok 2 - paid request and retry return the same original transaction
+      ---
+      duration_ms: 13.6439
+      type: 'test'
+      ...
+    # Subtest: invalid JSON and rejected authorization do not release the resource
+    ok 3 - invalid JSON and rejected authorization do not release the resource
+      ---
+      duration_ms: 7.4022
+      type: 'test'
+      ...
+    # Subtest: explicit verify route remains available and unknown paths return 404
+    ok 4 - explicit verify route remains available and unknown paths return 404
+      ---
+      duration_ms: 15.8975
+      type: 'test'
+      ...
+    1..4
+ok 10 - merchant HTTP flow preserves facilitator reconciliation on paid retries
+  ---
+  duration_ms: 105.0039
+  type: 'test'
+  ...
+# Subtest: durable purchase survives response loss and refuses ambiguous repurchase
+ok 11 - durable purchase survives response loss and refuses ambiguous repurchase
+  ---
+  duration_ms: 204.5514
+  type: 'test'
+  ...
+# This version of µWS is not compatible with your Node.js build:
+# Error: Cannot find module '../binaries/uws_win32_x64_127.node'
+# Require stack:
+# - <workspace>\\contracts\\node_modules\\ganache\\node_modules\\@trufflesuite\\uws-js-unofficial\\src\\uws.js
+# - <workspace>\\contracts\\node_modules\\ganache\\dist\\node\\core.js
+# Falling back to a NodeJS implementation; performance may be degraded.
+# <--- Last few GCs --->
+# [31936:000002BF67903000]     1588 ms: Mark-Compact (reduce) 33.4 (35.5) -> 32.2 (35.5) MB, pooled: 0 MB, 12.74 / 0.00 ms  (average mu = 0.797, current mu = 0.002) memory pressure; GC in old space requested
+# [31936:000002BF67903000]     1603 ms: Mark-Compact (reduce) 32.2 (35.5) -> 30.5 (34.8) MB, pooled: 0 MB, 14.69 / 0.00 ms  (average mu = 0.643, current mu = 0.016) memory pressure; GC in old space requested
+# <--- JS stacktrace --->
+# FATAL ERROR: Committing semi space failed. Allocation failed - JavaScript heap out of memory
+# ----- Native stack trace -----
+#  1: 00007FF64FA81477 
+#  2: 00007FF64F9E1EAB 
+#  3: 00007FF6505EA921 
+#  4: 00007FF6505D74A6 
+#  5: 00007FF650433BF0 
+#  6: 00007FF6503EB84D 
+#  7: 00007FF65043CE33 
+#  8: 00007FF65042CCBD 
+#  9: 00007FF650428875 
+# 10: 00007FF64FDB22CD 
+# Subtest: hedera\\test\\paid-research.test.mjs
+not ok 5 - hedera\\test\\paid-research.test.mjs
+  ---
+  duration_ms: 1695.7761
+  type: 'test'
+  location: '<workspace>\\backend\\hedera\\test\\paid-research.test.mjs:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 134
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: exact USDC payment and only the declared HBAR fee pass
+ok 13 - exact USDC payment and only the declared HBAR fee pass
+  ---
+  duration_ms: 0.9742
+  type: 'test'
+  ...
+# Subtest: SUCCESS without an actual merchant credit fails
+ok 14 - SUCCESS without an actual merchant credit fails
+  ---
+  duration_ms: 0.3285
+  type: 'test'
+  ...
+# Subtest: wrong payer debit fails even if merchant received funds
+ok 15 - wrong payer debit fails even if merchant received funds
+  ---
+  duration_ms: 1.6376
+  type: 'test'
+  ...
+# Subtest: additional token transfers fail
+ok 16 - additional token transfers fail
+  ---
+  duration_ms: 0.7243
+  type: 'test'
+  ...
+# Subtest: third account HBAR debit fails
+ok 17 - third account HBAR debit fails
+  ---
+  duration_ms: 1.229
+  type: 'test'
+  ...
+# Subtest: fee payer debit beyond declared fee fails
+ok 18 - fee payer debit beyond declared fee fails
+  ---
+  duration_ms: 0.3158
+  type: 'test'
+  ...
+# Subtest: NFT movement fails
+ok 19 - NFT movement fails
+  ---
+  duration_ms: 0.2235
+  type: 'test'
+  ...
+# Subtest: transfer log exposing a facilitator-controlled debit fails
+ok 20 - transfer log exposing a facilitator-controlled debit fails
+  ---
+  duration_ms: 0.3043
+  type: 'test'
+  ...
+# Subtest: signer lock prevents duplicate writers and releases idempotently
+ok 21 - signer lock prevents duplicate writers and releases idempotently
+  ---
+  duration_ms: 23.8627
+  type: 'test'
+  ...
+# This version of µWS is not compatible with your Node.js build:
+# Error: Cannot find module '../binaries/uws_win32_x64_127.node'
+# Require stack:
+# - <workspace>\\contracts\\node_modules\\ganache\\node_modules\\@trufflesuite\\uws-js-unofficial\\src\\uws.js
+# - <workspace>\\contracts\\node_modules\\ganache\\dist\\node\\core.js
+# Falling back to a NodeJS implementation; performance may be degraded.
+# Subtest: local EVM paid HTTP request survives response loss, restart and worker replacement
+ok 22 - local EVM paid HTTP request survives response loss, restart and worker replacement
+  ---
+  duration_ms: 15210.5705
+  type: 'test'
+  ...
+# Subtest: testnet fee ceiling and HTTPS endpoint guard fail closed
+ok 23 - testnet fee ceiling and HTTPS endpoint guard fail closed
+  ---
+  duration_ms: 2.4892
+  type: 'test'
+  ...
+# Subtest: backend consumes the shared chain, asset, version and task ABI
+ok 24 - backend consumes the shared chain, asset, version and task ABI
+  ---
+  duration_ms: 8.83
+  type: 'test'
+  ...
+# Subtest: offline migration plans without changing payloads, applies encryption and blocks active stores
+ok 25 - offline migration plans without changing payloads, applies encryption and blocks active stores
+  ---
+  duration_ms: 107.3518
+  type: 'test'
+  ...
+# Subtest: Arkiv public projection excludes private agent configuration and uses a generic label
+ok 26 - Arkiv public projection excludes private agent configuration and uses a generic label
+  ---
+  duration_ms: 2.8015
+  type: 'test'
+  ...
+# Subtest: research ciphertext rejects tampering and substitution across accounts and domains
+ok 27 - research ciphertext rejects tampering and substitution across accounts and domains
+  ---
+  duration_ms: 74.8242
+  type: 'test'
+  ...
+# Subtest: rotation reads retained old keys, writes the active key, and refuses retired keys
+ok 28 - rotation reads retained old keys, writes the active key, and refuses retired keys
+  ---
+  duration_ms: 42.3609
+  type: 'test'
+  ...
+# Subtest: production needs external keys and never silently accepts plaintext or resets state
+ok 29 - production needs external keys and never silently accepts plaintext or resets state
+  ---
+  duration_ms: 45.0523
+  type: 'test'
+  ...
+# Subtest: concurrent development stores share a complete key and persist across restart
+ok 30 - concurrent development stores share a complete key and persist across restart
+  ---
+  duration_ms: 113.967
+  type: 'test'
+  ...
+# Subtest: vault production refuses auto-generated master keys and supports an external key file
+ok 31 - vault production refuses auto-generated master keys and supports an external key file
+  ---
+  duration_ms: 39.2689
+  type: 'test'
+  ...
+# Subtest: parallel process research persists checkpoints and replacement reuses the original response
+ok 32 - parallel process research persists checkpoints and replacement reuses the original response
+  ---
+  duration_ms: 1167.7217
+  type: 'test'
+  ...
+# Subtest: provider runs require consent, account-owned credentials and reuse completed inference
+not ok 33 - provider runs require consent, account-owned credentials and reuse completed inference
+  ---
+  duration_ms: 262.2309
+  type: 'test'
+  location: '<workspace>\\backend\\workbench\\research.test.mjs:34:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'failed'
+    - 'completed'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'completed'
+  actual: 'failed'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///D:/Projects/Janus/backend/workbench/research.test.mjs:46:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: uncertain inference is reconciled without automatic rebilling; run controls preserve identity
+ok 34 - uncertain inference is reconciled without automatic rebilling; run controls preserve identity
+  ---
+  duration_ms: 1074.8434
+  type: 'test'
+  ...
+# Subtest: research is encrypted on disk and deletion refuses active, foreign and unresolved runs
+ok 35 - research is encrypted on disk and deletion refuses active, foreign and unresolved runs
+  ---
+  duration_ms: 973.7026
+  type: 'test'
+  ...
+# Subtest: vault encrypts keys, scopes records to identities, and revokes credentials
+ok 36 - vault encrypts keys, scopes records to identities, and revokes credentials
+  ---
+  duration_ms: 66.0841
+  type: 'test'
+  ...
+# Subtest: tampered vault and missing encryption configuration fail closed
+ok 37 - tampered vault and missing encryption configuration fail closed
+  ---
+  duration_ms: 30.2427
+  type: 'test'
+  ...
+# Subtest: popular providers use fixed endpoints and return sanitized metadata
+ok 38 - popular providers use fixed endpoints and return sanitized metadata
+  ---
+  duration_ms: 26.4825
+  type: 'test'
+  ...
+# Subtest: research configuration rejects the removed execution configuration
+ok 39 - research configuration rejects the removed execution configuration
+  ---
+  duration_ms: 0.5291
+  type: 'test'
+  ...
+1..39
+# tests 43
+# suites 0
+# pass 40
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 24484.0832

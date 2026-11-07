@@ -1,0 +1,66 @@
+
+> janus@0.1.0 test:security
+> npm run test:security --prefix backend
+
+
+> @janus/backend@0.0.1 test:security
+> node --test security/*.test.mjs
+
+TAP version 13
+# Subtest: missing external keys cannot reset a financial checkpoint or start another payment
+ok 1 - missing external keys cannot reset a financial checkpoint or start another payment
+  ---
+  duration_ms: 9.2196
+  type: 'test'
+  ...
+# Subtest: offline migration plans without changing payloads, applies encryption and blocks active stores
+ok 2 - offline migration plans without changing payloads, applies encryption and blocks active stores
+  ---
+  duration_ms: 50.2869
+  type: 'test'
+  ...
+# Subtest: Arkiv public projection excludes private agent configuration and uses a generic label
+ok 3 - Arkiv public projection excludes private agent configuration and uses a generic label
+  ---
+  duration_ms: 2.0255
+  type: 'test'
+  ...
+# Subtest: research ciphertext rejects tampering and substitution across accounts and domains
+ok 4 - research ciphertext rejects tampering and substitution across accounts and domains
+  ---
+  duration_ms: 43.5596
+  type: 'test'
+  ...
+# Subtest: rotation reads retained old keys, writes the active key, and refuses retired keys
+ok 5 - rotation reads retained old keys, writes the active key, and refuses retired keys
+  ---
+  duration_ms: 29.9318
+  type: 'test'
+  ...
+# Subtest: production needs external keys and never silently accepts plaintext or resets state
+ok 6 - production needs external keys and never silently accepts plaintext or resets state
+  ---
+  duration_ms: 26.9054
+  type: 'test'
+  ...
+# Subtest: concurrent development stores share a complete key and persist across restart
+ok 7 - concurrent development stores share a complete key and persist across restart
+  ---
+  duration_ms: 87.6343
+  type: 'test'
+  ...
+# Subtest: vault production refuses auto-generated master keys and supports an external key file
+ok 8 - vault production refuses auto-generated master keys and supports an external key file
+  ---
+  duration_ms: 27.5081
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 632.2197

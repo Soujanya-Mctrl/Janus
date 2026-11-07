@@ -22,6 +22,7 @@
     "test:protocol": "node --test shared/test/*.test.mjs",
     "demo:handoff": "npm run demo:handoff --prefix backend",
     "test:workbench": "npm run test:workbench --prefix backend",
+    "test:security": "npm run test:security --prefix backend",
     "sponsors:check": "node scripts/check-sponsors.mjs",
     "sponsors:ready": "node scripts/check-sponsors.mjs --require-ready",
     "arkiv:query": "npm run arkiv:query --prefix backend",

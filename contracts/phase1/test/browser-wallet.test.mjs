@@ -4,7 +4,7 @@ import http from 'node:http';
 import { once } from 'node:events';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-import ganache from 'ganache';
+import { createFixtureRpc } from './fixtures/local-rpc.mjs';
 import { privateKeyToAccount } from 'viem/accounts';
 import { build } from 'esbuild';
 import { createPublicClient, createWalletClient, custom, defineChain, keccak256, stringToHex } from 'viem';
@@ -12,8 +12,9 @@ import { createPublicClient, createWalletClient, custom, defineChain, keccak256,
 // Browser tooling may be supplied by the developer/CI without a runtime dependency.
 const { chromium } = await import(process.env.JANUS_PLAYWRIGHT_MODULE || 'playwright');
 test('recovery browser checks wallet identity, rejection, consent, network and exact local withdrawal', async t => {
- const rpc = ganache.server({ logging: { quiet: true }, wallet: { deterministic: true }, chain: { chainId: 1337, hardfork: 'shanghai' } });
- await rpc.listen(0,'127.0.0.1'); t.after(() => rpc.close());
+ let browser;
+ const rpc = createFixtureRpc();
+ await rpc.listen(0,'127.0.0.1'); t.after(async () => { await browser?.close(); await rpc.close(); });
  const provider = rpc.provider, addresses = await provider.request({ method: 'eth_accounts', params: [] });
  const chain = defineChain({ id: 1337, name: 'Local recovery test', nativeCurrency: { name: 'Local Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [`http://127.0.0.1:${rpc.address().port}`] } } });
  const client = createPublicClient({ chain, transport: custom(provider), cacheTime: 0, pollingInterval: 10 });
@@ -33,11 +34,11 @@ test('recovery browser checks wallet identity, rejection, consent, network and e
  const descriptor=JSON.parse(await fs.readFile(new URL('../../../shared/treasury-interface.json',import.meta.url),'utf8'));
  const manifest={interfaceVersion:descriptor.interfaceVersion,abiHash:descriptor.abiHash,mode:'local',chainId:1337,treasury,token,owner:addresses[0],runtimeCodeHash:keccak256(await client.getBytecode({address:treasury}))};
  const network={...chain,chainId:1337,token:{address:token}};
- const bundled=await build({entryPoints:[fileURLToPath(new URL('../browser/main.mjs',import.meta.url))],bundle:true,platform:'browser',target:'es2022',write:false,plugins:[{name:'local-fixture-only',setup(b){b.onLoad({filter:/shared\/(network|deployments\/hedera-testnet)\.json$/},args=>({contents:JSON.stringify(args.path.endsWith('network.json')?network:manifest),loader:'json'}));}}]});
+ const bundled=await build({entryPoints:[fileURLToPath(new URL('../browser/main.mjs',import.meta.url))],bundle:true,platform:'browser',target:'es2022',write:false,plugins:[{name:'local-fixture-only',setup(b){b.onLoad({filter:/shared[\\/](network|deployments[\\/]hedera-testnet)\.json$/},args=>({contents:JSON.stringify(args.path.endsWith('network.json')?network:manifest),loader:'json'}));}}]});
  const html=await fs.readFile(new URL('../browser/index.html',import.meta.url));
  const server=http.createServer((req,res)=>{res.setHeader('content-type',req.url==='/recovery.js'?'text/javascript':'text/html');res.end(req.url==='/recovery.js'?bundled.outputFiles[0].contents:html);});
  server.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>new Promise(resolve=>{server.closeAllConnections();server.close(resolve);}));
- const browser=await chromium.launch({headless:true,...(process.env.JANUS_CHROMIUM_PATH?{executablePath:process.env.JANUS_CHROMIUM_PATH}:{})});t.after(()=>browser.close());
+ browser=await chromium.launch({headless:true,...(process.env.JANUS_CHROMIUM_PATH?{executablePath:process.env.JANUS_CHROMIUM_PATH}:{})});
  const page=await browser.newPage();let selected=addresses[1],wrongChain=false,rejectConnect=false,rejectTransaction=false,sends=0;
  await page.exposeFunction('fixtureWalletRequest',async({method,params})=>{
   if(method==='eth_requestAccounts'){if(rejectConnect)throw Error('User rejected wallet connection');return[selected];}

@@ -44,8 +44,8 @@ test('dashboard confirms authoritative balances and wallet actions before indepe
  b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:auth,loader:'js'}));
  b.onLoad({filter:/shared[\\/](network|deployments[\\/]hedera-testnet)\.json$/},args=>({contents:JSON.stringify(args.path.endsWith('network.json')?network:manifest),loader:'json'}));
  }}]});
- let available=true;
- const server=http.createServer((req,res)=>{res.setHeader('content-type',req.url==='/bundle.js'?'text/javascript':'text/html');res.end(req.url==='/bundle.js'?bundled.outputFiles[0].contents:'<html><body><div id="root"></div><script src="/bundle.js"></script></body></html>');});
+ let available=true, exposedManifest=manifest;
+ const server=http.createServer((req,res)=>{if(req.url==='/api/deployment'){res.setHeader('content-type','application/json');res.end(JSON.stringify({deployment:exposedManifest,chain}));return;}res.setHeader('content-type',req.url==='/bundle.js'?'text/javascript':'text/html');res.end(req.url==='/bundle.js'?bundled.outputFiles[0].contents:'<html><body><div id="root"></div><script src="/bundle.js"></script></body></html>');});
  server.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>{if(available){server.closeAllConnections();server.close();}});
  browser=await chromium.launch({headless:true,...(process.env.JANUS_CHROMIUM_PATH?{executablePath:process.env.JANUS_CHROMIUM_PATH}:{})});
  const page=await browser.newPage();let rejectTransaction=false,sends=0;
@@ -65,6 +65,11 @@ test('dashboard confirms authoritative balances and wallet actions before indepe
  assert.equal(await page.getByRole('button',{name:'Cancel task',exact:true}).isDisabled(),true);
  await page.getByLabel('Selected task ID',{exact:true}).fill(task);
  await page.getByLabel('Replacement worker wallet').fill(addresses[3]);
+ exposedManifest={...manifest,treasury:token};
+ await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Assign replacement',exact:true}).click();
+ await page.getByRole('status').filter({hasText:'Deployment changed; refresh'}).waitFor();
+ assert.equal(sends,0,'changed deployment must be rejected before wallet submission');
+ exposedManifest=manifest;await refresh();
  await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Assign replacement',exact:true}).click();
  await confirmed();
  assert.equal((await client.readContract({address:treasury,abi,functionName:'tasks',args:[task]}))[8],2n);

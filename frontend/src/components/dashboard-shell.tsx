@@ -176,8 +176,8 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
         <div className="workspace-pill-box">
           <span className="workspace-avatar">J</span>
           <div>
-            <strong>Hedera Workspace</strong>
-            <small>Testnet 296 · Active</small>
+            <strong>Treasury Workspace</strong>
+            <small>Chain {targetChain.id} · Test network</small>
           </div>
           <span className="workspace-badge">V1</span>
         </div>
@@ -259,9 +259,9 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
           <div className="topbar-actions">
             <div className="network-status-badge">
               <span className="status-dot-white" />
-              <span className="network-badge-full">Hedera Testnet (296)</span>
-              <span className="network-badge-short">Hedera 296</span>
-              <span className="network-badge-micro">296</span>
+              <span className="network-badge-full">{targetChain.name} ({targetChain.id})</span>
+              <span className="network-badge-short">{targetChain.name}</span>
+              <span className="network-badge-micro">{targetChain.id}</span>
             </div>
 
             {auth.authenticated ? (
@@ -327,7 +327,7 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
                 {tab === "Agents" && "Create workers with a role, model, and account-owned provider credential."}
                 {tab === "Runs" && "Parallel research, durable checkpoints, and a timeline of actual execution."}
                 {tab === "Credentials" && "Encrypted provider keys, scoped to your verified account."}
-                {tab === "Integrations" && "Inspect Hedera and discover public research worker profiles."}
+                {tab === "Integrations" && "Inspect the configured treasury and discover public research worker profiles."}
                 {tab === "Overview" && "A clear view of the work, the spend, and what comes next across all workers."}
                 {tab === "Tasks" && "Bounded spending authority for each piece of work. Epoch fencing enabled."}
                 {tab === "Wallet" && "Hardware and embedded wallet connections. Authoritative signing keys."}
@@ -365,7 +365,7 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
               <AlertTriangle size={18} />
               <div>
                 <strong>Unsupported wallet network</strong>
-                <p>Your wallet is on chain {auth.chainId}. Switch to Hedera Testnet (296) before executing actions.</p>
+                <p>Your wallet is on chain {auth.chainId}. Switch to {targetChain.name} ({targetChain.id}) before executing actions.</p>
               </div>
               <button type="button" className="btn-secondary-pill" style={{ marginLeft: "auto" }} onClick={() => void auth.switchNetwork()}>
                 Switch network
@@ -552,7 +552,7 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
 
                 <div className="dashboard-table-footer" style={{ padding: "16px 28px", borderTop: "1px solid rgba(255,255,255,0.08)", fontSize: "11px", color: "#777777", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span>State invariant verified: Cap = Available + Reserved + Spent</span>
-                  <span>Hedera Testnet 296</span>
+                  <span>{targetChain.name} · Chain {targetChain.id}</span>
                 </div>
               </div>
             </>
@@ -589,7 +589,7 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "10px" }}>
                     <span style={{ color: "#8e8e8e" }}>Target Settlement Network</span>
-                    <strong style={{ color: "#ffffff" }}>Hedera Testnet (Chain ID 296)</strong>
+                    <strong style={{ color: "#ffffff" }}>{targetChain.name} (Chain ID {targetChain.id})</strong>
                   </div>
                 </div>
 
@@ -600,7 +600,7 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
                       <button type="button" className="btn-secondary-pill" style={{ padding: "6px 10px" }} onClick={() => void copyAddress()}>
                         {copied ? <Check size={14} /> : <Copy size={14} />}
                       </button>
-                      <a href={`https://hashscan.io/testnet/account/${auth.walletAddress}`} target="_blank" rel="noreferrer" className="btn-secondary-pill" style={{ padding: "6px 10px" }}>
+                      <a hidden={targetChain.id !== 296} href={`https://hashscan.io/testnet/account/${auth.walletAddress}`} target="_blank" rel="noreferrer" className="btn-secondary-pill" style={{ padding: "6px 10px" }}>
                         <ExternalLink size={14} />
                       </a>
                     </div>
@@ -655,8 +655,8 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
                       {auth.walletAddress && !wrongChain ? "✓" : "2"}
                     </div>
                     <div>
-                      <strong style={{ color: "#ffffff", fontSize: "14px" }}>Connect on Hedera Testnet</strong>
-                      <p style={{ fontSize: "12px", color: "#777777", margin: "2px 0 0" }}>Verify your address, gas balance, and chain ID (296).</p>
+                      <strong style={{ color: "#ffffff", fontSize: "14px" }}>Connect on {targetChain.name}</strong>
+                      <p style={{ fontSize: "12px", color: "#777777", margin: "2px 0 0" }}>Verify your address, gas balance, and chain ID ({targetChain.id}).</p>
                     </div>
                   </div>
 
@@ -704,7 +704,7 @@ export default function Dashboard({ initialTab = "Overview" }: { initialTab?: st
               <BrandLogo size="sm" />
             </div>
             <span>Identity is separate from onchain authority · Janus Protocol</span>
-            <span>Hedera Testnet 296 · Sepolia Ready</span>
+            <span>{targetChain.name} · Chain {targetChain.id}</span>
           </footer>
         </main>
       </div>

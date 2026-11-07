@@ -25,13 +25,14 @@ try {
     return result;
   };
   const token = (await receipt(await wallet.deployContract(tokenArtifact))).contractAddress;
-  const treasury = (await receipt(await wallet.deployContract({ ...treasuryArtifact, args: [token] }))).contractAddress;
+  const deploymentReceipt = await receipt(await wallet.deployContract({ ...treasuryArtifact, args: [token] }));
+  const treasury = deploymentReceipt.contractAddress;
   await receipt(await wallet.writeContract({ address: token, abi: tokenArtifact.abi, functionName: 'approve', args: [treasury, 1000000n] }));
   await receipt(await wallet.writeContract({ address: treasury, abi: treasuryArtifact.abi, functionName: 'deposit', args: [1000000n] }));
   const taskId = keccak256(stringToHex('compose-demo'));
   await receipt(await wallet.writeContract({ address: treasury, abi: treasuryArtifact.abi, functionName: 'createTask', args: [taskId, account(1).address, account(3).address, 100000n, 20000n] }));
   const descriptor = JSON.parse(await fs.readFile(new URL('../../shared/treasury-interface.json', import.meta.url), 'utf8'));
-  const manifest = { mode: 'local', chainId: 1337, interfaceVersion: descriptor.interfaceVersion, abiHash: descriptor.abiHash, treasury, token, owner: wallet.account.address, runtimeCodeHash: keccak256(await publicClient.getBytecode({ address: treasury })), taskId, merchant: account(3).address, worker: account(1).address };
+  const manifest = { deploymentBlock: deploymentReceipt.blockNumber.toString(), mode: 'local', chainId: 1337, interfaceVersion: descriptor.interfaceVersion, abiHash: descriptor.abiHash, treasury, token, owner: wallet.account.address, runtimeCodeHash: keccak256(await publicClient.getBytecode({ address: treasury })), taskId, merchant: account(3).address, worker: account(1).address };
   await fs.writeFile(`${file}.tmp`, JSON.stringify(manifest, null, 2));
   await fs.rename(`${file}.tmp`, file);
 }

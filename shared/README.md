@@ -1,5 +1,7 @@
 # Shared Janus context
 
+Deployment integration step 1: [DEPLOYMENT.md](DEPLOYMENT.md) describes the shared runtime manifest, browser/service RPC separation and mismatch checks. Paid dashboard task bindings and interruption/discovery wiring remain subsequent steps.
+
 Security experiment: [SECURITY_EXPERIMENT.md](SECURITY_EXPERIMENT.md) defines encrypted-state configuration, offline migration/rotation, deletion boundaries, threat assumptions and sponsor positioning on `experiment/security-sponsor-fit`.
 
 Dashboard runtime: [DASHBOARD_RUNTIME.md](DASHBOARD_RUNTIME.md) covers agent creation, parallel research, provider brokerage and persisted monitoring in the original dashboard shell.

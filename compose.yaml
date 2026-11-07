@@ -26,6 +26,9 @@ services:
         condition: service_healthy
     environment:
       JANUS_RPC_URL: http://contracts:8545
+      JANUS_DEPLOYMENT_FILE: /state/deployment.json
+      JANUS_BROWSER_RPC_URL: http://127.0.0.1:${JANUS_RPC_PORT:-8545}
+      JANUS_MERCHANT_URL: http://backend:4023
     volumes:
       - chain-data:/state:ro
       - merchant-data:/merchant
@@ -47,6 +50,12 @@ services:
     init: true
     environment:
       PRIVY_VERIFICATION_KEY: ${PRIVY_VERIFICATION_KEY:-}
+      JANUS_DEPLOYMENT_FILE: /state/deployment.json
+      JANUS_RPC_URL: http://contracts:8545
+      JANUS_BROWSER_RPC_URL: http://127.0.0.1:${JANUS_RPC_PORT:-8545}
+      JANUS_MERCHANT_URL: http://backend:4023
+    volumes:
+      - chain-data:/state:ro
     depends_on:
       backend:
         condition: service_healthy

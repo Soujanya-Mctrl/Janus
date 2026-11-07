@@ -1,5 +1,9 @@
 # Janus product and current context
 
+## Dashboard integration step 1
+
+Runtime deployment selection now supplies the browser, local merchant and detached supervisor with one manifest identity and separate browser/service RPC URLs. New runs pin the server-selected deployment; resume rejects identity changes. Local-chain mismatch and actual treasury browser regressions cover the boundary. See [DEPLOYMENT.md](DEPLOYMENT.md). Run-to-task funding, dashboard paid-tool dispatch, interactive process interruption and live-discovery research replacement remain subsequent steps. This changes no sponsor claim.
+
 ## Experimental security branch — current override
 
 Upstream `c065696` was integrated before publication and supplies recorded funded Arkiv publication, independent CLI/browser reads and live-discovery/local-finance handoff evidence. The previous missing-writer blocker is cleared; broader sponsor acceptance and combined live execution remain open.

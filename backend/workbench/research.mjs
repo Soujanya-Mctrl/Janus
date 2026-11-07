@@ -27,7 +27,7 @@ export async function listRuns(root, user) {
   const results = await Promise.all(names.filter(name => /^[a-f0-9-]{36}$/.test(name)).map(id => readRun(root, user, id)));
   return results.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
-export async function createRun(root, user, { config, question, mode, confirmProviderBilling, interrupt = false }) {
+export async function createRun(root, user, { config, question, mode, confirmProviderBilling, interrupt = false, deployment = null }) {
   config = validateWorkbenchConfig(config);
   config.agents = config.agents.filter(agent => !agent.archived);
   if (typeof question !== 'string' || question.trim().length < 10 || question.length > 6000) throw new Error('Enter a research question of 10–6000 characters');
@@ -46,7 +46,7 @@ export async function createRun(root, user, { config, question, mode, confirmPro
     if (runs.filter(run => !terminal.has(run.status)).length >= 2) throw new Error('Two runs already active; finish or cancel one');
     if (runs.length >= 100) throw new Error('Run retention limit reached; operator archival required');
     const run = { id: randomUUID(), version: 1, createdAt: new Date().toISOString(), question: question.trim(), mode,
-      config, interrupt: mode === 'fixture' && interrupt === true, status: 'queued', events: [], artifacts: {}, workers: {}, report: null };
+      config, deployment, interrupt: mode === 'fixture' && interrupt === true, status: 'queued', events: [], artifacts: {}, workers: {}, report: null };
     await atomic(path.join(runDirectory(root, user, run.id), 'run.json'), run);
     return run;
   } finally { await lock.close(); await fs.unlink(path.join(directory, 'create.lock')); }

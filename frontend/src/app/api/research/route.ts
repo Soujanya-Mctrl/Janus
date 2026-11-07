@@ -1,4 +1,6 @@
 import path from 'node:path';
+import { loadRuntimeDeployment } from '../../../../../backend/lib/runtime-deployment.mjs';
+import { sameDeployment } from '../../../../../shared/runtime-deployment.mjs';
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { sessionResponse } from '../../../lib/session-response.mjs';
@@ -51,7 +53,8 @@ export async function POST(request: Request) {
     const body = JSON.parse(raw + decoder.decode()), { root, state } = workspace();
     if (body.action === 'create') {
       const config = await createWorkbenchStore(path.join(state, 'vault')).config(user) || defaultConfig;
-      const run = await createRun(state, user, { ...body, config });
+      const { deployment } = await loadRuntimeDeployment({ verify: Boolean(process.env.JANUS_DEPLOYMENT_FILE) });
+      const run = await createRun(state, user, { ...body, config, deployment });
       try { await launch(root, state, user, run.id); }
       catch { await controlRun(state, user, run.id, 'cancel'); throw new Error('Supervisor could not start; run cancelled'); }
       return Response.json({ run }, { status: 201, headers });
@@ -59,6 +62,11 @@ export async function POST(request: Request) {
     if (body.action === 'delete') {
       if (body.confirmDelete !== true) throw new Error('Confirm permanent deletion of local research; payment records and provider copies remain');
       return Response.json(await deleteRun(state, user, body.id), { headers });
+    }
+    if (body.action === 'resume') {
+      const saved = await readRun(state, user, body.id);
+      const { deployment } = await loadRuntimeDeployment({ verify: Boolean(process.env.JANUS_DEPLOYMENT_FILE) });
+      if (saved.deployment && !sameDeployment(saved.deployment, deployment)) throw new Error('Run deployment changed; reconcile before resuming');
     }
     const run = await controlRun(state, user, body.id, body.action);
     if (body.action === 'resume') await launch(root, state, user, body.id);

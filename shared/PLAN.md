@@ -1,5 +1,9 @@
 # Janus implementation plan
 
+## Dashboard payment integration sequence
+
+Step 1 implements shared runtime deployment configuration with explicit browser/service RPC separation and fail-closed identity checks; see [DEPLOYMENT.md](DEPLOYMENT.md). Native regression/build/HTTP checks pass. The user requested publication of this code checkpoint; the container acceptance gate remains open after host disk exhaustion and incomplete Docker restart following storage relocation. Next bind each research branch to a confirmed funded treasury task and inject trusted paid tools into the dashboard supervisor. Then add block-pinned card balances, actual process-interrupt commands with in-flight reconciliation, live Arkiv discovery with reachable executors, confirmed epoch-gated restart and receipt-backed paid-result reuse events. Validate the combined browser path before claiming those gates complete. No sponsor claim changes in step 1.
+
 ## Security and sponsor-fit experiment
 
 Keep `experiment/security-sponsor-fit` separate from main under the user's current instruction. Evaluate encrypted private persistence, fail-closed production keys, offline maintenance, bounded research deletion and public-data minimization with existing payment/handoff/recovery regressions. See [SECURITY_EXPERIMENT.md](SECURITY_EXPERIMENT.md). Follow with dependency reachability/migration, deployed secret management, OS/signer isolation, backup/retention policy and manual live recovery. Actual x402 interoperability, integrated browser-paid research and final sponsor evidence remain gates. Funded Arkiv publication/read/handoff records were integrated from upstream `c065696`; do not repeat their former missing-writer blocker. Publish only this experimental branch, without merging or pushing main.

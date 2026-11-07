@@ -1,5 +1,9 @@
 # Janus module boundaries
 
+## Runtime deployment boundary
+
+`shared/runtime-deployment.mjs` owns the public manifest projection and supported browser chain definition. `backend/lib/runtime-deployment.mjs` loads the host-selected manifest, validates service RPC/merchant identity and keeps service URLs private. `api/deployment` publishes uncached browser configuration at request time. Privy wallet selection, treasury clients and Arkiv execution-network filters consume it. The research API pins the deployment into new run records; detached supervisors and resume reject changed identities. Compose mounts the same manifest into both services. See [DEPLOYMENT.md](DEPLOYMENT.md); task-budget binding and paid dashboard execution remain subsequent integration phases.
+
 ## Experimental privacy boundary
 
 `backend/lib/private-json.mjs` owns authenticated private JSON and production data-key policy. Research account/run-relative records, checkpoint task files and merchant operation files use distinct encryption domains; they remain private host state, not public Arkiv entities. `backend/security/state-maintenance.mjs` owns explicit offline migration/rotation. `shared/public-worker-profile.mjs` defines the public-field projection used by frontend/backend publication. `api/research` adds identity-scoped confirmed local deletion; financial journals are outside that deletion boundary. Production vault/data key configuration and limitations are in [SECURITY_EXPERIMENT.md](SECURITY_EXPERIMENT.md). This does not isolate the trusted supervisor or provide confidential inference.

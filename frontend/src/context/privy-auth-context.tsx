@@ -2,10 +2,11 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { PrivyProvider, usePrivy, useWallets, useLogin } from "@privy-io/react-auth";
-import network from "../../../shared/network.json";
+import { runtimeDeployment } from "../../../shared/runtime-deployment.mjs";
+import { loadBrowserDeployment } from "@/lib/runtime-deployment.mjs";
 import { defineChain, formatEther, type EIP1193Provider } from "viem";
 
-export const targetChain = defineChain({ ...network, id: network.chainId });
+export let targetChain = defineChain(runtimeDeployment().chain);
 type AuthState = {
   configured: boolean; ready: boolean; authenticated: boolean;
   user: { id: string; email?: string } | null;
@@ -85,7 +86,7 @@ function PrivyBridge({ children }: { children: ReactNode }) {
   async function switchNetwork() {
     setError(null);
     try { await wallet?.switchChain(targetChain.id); await refresh(); }
-    catch { setError("Network switch was declined or failed. Select Hedera Testnet in your wallet and retry."); }
+    catch { setError("Network switch was declined or failed. Select the configured treasury network in your wallet and retry."); }
   }
   async function exportWallet() {
     setError(null);
@@ -110,6 +111,15 @@ function PrivyBridge({ children }: { children: ReactNode }) {
 }
 
 export function PrivyAuthWrapper({ children }: { children: ReactNode }) {
+  const [deploymentStatus, setDeploymentStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  useEffect(() => {
+    let active = true;
+    void loadBrowserDeployment().then(config => {
+      if (active) { targetChain = defineChain(config.chain); setDeploymentStatus('ready'); }
+    }).catch(() => { if (active) setDeploymentStatus('error'); });
+    return () => { active = false; };
+  }, []);
+  if (deploymentStatus !== 'ready') return <AuthContext.Provider value={{ ...empty, ready: deploymentStatus === 'error', error: deploymentStatus === 'error' ? 'Deployment unavailable. Check chain configuration and reload.' : null }}>{children}</AuthContext.Provider>;
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID?.trim();
   if (!appId || appId.includes("your-") || appId.includes("replace-")) {
     return <AuthContext.Provider value={empty}>{children}</AuthContext.Provider>;

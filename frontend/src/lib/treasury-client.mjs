@@ -2,14 +2,23 @@ import { createPublicClient, createWalletClient, http, custom, defineChain } fro
 import { validateTreasury } from '../../../contracts/phase1/lib/recovery-core.mjs';
 import { transactionPolicy } from '../../../backend/hedera/lib/transaction-policy.mjs';
 import descriptor from '../../../shared/treasury-interface.json' with { type: 'json' };
-import network from '../../../shared/network.json' with { type: 'json' };
-import manifest from '../../../shared/deployments/hedera-testnet.json' with { type: 'json' };
+import { runtimeDeployment, sameDeployment } from '../../../shared/runtime-deployment.mjs';
+import { loadBrowserDeployment } from './runtime-deployment.mjs';
+const initial = runtimeDeployment();
 import { bytes32, taskSnapshot } from '../../../shared/protocol.mjs';
-export const deployment = manifest;
-export const chain = defineChain({ ...network, id: network.chainId });
-export const client = createPublicClient({ chain, transport: http(), cacheTime: 0 });
+export let deployment = initial.deployment;
+export let chain = defineChain(initial.chain);
+export let client = createPublicClient({ chain, transport: http(), cacheTime: 0 });
 const abi = descriptor.abi;
-export async function readTreasury(publicClient = client, identity = manifest, taskIds = [], fromBlock) {
+async function resolve(publicClient, identity) {
+ if (publicClient && identity) return { publicClient, identity };
+ const config = await loadBrowserDeployment();
+ deployment = config.deployment; chain = defineChain(config.chain);
+ client = createPublicClient({ chain, transport: http(), cacheTime: 0 });
+ return { publicClient: publicClient || client, identity: identity || deployment };
+}
+export async function readTreasury(publicClient, identity, taskIds = [], fromBlock) {
+ ({ publicClient, identity } = await resolve(publicClient, identity));
  await validateTreasury(publicClient, identity);
  const block = await publicClient.getBlockNumber();
  const start = fromBlock === undefined ? (block > 1000n ? block - 1000n : 0n) : BigInt(fromBlock);
@@ -25,11 +34,13 @@ export async function readTreasury(publicClient = client, identity = manifest, t
   Promise.all(ids.map(async id => { const task = taskSnapshot(await read('tasks', [id])); return { id, cap:task.cap, available:task.available, reserved:task.reserved, spent:task.spent, returned:task.returned, worker:task.worker, epoch:task.epoch, cancelled:task.cancelled }; })),
  ]);
  if (unallocated + totalAvailable + totalReserved + totalSpent + withdrawn !== deposited) throw new Error('Treasury accounting invariant mismatch');
- return { block: block.toString(), fromBlock: start.toString(), treasury: identity.treasury, chainId: identity.chainId,
+ return { deployment: identity, block: block.toString(), fromBlock: start.toString(), treasury: identity.treasury, chainId: identity.chainId,
   unallocated: unallocated.toString(), available: totalAvailable.toString(), reserved: totalReserved.toString(), spent: totalSpent.toString(), withdrawn: withdrawn.toString(), scheduler,
   tasks: tasks.filter(task => task.cap !== '0'), events: logs.map(log => ({ name: log.eventName, transaction: log.transactionHash, block: log.blockNumber.toString(), args: Object.fromEntries(Object.entries(log.args).map(([k,v]) => [k, typeof v === 'bigint' ? v.toString() : v])) })) };
 }
-export async function treasuryAction({ publicClient = client, identity = manifest, walletClient, action, taskId, replacement, onSubmitted = hash => { void hash; } }) {
+export async function treasuryAction({ publicClient = undefined, identity = undefined, expectedDeployment = undefined, walletClient, action, taskId, replacement, onSubmitted = hash => { void hash; } }) {
+ ({ publicClient, identity } = await resolve(publicClient, identity));
+ if (expectedDeployment && !sameDeployment(expectedDeployment, identity)) throw new Error('Deployment changed; refresh and review the action again');
  const read = await validateTreasury(publicClient, identity);
  const address = walletClient.account?.address;
  if (!address || await walletClient.getChainId() !== identity.chainId) throw new Error('Connect an authorized wallet on the treasury network');
@@ -54,4 +65,4 @@ export async function treasuryAction({ publicClient = client, identity = manifes
  if (receipt.status !== 'success') throw new Error(`Transaction reverted: ${hash}`);
  return { hash, block: receipt.blockNumber.toString() };
 }
-export function connectedWallet(provider, address) { return createWalletClient({ chain, account: address, transport: custom(provider) }); }
+export async function connectedWallet(provider, address) { const config = await loadBrowserDeployment(); return createWalletClient({ chain: defineChain(config.chain), account: address, transport: custom(provider) }); }

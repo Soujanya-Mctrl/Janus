@@ -17,6 +17,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY frontend/package*.json frontend/.npmrc ./frontend/
 RUN npm ci --prefix frontend
 COPY frontend ./frontend
+COPY --from=services /app/backend ./backend
+COPY --from=services /app/contracts ./contracts
+COPY scripts ./scripts
+COPY package.json ./
 COPY shared ./shared
 ARG NEXT_PUBLIC_PRIVY_APP_ID=""
 ARG NEXT_PUBLIC_PRIVY_CLIENT_ID=""

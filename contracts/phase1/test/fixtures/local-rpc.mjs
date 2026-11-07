@@ -5,8 +5,8 @@ import memdown from 'memdown';
 
 // Test-only HTTP transport. Ganache's native-server fallback leaves HTTP/DB
 // handles open on this Windows build; the provider itself has a working shutdown.
-export function createFixtureRpc() {
-  const provider = ganache.provider({ database: { db: memdown() }, logging: { quiet: true }, wallet: { deterministic: true }, chain: { chainId: 1337, hardfork: 'shanghai' } });
+export function createFixtureRpc({ mnemonic } = {}) {
+  const provider = ganache.provider({ database: { db: memdown() }, logging: { quiet: true }, wallet: mnemonic ? { mnemonic } : { deterministic: true }, chain: { chainId: 1337, hardfork: 'shanghai' } });
   const answer = async request => {
     try { return { jsonrpc: '2.0', id: request.id, result: await provider.request({ method: request.method, params: request.params ?? [] }) }; }
     catch (error) { return { jsonrpc: '2.0', id: request.id, error: { code: typeof error.code === 'number' ? error.code : -32000, message: error.message } }; }

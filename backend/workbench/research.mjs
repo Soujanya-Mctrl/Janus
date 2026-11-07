@@ -27,12 +27,13 @@ export async function listRuns(root, user) {
   const results = await Promise.all(names.filter(name => /^[a-f0-9-]{36}$/.test(name)).map(id => readRun(root, user, id)));
   return results.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
-export async function createRun(root, user, { config, question, mode, confirmProviderBilling, interrupt = false, deployment = null }) {
+export async function createRun(root, user, { config, question, mode, confirmProviderBilling, interrupt = false, deployment = null, paid = false, discoveryMode = 'arkiv', confirmTaskSpending = false }) {
   config = validateWorkbenchConfig(config);
   config.agents = config.agents.filter(agent => !agent.archived);
   if (typeof question !== 'string' || question.trim().length < 10 || question.length > 6000) throw new Error('Enter a research question of 10–6000 characters');
   if (!['fixture', 'llm'].includes(mode)) throw new Error('Choose fixture or provider mode');
   if (mode === 'llm' && confirmProviderBilling !== true) throw new Error('Confirm separate provider billing');
+  if (paid && (confirmTaskSpending !== true || deployment?.mode !== 'local' || !['local', 'arkiv'].includes(discoveryMode))) throw new Error('Confirm local task spending and choose a replacement directory');
   const vault = createWorkbenchStore(path.join(root, 'vault'));
   if (mode === 'llm') for (const agent of config.agents) {
     if (!agent.credentialId || !agent.model) throw new Error('Assign a credential and model to every active agent');
@@ -46,7 +47,9 @@ export async function createRun(root, user, { config, question, mode, confirmPro
     if (runs.filter(run => !terminal.has(run.status)).length >= 2) throw new Error('Two runs already active; finish or cancel one');
     if (runs.length >= 100) throw new Error('Run retention limit reached; operator archival required');
     const run = { id: randomUUID(), version: 1, createdAt: new Date().toISOString(), question: question.trim(), mode,
-      config, deployment, interrupt: mode === 'fixture' && interrupt === true, status: 'queued', events: [], artifacts: {}, workers: {}, report: null };
+      config, deployment, paid: paid === true, discoveryMode: paid ? discoveryMode : null, tasks: null,
+      holdAfterPayment: paid && mode === 'fixture' && interrupt === true,
+      interrupt: !paid && mode === 'fixture' && interrupt === true, status: 'queued', events: [], artifacts: {}, workers: {}, report: null };
     await atomic(path.join(runDirectory(root, user, run.id), 'run.json'), run);
     return run;
   } finally { await lock.close(); await fs.unlink(path.join(directory, 'create.lock')); }
@@ -55,7 +58,7 @@ export async function controlRun(root, user, id, action) {
   if (!['pause', 'resume', 'cancel'].includes(action)) throw new Error('Invalid run action');
   const run = await readRun(root, user, id);
   if (terminal.has(run.status)) throw new Error('Run already finished');
-  if (action === 'resume' && !['paused', 'queued'].includes(run.status)) throw new Error('Resume is allowed only for paused or queued runs; uncertain submissions require reconciliation');
+  if (action === 'resume' && !['paused', 'queued', 'waiting'].includes(run.status)) throw new Error('Resume is allowed only for paused, waiting or queued runs; uncertain submissions require reconciliation');
   const dir = runDirectory(root, user, id);
   await atomic(path.join(dir, 'control.json'), { action, at: new Date().toISOString() });
   // When no supervisor owns the run, cancellation is a local execution action only.
@@ -65,6 +68,14 @@ export async function controlRun(root, user, id, action) {
     if (locked) { try { run.status = 'cancelled'; await atomic(path.join(dir, 'run.json'), run); } finally { await locked.close(); await fs.unlink(path.join(dir, 'supervisor.lock')); } }
   }
   return run;
+}
+
+export async function interruptRunWorker(root, user, id, agentId) {
+ const run = await readRun(root, user, id);
+ const worker = run.workers[agentId];
+ if (run.status !== 'running' || !run.config.agents.some(agent => agent.id === agentId && agent.id !== 'orchestrator') || !worker || !['running', 'holding'].includes(worker.status)) throw new Error('Worker is not running in this account');
+ await atomic(path.join(runDirectory(root, user, id), `interrupt-${agentId}-${worker.attempt}.json`), { agentId, attempt: worker.attempt, requestedAt: new Date().toISOString() });
+ return { requested: true, agentId, attempt: worker.attempt };
 }
 
 // Deleting research never deletes the separate financial checkpoint/journal.
@@ -90,11 +101,13 @@ export async function deleteRun(root, user, id) {
   }
 }
 
-export async function executeResearch({ root, user, id, providerCall = callProvider, paidTools, interruptAfterPaid = false }) {
+export async function executeResearch({ root, user, id, providerCall = callProvider, paidTools, paidToolsFactory, interruptAfterPaid = false }) {
   const directory = runDirectory(root, user, id), lockPath = path.join(directory, 'supervisor.lock');
   const lock = await fs.open(lockPath, 'wx', 0o600).catch(() => { throw new Error('Supervisor already active or stale lock; reconcile before retry'); });
   let run, queue = Promise.resolve();
   const children = new Set();
+  const liveWorkers = new Map();
+  let controlTimer, controlWork = Promise.resolve();
   try {
     run = await readRun(root, user, id);
     if (terminal.has(run.status) || run.status === 'reconciling') return run;
@@ -108,6 +121,27 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
       try { return (await privateRead(path.join(directory, 'control.json'))).action; } catch (e) { if (e.code === 'ENOENT') return 'resume'; throw e; }
     };
     const stopped = async () => ['pause', 'cancel'].includes(await control());
+    delete run.error;
+    if (run.paid && !paidTools) {
+      run.status = 'funding'; await save();
+      if (!paidToolsFactory) throw new Error('Trusted paid tools are required for this run');
+      paidTools = await paidToolsFactory({ root, user, run, onActivity: event });
+      run.tasks = paidTools.tasks; await save();
+    }
+    controlTimer = setInterval(() => {
+      controlWork = controlWork.then(async () => {
+        for (const [agentId, worker] of liveWorkers) {
+          if (worker.interrupted || worker.child.exitCode !== null || !worker.child.connected) continue;
+          let command;
+          try { command = await privateRead(path.join(directory, `interrupt-${agentId}-${worker.attempt}.json`)); }
+          catch (error) { if (error.code === 'ENOENT') continue; throw error; }
+          if (command.agentId !== agentId || command.attempt !== worker.attempt) continue;
+          worker.interrupted = true;
+          await event('worker-interrupted', agentId, 'Interrupt command accepted; stopping the actual worker process.', { pid: worker.child.pid, attempt: worker.attempt });
+          worker.child.kill();
+        }
+      }).catch(error => { run.status = 'reconciling'; run.error = error.message; for (const child of children) child.kill(); });
+    }, 150);
     run.status = 'running'; await event('run-started', 'orchestrator', paidTools ? 'Janus supervisor started with authorized paid research tools.' : 'Janus supervisor started. Research only; no wallet or payment calls.');
     const vault = createWorkbenchStore(path.join(root, 'vault'));
     const infer = async (agent, step, prompt) => {
@@ -126,7 +160,7 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
       let result;
       if (run.mode === 'fixture') {
         await new Promise(resolve => setTimeout(resolve, 250));
-        result = { text: step === 'report' ? `Research fixture report: ${run.question}\n\n${Object.values(run.artifacts).map(item => item.text).join('\n\n')}` : `${agent.name}: ${agent.responsibility}\nQuestion: ${run.question}\nLocal fixture artifact; no external sources were fetched or purchased.`, provider: 'local-fixture', model: 'deterministic', requestId: null, usage: null };
+        result = { text: step === 'report' ? `Research fixture report: ${run.question}\n\n${Object.values(run.artifacts).map(item => item.text).join('\n\n')}` : `${agent.name}: ${agent.responsibility}\nQuestion: ${run.question}\n${paidTools ? prompt : 'Local fixture artifact; no external sources were fetched or purchased.'}`, provider: 'local-fixture', model: 'deterministic', requestId: null, usage: null };
       } else {
         // Resolve credentials at dispatch time, allowing revocation to stop future calls.
         const credential = await vault.credential(user, agent.credentialId);
@@ -145,8 +179,9 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
       run.workers[agent.id] = { status: 'starting', attempt, pid: null, heartbeat: null };
       const child = fork(fileURLToPath(new URL('./research-worker.mjs', import.meta.url)), [], { stdio: ['ignore', 'ignore', 'ignore', 'ipc'], env: { PATH: process.env.PATH || '' }, execArgv: [] });
       children.add(child);
+      const liveWorker = { child, attempt, interrupted: false }; liveWorkers.set(agent.id, liveWorker);
       let settled = false, inflight = Promise.resolve(), requestSeen = false;
-      const finish = (error) => { if (settled) return; settled = true; children.delete(child); child.kill(); error ? reject(error) : resolve(); };
+      const finish = (error) => { if (settled) return; settled = true; children.delete(child); liveWorkers.delete(agent.id); child.kill(); error ? reject(error) : resolve(); };
       child.on('message', message => {
         if (message.type === 'heartbeat') {
           run.workers[agent.id].heartbeat = new Date().toISOString();
@@ -161,13 +196,19 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
             await event('worker-started', agent.id, 'Independent worker process started.', { pid: child.pid, attempt });
             let purchased = [];
             if (paidTools) {
-              purchased = await paidTools.acquire(agent.id, async result => {
-                await event('tool-payment-confirmed', agent.id, 'Paid research artifact confirmed.', { transaction: result.receipt.transaction });
-                if (interruptAfterPaid && agent.id === workers[0].id && attempt === 1) {
+              purchased = await paidTools.acquire(agent.id, async (result, stepId, metadata) => {
+                const reused = metadata?.reused || run.events.some(item => item.agentId === agent.id && item.transaction === result.receipt.transaction && ['tool-payment-confirmed', 'paid-result-reused'].includes(item.type));
+                await event(reused ? 'paid-result-reused' : 'tool-payment-confirmed', agent.id, reused ? 'Paid result reused—no additional charge' : 'Paid research artifact confirmed.', { transaction: result.receipt.transaction, resultHash: result.resultHash, stepId });
+                if (run.holdAfterPayment && agent.id === workers[0].id && attempt === 1 && !liveWorker.interrupted) {
+                  run.workers[agent.id].status = 'holding';
+                  await event('worker-awaiting-interrupt', agent.id, 'Payment confirmed. Use Interrupt worker to demonstrate recovery before checkpoint acknowledgement.');
+                  while (child.connected && !liveWorker.interrupted && !await stopped()) await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                if (liveWorker.interrupted || interruptAfterPaid && agent.id === workers[0].id && attempt === 1) {
                   await event('worker-interrupted', agent.id, 'Worker stopped after paid result, before checkpoint acknowledgement.');
                   const fault = new Error('PAID_WORKER_INTERRUPTED'); fault.code = 'PAID_WORKER_INTERRUPTED'; throw fault;
                 }
-              }).catch(error => { if (error.code === 'PAID_WORKER_INTERRUPTED') { child.kill(); return null; } throw error; });
+              }).catch(error => { if (error.code === 'PAID_WORKER_INTERRUPTED') { child.kill(); return null; } run.status = 'reconciling'; throw error; });
               if (purchased === null) return;
               await event('paid-artifacts-ready', agent.id, 'Purchased artifacts loaded from durable task checkpoints.');
             }
@@ -190,10 +231,15 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
         if (settled) return;
         inflight.then(async () => {
           if (settled) return;
-          children.delete(child); settled = true;
+          children.delete(child); liveWorkers.delete(agent.id); settled = true;
+          await event('worker-exited', agent.id, 'Worker process exited; in-flight supervisor calls have settled.', { pid: child.pid, attempt });
           if (await stopped()) { run.workers[agent.id].status = 'paused'; await save(); resolve(); }
           else if (attempt < 2 && (run.artifacts['research:' + agent.id] || paidTools)) {
-            if (paidTools) await paidTools.replace(agent.id);
+            if (paidTools) {
+              run.workers[agent.id].status = 'discovering'; await save();
+              try { await paidTools.replace(agent.id); }
+              catch (error) { if (error.code === 'DISCOVERY_WAITING') run.workers[agent.id].status = 'waiting'; throw error; }
+            }
             run.workers[agent.id].status = 'replacing';
             await event('worker-replaced', agent.id, paidTools ? 'Replacement authority confirmed on chain; resuming original paid operations.' : 'Replacement resumes the saved local research checkpoint. No on-chain assignment is implied.');
             launch(agent).then(resolve, reject);
@@ -203,7 +249,11 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
       child.send({ type: 'start' });
     });
     // All branches settle before terminal state, so no provider call continues after failure is reported.
-    const outcomes = await Promise.allSettled(workers.map(launch));
+    const outcomes = await Promise.allSettled(workers.map(async agent => {
+      if (run.workers[agent.id]?.status === 'completed') return;
+      if (run.workers[agent.id]?.status === 'waiting' && paidTools) await paidTools.replace(agent.id);
+      return launch(agent);
+    }));
     const failed = outcomes.find(outcome => outcome.status === 'rejected');
     if (failed) throw failed.reason;
     if (!await stopped()) {
@@ -217,12 +267,12 @@ export async function executeResearch({ root, user, id, providerCall = callProvi
   } catch (error) {
     if (run) {
       let action; try { action = (await privateRead(path.join(directory, 'control.json'))).action; } catch { /* no control */ }
-      run.status = error.message === 'DISPATCH_STOPPED' ? action === 'cancel' ? 'cancelled' : 'paused' : run.status === 'reconciling' ? 'reconciling' : 'failed';
+      run.status = error.code === 'DISCOVERY_WAITING' ? 'waiting' : error.message === 'DISPATCH_STOPPED' ? action === 'cancel' ? 'cancelled' : 'paused' : run.status === 'reconciling' ? 'reconciling' : 'failed';
       run.error = error.message;
       await queue.catch(() => {});
       run.events.push({ sequence: run.events.length + 1, at: new Date().toISOString(), type: 'run-' + run.status, agentId: 'orchestrator', summary: error.message });
       await atomic(path.join(directory, 'run.json'), run);
     }
     return run;
-  } finally { for (const child of children) child.kill(); await lock.close(); await fs.unlink(lockPath); }
+  } finally { clearInterval(controlTimer); await controlWork; for (const child of children) child.kill(); await lock.close(); await fs.unlink(lockPath); }
 }

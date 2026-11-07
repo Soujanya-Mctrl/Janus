@@ -10,7 +10,7 @@ export async function loadRuntimeDeployment({ env = process.env, verify = true }
  if (manifest?.mode === 'local' && (!env.JANUS_BROWSER_RPC_URL || !env.JANUS_RPC_URL || !env.JANUS_MERCHANT_URL)) throw new Error('Local deployment requires browser RPC, service RPC and merchant URL');
  const config = runtimeDeployment({ manifest, browserRpcUrl: env.JANUS_BROWSER_RPC_URL });
  const serviceRpcUrl = env.JANUS_RPC_URL || config.chain.rpcUrls.default.http[0];
- const publicClient = createPublicClient({ chain: defineChain(config.chain), transport: http(serviceRpcUrl, { timeout: 10000, retryCount: 0 }), cacheTime: 0 });
+ const publicClient = createPublicClient({ chain: defineChain(config.chain), transport: http(serviceRpcUrl, { timeout: 10000, retryCount: 0 }), cacheTime: 0, pollingInterval: config.deployment.mode === 'local' ? 100 : 4000 });
  if (verify) {
   await validateTreasury(publicClient, config.deployment);
   if (env.JANUS_MERCHANT_URL) {

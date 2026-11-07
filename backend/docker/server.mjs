@@ -14,7 +14,8 @@ await fs.mkdir(directory, { recursive: true });
 const release = acquireSignerLock(directory, account(3).address);
 process.once('exit', release);
 const merchant = await createTaskMerchant({ directory, publicClient, walletClient: createWalletClient({ chain, transport: rpc(serviceRpcUrl), account: account(3) }), manifest, confirmations: 1,
-  produce: async ({ request }) => ({ schemaVersion: '1', requestHash: requestHash(request), dataset: request.body }) });
+  produce: async ({ request }) => ({ schemaVersion: '1', requestHash: requestHash(request), dataset: request.body,
+   ...(request.body?.dataset === 'task-budget-reference-v1' ? { content: 'Janus reference dataset v1: Available funds exclude reserved obligations and settled spending. Worker reassignment increments the epoch and fences old workers. Stable task and step identities retrieve an existing paid result without purchasing it again. This is a reference dataset, not independent web evidence.' } : {}) }) });
 const handler = taskMerchantHandler(merchant);
 const server = http.createServer({ requestTimeout: 15000, headersTimeout: 10000 }, async (req, res) => {
   if (req.method === 'GET' && ['/health', '/deployment'].includes(req.url)) {
@@ -27,5 +28,7 @@ const server = http.createServer({ requestTimeout: 15000, headersTimeout: 10000 
   }
   await handler(req, res);
 });
-server.listen(4023, '0.0.0.0', () => console.log('Local task merchant listening on 4023'));
+const port = Number(process.env.JANUS_MERCHANT_PORT || 4023);
+server.listen(port, process.env.JANUS_BIND_HOST || '0.0.0.0', () => console.log(`Local task merchant listening on ${port}`));
 for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => server.close(() => process.exit(0)));
+process.on('message', message => { if (message?.type === 'shutdown') server.close(() => process.exit(0)); });

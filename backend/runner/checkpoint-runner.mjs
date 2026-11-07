@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { canonicalJson, bytes32 } from '../../shared/protocol.mjs';
+import { canonicalJson, bytes32, operationId } from '../../shared/protocol.mjs';
 import { buyTaskDataset } from '../hedera/lib/task-client.mjs';
 import { taskTreasuryAbi as abi } from '../hedera/lib/treasury.mjs';
 import { validateTreasury } from '../../contracts/phase1/lib/recovery.mjs';
@@ -49,13 +49,16 @@ export function createCheckpointRunner({ directory, publicClient, manifest, endp
     const state = await load(), task = await readTask();
     if (task[9] || !same(task[6], walletClient.account.address)) throw new Error('Worker is not currently assigned');
     if (state.handoff?.status === 'intent') throw new Error('Handoff requires reconciliation before execution');
+    for (const step of state.completed) await afterPaid(step.result, step.id, { reused: true });
     for (const step of steps.slice(state.completed.length)) {
      const current = await readTask();
      if (current[9] || !same(current[6], walletClient.account.address)) throw new Error('Worker authority changed');
      state.pending = step.id; await save(state); // durable intent before paid HTTP call
+     const opId = await operationId({ chainId: String(manifest.chainId), treasury: manifest.treasury, taskId, stepId: step.id });
+     const prior = await publicClient.readContract({ address: manifest.treasury, abi, functionName: 'getOperation', args: [taskId, opId] });
      const result = await buyTaskDataset({ publicClient, walletClient, endpoint, taskId, stepId: step.id, request: step.request, manifest });
      if (!await validateResult(result, step.id)) throw new Error('Output validation failed; payment remains settled');
-     await afterPaid(result, step.id); // deterministic fault hook; no financial state is reset
+     await afterPaid(result, step.id, { reused: Number(prior.status) === 2 }); // no financial state is reset
      const latest = await readTask();
      if (!same(latest[6], walletClient.account.address) || latest[8] !== current[8] || latest[9]) throw new Error('Worker fenced before checkpoint commit');
      state.completed.push({ id: step.id, result, resultHash: hash(result) }); state.pending = null; await save(state);

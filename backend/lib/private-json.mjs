@@ -114,7 +114,18 @@ export function createPrivateJsonStore(directory, {
       const handle = await fs.open(temp, 'wx', 0o600);
       try { await handle.writeFile(JSON.stringify(envelope) + '\n'); await handle.sync(); }
       finally { await handle.close(); }
-      try { await fs.rename(temp, file); await syncDirectory(path.dirname(file)); } finally { await fs.unlink(temp).catch(error => { if (error.code !== 'ENOENT') throw error; }); }
+      try {
+        // Windows scanners/concurrent readers can briefly deny replacing a file.
+        // Retain the old record and retry the atomic rename; never delete it first.
+        for (let attempt = 0; ; attempt++) {
+          try { await fs.rename(temp, file); break; }
+          catch (error) {
+            if (process.platform !== 'win32' || !['EPERM', 'EACCES', 'EBUSY'].includes(error.code) || attempt >= 39) throw error;
+            await new Promise(resolve => setTimeout(resolve, 25));
+          }
+        }
+        await syncDirectory(path.dirname(file));
+      } finally { await fs.unlink(temp).catch(error => { if (error.code !== 'ENOENT') throw error; }); }
     },
   };
 }

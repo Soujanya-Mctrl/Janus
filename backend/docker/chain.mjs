@@ -7,7 +7,7 @@ import { validateTreasury } from '../../contracts/phase1/lib/recovery.mjs';
 const directory = process.env.JANUS_CHAIN_STATE || '/state';
 await fs.mkdir(directory, { recursive: true });
 const server = ganache.server({ logging: { quiet: true }, wallet: { mnemonic }, chain: { chainId: 1337, hardfork: 'shanghai' }, database: { dbPath: `${directory}/db` } });
-await server.listen(8545, '0.0.0.0');
+await server.listen(Number(process.env.JANUS_CHAIN_PORT || 8545), process.env.JANUS_BIND_HOST || '0.0.0.0');
 const publicClient = createPublicClient({ chain, transport: http(rpcUrl) });
 const wallet = createWalletClient({ chain, transport: http(rpcUrl), account: account(0) });
 const file = `${directory}/deployment.json`;
@@ -27,8 +27,9 @@ try {
   const token = (await receipt(await wallet.deployContract(tokenArtifact))).contractAddress;
   const deploymentReceipt = await receipt(await wallet.deployContract({ ...treasuryArtifact, args: [token] }));
   const treasury = deploymentReceipt.contractAddress;
-  await receipt(await wallet.writeContract({ address: token, abi: tokenArtifact.abi, functionName: 'approve', args: [treasury, 1000000n] }));
-  await receipt(await wallet.writeContract({ address: treasury, abi: treasuryArtifact.abi, functionName: 'deposit', args: [1000000n] }));
+  const deposit = BigInt(process.env.JANUS_LOCAL_DEPOSIT || '1000000');
+  await receipt(await wallet.writeContract({ address: token, abi: tokenArtifact.abi, functionName: 'approve', args: [treasury, deposit] }));
+  await receipt(await wallet.writeContract({ address: treasury, abi: treasuryArtifact.abi, functionName: 'deposit', args: [deposit] }));
   const taskId = keccak256(stringToHex('compose-demo'));
   await receipt(await wallet.writeContract({ address: treasury, abi: treasuryArtifact.abi, functionName: 'createTask', args: [taskId, account(1).address, account(3).address, 100000n, 20000n] }));
   const descriptor = JSON.parse(await fs.readFile(new URL('../../shared/treasury-interface.json', import.meta.url), 'utf8'));
@@ -36,5 +37,6 @@ try {
   await fs.writeFile(`${file}.tmp`, JSON.stringify(manifest, null, 2));
   await fs.rename(`${file}.tmp`, file);
 }
-console.log('Local contracts ready; manifest: /state/deployment.json');
+console.log(`Local contracts ready; manifest: ${file}`);
 for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, async () => { await server.close(); process.exit(0); });
+process.on('message', async message => { if (message?.type === 'shutdown') { await server.close(); process.exit(0); } });

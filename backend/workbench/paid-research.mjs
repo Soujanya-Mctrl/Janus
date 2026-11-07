@@ -10,6 +10,7 @@ export function createPaidResearchTools(bindings) {
   },
   async replace(agentId) {
    const binding = entry(agentId);
+   if (binding.discover) return binding.discover();
    if (!binding.replacementWallet || typeof binding.eligible !== 'function') throw new Error('No authorized replacement');
    await binding.runner.handoff({ schedulerWallet: binding.schedulerWallet, replacement: binding.replacementWallet.account.address, eligible: binding.eligible });
    binding.walletClient = binding.replacementWallet;

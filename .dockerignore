@@ -9,6 +9,8 @@
 .agents
 .codex
 .aws
+.tools
+.security-artifacts
 docs
 **/evidence
 !contracts/phase1/evidence

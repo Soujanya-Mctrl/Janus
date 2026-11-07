@@ -715,10 +715,11 @@ export default function Home() {
 
           {/* Headline */}
           <h1 className="headline anim">
-            <span className="headline-line" style={{ "--d": "0.12s" } as React.CSSProperties}>
+            <span className="headline-line headline-line-black" style={{ "--d": "0.12s" } as React.CSSProperties}>
               <GradientText
-                colors={["#ffffff", "#e4e4e7", "#ffffff", "#a1a1aa", "#ffffff"]}
-                animationSpeed={7}
+                colors={["#000000", "#141416", "#050507", "#222226", "#000000"]}
+                animationSpeed={6}
+                className="headline-text-black"
               >
                 Task-Bound Budgets.
               </GradientText>
@@ -734,11 +735,12 @@ export default function Home() {
           </h1>
 
           {/* Subhead */}
-          <div className="subhead anim" style={{ "--d": "0.28s" } as React.CSSProperties}>
+          <div className="subhead anim" style={{ "--d": "0.28s", textAlign: "center" } as React.CSSProperties}>
             <BlurText
               text="Money belongs to the task, not the agent. Janus gives autonomous AI workers temporary spending authority with onchain epoch fencing, durable deliverable caching, and zero double-charge recovery."
               delay={22}
               animateBy="words"
+              style={{ textAlign: "center" }}
             />
           </div>
 

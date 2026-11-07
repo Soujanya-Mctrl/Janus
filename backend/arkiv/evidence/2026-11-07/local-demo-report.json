@@ -1,0 +1,96 @@
+{
+  "status": "passed",
+  "network": "LOCAL EPHEMERAL EVM ONLY",
+  "liveTransactions": false,
+  "generatedAt": "2026-11-06T23:42:17.666Z",
+  "runtime": "v22.23.4",
+  "faultSchedule": [
+    "A stops after confirmed payment before checkpoint",
+    "B/C/D complete independently",
+    "assignment acknowledgement is lost",
+    "scheduler reconciles assignment",
+    "B reuses A artifact and completes followup"
+  ],
+  "taskA": [
+    "100",
+    "60",
+    "0",
+    "40",
+    "0",
+    "30",
+    "0xf4F1a10309FCb1514bF6b0eb1E4813E220D936F0",
+    "0xE11BA2b4D45Eaed5996Cd0823791E0C93114882d",
+    "2",
+    false
+  ],
+  "otherTasks": [
+    [
+      "100",
+      "80",
+      "0",
+      "20",
+      "0",
+      "30",
+      "0xf4F1a10309FCb1514bF6b0eb1E4813E220D936F0",
+      "0xE11BA2b4D45Eaed5996Cd0823791E0C93114882d",
+      "1",
+      false
+    ],
+    [
+      "100",
+      "80",
+      "0",
+      "20",
+      "0",
+      "30",
+      "0xd03ea8624C8C5987235048901fB614fDcA89b117",
+      "0xE11BA2b4D45Eaed5996Cd0823791E0C93114882d",
+      "1",
+      false
+    ],
+    [
+      "100",
+      "80",
+      "0",
+      "20",
+      "0",
+      "30",
+      "0x95cED938F7991cd0dFcb48F0a06a40FA1aF46EBC",
+      "0xE11BA2b4D45Eaed5996Cd0823791E0C93114882d",
+      "1",
+      false
+    ]
+  ],
+  "totalSpent": "100",
+  "logicalPurchases": 5,
+  "firstPayment": "0xd0e426e47181e85118520ae90080aa11cb179b78fd8ac8bbe7651f182f025a2c",
+  "reusedPayment": "0xd0e426e47181e85118520ae90080aa11cb179b78fd8ac8bbe7651f182f025a2c",
+  "completedSteps": [
+    "A:dataset",
+    "A:followup"
+  ],
+  "assignmentEpoch": "2",
+  "discovery": {
+    "source": "arkiv-rabdi",
+    "chainId": "7794095",
+    "block": "311380",
+    "queriedAt": "1794008532",
+    "latencyMs": "468",
+    "recordsRead": "1",
+    "rejected": [],
+    "selected": {
+      "address": "0xf4F1a10309FCb1514bF6b0eb1E4813E220D936F0",
+      "entityKey": "0xb5f309c4358e973b37705a0f6085c4a9e44bf2b8eb78a89cd829774c5bf2ebaa",
+      "owner": "0xf4F1a10309FCb1514bF6b0eb1E4813E220D936F0",
+      "validUntil": "1794012105",
+      "expiresAtBlock": "313168"
+    },
+    "queries": 2,
+    "removalChecks": [
+      "empty directory waits without assignment",
+      "RPC unavailable propagates without assignment",
+      "pending assignment reconciles with directory offline"
+    ]
+  },
+  "liveArkivDiscovery": true
+}

@@ -88,3 +88,9 @@ Run `npm run arkiv:query` to query public research-worker records independently 
 ## Authoritative treasury dashboard and independent recovery
 
 Overview/Tasks default to validated Hedera treasury reads. Click **Refresh chain state** and supply task IDs or a bounded event range when needed. Owner/scheduler actions wait for successful receipts; fixture accounting requires an explicit toggle. Frontend dev/build generate a standalone recovery copy at `/recovery/index.html`; save both HTML and JavaScript files for independent hosting. See [phase-six verification and limits](shared/PHASE6.md). Local Chromium verifies all four dashboard controls and recovery after the dashboard server stops. Manual live wallet recovery remains unverified.
+
+## Live Arkiv worker directory
+
+Dedicated Rabdi writer: `0xf4F1a10309FCb1514bF6b0eb1E4813E220D936F0` (chain `7794095`). Two one-hour entities were published by this one wallet: a Hedera-compatible profile and a local-handoff profile. The actual directory UI read the live Hedera-compatible record; the runner selected the live local-network record and completed paid-result reuse. See [publication/query/receipt/browser evidence](backend/arkiv/evidence/2026-11-07/README.md). Financial handoff and payments in that demonstration used a local EVM, not live Hedera.
+
+Reproduce a current query: `npm run arkiv:query`. For local-demo execution-network records: `ARKIV_WORKER_NETWORK=eip155:1337 npm run arkiv:query`. Filters include `janus.worker.v2`, researcher/ready/research, execution network, `janus-task-v1` and an unexpired lease. Profiles expire; later empty results are expected unless intentionally republished. No private key is required for reads.

@@ -66,3 +66,7 @@ Completed the bounded CLI research-to-paid-tool-to-replacement gate: separate wo
 ## Phase 6 authoritative treasury dashboard
 
 Overview/Tasks now default to validated chain reads, block-pinned balances, bounded event discovery and receipt-confirmed owner/scheduler actions. A separately downloadable static recovery copy is generated before frontend dev/build, with configurable RPC and no application dependency. Local Chromium acceptance covers actual dashboard actions and independent recovery with the dashboard server stopped; static wallet recovery has its own acceptance test. See [PHASE6.md](PHASE6.md). No manual live recovery, production readiness or new sponsor acceptance is claimed.
+
+## Funded Arkiv discovery verified
+
+On 7 November 2026 the dedicated Rabdi writer published two expiring profiles. Independent CLI and actual React/SDK reads found the Hedera-compatible record; the live-discovery/local-finance handoff selected the other profile, confirmed epoch 2, preserved unrelated tasks and reused the original paid result. [Publication, query, receipt and browser evidence](../backend/arkiv/evidence/2026-11-07/README.md) labels the boundaries. This clears the former empty-writer/funded-publication blocker. Entities expire after one hour; there is one writer, no external adoption measurement, no new live Hedera payment and no claim that browser research-run reassignment or all sponsor requirements are complete.

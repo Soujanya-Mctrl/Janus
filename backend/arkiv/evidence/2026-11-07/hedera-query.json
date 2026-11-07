@@ -1,0 +1,31 @@
+{
+  "source": "arkiv-rabdi",
+  "chainId": 7794095,
+  "block": "311406",
+  "queriedAt": "1794008585",
+  "latencyMs": 460,
+  "pages": [
+    {
+      "block": "311406",
+      "skipped": 0
+    }
+  ],
+  "records": [
+    {
+      "entityKey": "0x5ef681df509ab05db26d69a921c502a75771321bd8e283a74cfabd4af477e302",
+      "owner": "0xf4F1a10309FCb1514bF6b0eb1E4813E220D936F0",
+      "expiresAtBlock": "313191",
+      "updatedAtBlock": "311391",
+      "address": "0xf4F1a10309FCb1514bF6b0eb1E4813E220D936F0",
+      "role": "researcher",
+      "status": "ready",
+      "capabilities": [
+        "research"
+      ],
+      "network": "eip155:296",
+      "scheme": "janus-task-v1",
+      "validUntil": "1794012150",
+      "name": "Janus research worker"
+    }
+  ]
+}

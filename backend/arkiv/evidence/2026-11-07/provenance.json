@@ -1,0 +1,18 @@
+{
+  "sourceCommit": "7436e49e98c37e420830a1f30cf3b5211dd4066d",
+  "sourceDirty": true,
+  "files": {
+    "backend/arkiv/directory.mjs": "d492b0a46195ef549d404f2d8f3bb99a7b2a80bbf196f1aa7132d48edca682dd",
+    "backend/arkiv/discovery.mjs": "f88b5be4a047e433b69627b6291d3a9187be3f91536f54355cbd3ca67c71a566",
+    "backend/arkiv/live-demo.mjs": "5bcbc72b2c6f9617096a6448e96f2d032820ac071f599da115b41820bf6f18db",
+    "backend/hedera/test/checkpoint-runner.test.mjs": "f00c9878ba3add9c05bfb719517d6c0d3811b06e15434d6c0b392fa6eb04edae"
+  },
+  "node": "v22.23.4",
+  "verifiedAt": "2026-11-06T23:44:44.520Z",
+  "scope": "Real Rabdi publication/query/selection; local EVM financial handoff and payments; no new Hedera payment",
+  "commands": [
+    "npm run demo:arkiv",
+    "node --env-file=backend/.env.arkiv backend/arkiv/cli.mjs publish",
+    "node --env-file=backend/.env.arkiv backend/arkiv/cli.mjs query"
+  ]
+}
